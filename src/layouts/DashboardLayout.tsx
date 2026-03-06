@@ -27,7 +27,7 @@ function DashboardSidebar({ title, navItems }: DashboardLayoutProps) {
             <span className="font-display font-bold text-lg text-gradient">{collapsed ? "M" : title}</span>
           </Link>
         </div>
-        <SidebarGroup defaultOpen>
+        <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
