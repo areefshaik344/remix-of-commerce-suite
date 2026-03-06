@@ -1,0 +1,74 @@
+import { users } from "@/data/mock-users";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+export default function AdminUsers() {
+  const [search, setSearch] = useState("");
+  const filtered = users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="font-display text-xl font-bold">User Management</h1>
+        <p className="text-sm text-muted-foreground">{users.length} registered users</p>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search users..." className="pl-9" />
+      </div>
+
+      <Card className="shadow-card">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="text-left p-3 font-medium">User</th>
+                  <th className="text-left p-3 font-medium">Email</th>
+                  <th className="text-center p-3 font-medium">Role</th>
+                  <th className="text-left p-3 font-medium">Phone</th>
+                  <th className="text-left p-3 font-medium">Joined</th>
+                  <th className="text-right p-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(user => (
+                  <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">{user.name[0]}</div>
+                        <span className="font-medium">{user.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3 text-muted-foreground">{user.email}</td>
+                    <td className="p-3 text-center">
+                      <Badge variant={user.role === "admin" ? "default" : "secondary"} className="text-xs capitalize">{user.role}</Badge>
+                    </td>
+                    <td className="p-3 text-muted-foreground">{user.phone}</td>
+                    <td className="p-3 text-muted-foreground">{new Date(user.joinedDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</td>
+                    <td className="p-3 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>View Profile</DropdownMenuItem>
+                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">Suspend</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
