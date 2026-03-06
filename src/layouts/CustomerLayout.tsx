@@ -1,0 +1,147 @@
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import { useStore } from "@/store/useStore";
+import { SearchBar } from "@/components/shared/SearchBar";
+import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, Heart, User, Package, ChevronDown, MapPin } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { categories } from "@/data/mock-products";
+
+export default function CustomerLayout() {
+  const { cartCount, currentUser, isAuthenticated, login, logout } = useStore();
+  const navigate = useNavigate();
+  const count = cartCount();
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Top bar */}
+      <div className="gradient-primary text-primary-foreground">
+        <div className="container flex items-center justify-between py-1.5 text-xs">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Deliver to Mumbai 400001</span>
+          </div>
+          <RoleSwitcher />
+        </div>
+      </div>
+
+      {/* Main header */}
+      <header className="sticky top-0 z-40 bg-card border-b shadow-card">
+        <div className="container flex items-center gap-4 py-3">
+          <Link to="/" className="shrink-0">
+            <h1 className="text-xl font-display font-bold text-gradient">MarketHub</h1>
+          </Link>
+
+          <SearchBar />
+
+          <div className="flex items-center gap-1">
+            {!isAuthenticated ? (
+              <Button size="sm" onClick={() => login("customer")}>Login</Button>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1">
+                    <User className="h-4 w-4" />
+                    <span className="hidden md:inline text-xs">{currentUser?.name?.split(" ")[0]}</span>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>My Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/orders")}>My Orders</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/wishlist")}>Wishlist</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <Button variant="ghost" size="icon" onClick={() => navigate("/wishlist")} className="relative">
+              <Heart className="h-4 w-4" />
+            </Button>
+
+            <Button variant="ghost" size="icon" onClick={() => navigate("/cart")} className="relative">
+              <ShoppingCart className="h-4 w-4" />
+              {count > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 min-w-4 p-0 flex items-center justify-center text-[10px] bg-secondary text-secondary-foreground">
+                  {count}
+                </Badge>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Categories nav */}
+        <div className="border-t">
+          <div className="container overflow-x-auto">
+            <div className="flex items-center gap-1 py-1.5">
+              {categories.map(cat => (
+                <Link
+                  key={cat.id}
+                  to={`/products?category=${cat.slug}`}
+                  className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <Outlet />
+      </main>
+
+      {/* Footer */}
+      <footer className="mt-12 border-t bg-card">
+        <div className="container py-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <h3 className="font-display font-semibold mb-3">About</h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p><Link to="/" className="hover:text-foreground transition-colors">About Us</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Careers</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Press</Link></p>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-display font-semibold mb-3">Help</h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p><Link to="/" className="hover:text-foreground transition-colors">FAQ</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Shipping</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Returns</Link></p>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-display font-semibold mb-3">Policy</h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p><Link to="/" className="hover:text-foreground transition-colors">Privacy</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Terms</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Security</Link></p>
+              </div>
+            </div>
+            <div>
+              <h3 className="font-display font-semibold mb-3">Connect</h3>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p><Link to="/" className="hover:text-foreground transition-colors">Twitter</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Instagram</Link></p>
+                <p><Link to="/" className="hover:text-foreground transition-colors">Facebook</Link></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 pt-6 border-t text-center text-sm text-muted-foreground">
+            © 2025 MarketHub. All rights reserved.
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

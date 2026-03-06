@@ -1,0 +1,89 @@
+import { StatCard } from "@/components/shared/StatCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { analyticsData, orders } from "@/data/mock-orders";
+import { DollarSign, Package, ShoppingCart, TrendingUp } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+
+const COLORS = ["hsl(142 71% 45%)", "hsl(221 83% 53%)", "hsl(38 92% 50%)", "hsl(280 67% 54%)", "hsl(0 72% 51%)", "hsl(220 10% 46%)"];
+
+export default function VendorDashboard() {
+  const revenueData = analyticsData.monthlyRevenue.map(d => ({ ...d, revenue: d.revenue / 100000 }));
+  const statusData = analyticsData.ordersByStatus;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="font-display text-xl font-bold">Vendor Dashboard</h1>
+        <p className="text-sm text-muted-foreground">Welcome back! Here's your store overview.</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Revenue" value="₹89.5L" change="+12.5% from last month" changeType="positive" icon={DollarSign} iconClassName="bg-success/10 text-success" />
+        <StatCard title="Total Orders" value="12,500" change="+8.2% from last month" changeType="positive" icon={ShoppingCart} iconClassName="bg-primary/10 text-primary" />
+        <StatCard title="Products" value="45" change="3 new this month" changeType="neutral" icon={Package} iconClassName="bg-secondary/10 text-secondary" />
+        <StatCard title="Conversion Rate" value="3.2%" change="+0.5% from last month" changeType="positive" icon={TrendingUp} iconClassName="bg-accent/10 text-accent" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="shadow-card">
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-display">Revenue Trend (₹ Lakhs)</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="month" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardHeader className="pb-2"><CardTitle className="text-sm font-display">Orders by Status</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="count" nameKey="status" label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`}>
+                  {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="shadow-card">
+        <CardHeader className="pb-2"><CardTitle className="text-sm font-display">Recent Orders</CardTitle></CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-muted-foreground">
+                  <th className="text-left py-2 font-medium">Order ID</th>
+                  <th className="text-left py-2 font-medium">Product</th>
+                  <th className="text-left py-2 font-medium">Status</th>
+                  <th className="text-right py-2 font-medium">Amount</th>
+                  <th className="text-right py-2 font-medium">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.slice(0, 5).map(order => (
+                  <tr key={order.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
+                    <td className="py-2.5 font-medium">{order.id}</td>
+                    <td className="py-2.5 text-muted-foreground">{order.items[0]?.productName}</td>
+                    <td className="py-2.5"><span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${order.status === "delivered" ? "bg-success/10 text-success" : order.status === "cancelled" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{order.status}</span></td>
+                    <td className="py-2.5 text-right font-medium">₹{order.total.toLocaleString("en-IN")}</td>
+                    <td className="py-2.5 text-right text-muted-foreground">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
