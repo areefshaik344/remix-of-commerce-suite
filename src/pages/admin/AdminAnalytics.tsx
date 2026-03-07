@@ -14,10 +14,10 @@ export default function AdminAnalytics() {
       <h1 className="font-display text-xl font-bold">Analytics & Reports</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value={fmt(analyticsData.totalRevenue)} icon={DollarSign} trend={14} />
-        <StatCard title="Total Orders" value={analyticsData.totalOrders.toLocaleString()} icon={ShoppingCart} trend={8} />
-        <StatCard title="Total Customers" value={analyticsData.totalCustomers.toLocaleString()} icon={Users} trend={12} />
-        <StatCard title="Active Vendors" value={String(analyticsData.totalVendors)} icon={Store} trend={5} />
+        <StatCard title="Total Revenue" value={fmt(analyticsData.totalRevenue)} icon={DollarSign} change="+14%" changeType="positive" />
+        <StatCard title="Total Orders" value={analyticsData.totalOrders.toLocaleString()} icon={ShoppingCart} change="+8%" changeType="positive" />
+        <StatCard title="Total Customers" value={analyticsData.totalCustomers.toLocaleString()} icon={Users} change="+12%" changeType="positive" />
+        <StatCard title="Active Vendors" value={String(analyticsData.totalVendors)} icon={Store} change="+5%" changeType="positive" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -30,9 +30,9 @@ export default function VendorFinancials() {
       <h1 className="font-display text-xl font-bold">Financial Reports</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value="₹89.5L" icon={DollarSign} trend={12} />
-        <StatCard title="This Month" value="₹12.3L" icon={TrendingUp} trend={-5} />
-        <StatCard title="Pending Payout" value="₹9.8L" icon={Wallet} trend={0} />
+        <StatCard title="Total Revenue" value="₹89.5L" icon={DollarSign} change="+12%" changeType="positive" />
+        <StatCard title="This Month" value="₹12.3L" icon={TrendingUp} change="-5%" changeType="negative" />
+        <StatCard title="Pending Payout" value="₹9.8L" icon={Wallet} change="Processing" changeType="neutral" />
         <StatCard title="Commission Rate" value="10%" icon={ArrowDownToLine} />
       </div>
 
