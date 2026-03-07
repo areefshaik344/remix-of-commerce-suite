@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingCart, Star, DollarSign, Settings, Users, Store, Tag, BarChart3, Image } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Star, DollarSign, Settings, Users, Store, Tag, BarChart3, Image, Ticket } from "lucide-react";
 
 import CustomerLayout from "@/layouts/CustomerLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
@@ -61,6 +61,7 @@ const adminNav = [
   { title: "Products", url: "/admin/products", icon: Package },
   { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
   { title: "Categories", url: "/admin/categories", icon: Tag },
+  { title: "Coupons", url: "/admin/coupons", icon: Ticket },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "CMS", url: "/admin/cms", icon: Image },
   { title: "Settings", url: "/admin/settings", icon: Settings },
