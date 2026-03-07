@@ -32,6 +32,13 @@ import AdminProducts from "@/pages/admin/AdminProducts";
 import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminCategories from "@/pages/admin/AdminCategories";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
+import AdminCMS from "@/pages/admin/AdminCMS";
+import AdminSettings from "@/pages/admin/AdminSettings";
+import AdminCoupons from "@/pages/admin/AdminCoupons";
+
+import VendorCoupons from "@/pages/vendor/VendorCoupons";
+
+import NotificationsPage from "@/pages/customer/NotificationsPage";
 
 import NotFound from "@/pages/NotFound";
 
@@ -41,6 +48,7 @@ const vendorNav = [
   { title: "Dashboard", url: "/vendor", icon: LayoutDashboard },
   { title: "Products", url: "/vendor/products", icon: Package },
   { title: "Orders", url: "/vendor/orders", icon: ShoppingCart },
+  { title: "Coupons", url: "/vendor/coupons", icon: Tag },
   { title: "Reviews", url: "/vendor/reviews", icon: Star },
   { title: "Financials", url: "/vendor/financials", icon: DollarSign },
   { title: "Settings", url: "/vendor/settings", icon: Settings },
@@ -76,6 +84,7 @@ const App = () => (
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
 
           {/* Vendor */}
@@ -84,6 +93,7 @@ const App = () => (
             <Route path="/vendor/products" element={<VendorProducts />} />
             <Route path="/vendor/orders" element={<VendorOrders />} />
             <Route path="/vendor/reviews" element={<VendorReviews />} />
+            <Route path="/vendor/coupons" element={<VendorCoupons />} />
             <Route path="/vendor/financials" element={<VendorFinancials />} />
             <Route path="/vendor/settings" element={<VendorSettings />} />
           </Route>
@@ -96,7 +106,10 @@ const App = () => (
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/coupons" element={<AdminCoupons />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/cms" element={<AdminCMS />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
