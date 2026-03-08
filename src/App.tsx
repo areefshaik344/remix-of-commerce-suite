@@ -24,6 +24,7 @@ import VendorOrders from "@/pages/vendor/VendorOrders";
 import VendorReviews from "@/pages/vendor/VendorReviews";
 import VendorFinancials from "@/pages/vendor/VendorFinancials";
 import VendorSettings from "@/pages/vendor/VendorSettings";
+import VendorProductForm from "@/pages/vendor/VendorProductForm";
 
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
@@ -92,6 +93,7 @@ const App = () => (
           <Route element={<DashboardLayout title="Vendor Portal" navItems={vendorNav} />}>
             <Route path="/vendor" element={<VendorDashboard />} />
             <Route path="/vendor/products" element={<VendorProducts />} />
+            <Route path="/vendor/products/new" element={<VendorProductForm />} />
             <Route path="/vendor/orders" element={<VendorOrders />} />
             <Route path="/vendor/reviews" element={<VendorReviews />} />
             <Route path="/vendor/coupons" element={<VendorCoupons />} />

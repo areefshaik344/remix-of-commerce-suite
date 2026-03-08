@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { products } from "@/data/mock-products";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Trash2, Star } from "lucide-react";
 
 export default function VendorProducts() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const vendorProducts = products.filter(p => p.vendorId === "v-1");
   const filtered = vendorProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
@@ -18,7 +20,7 @@ export default function VendorProducts() {
           <h1 className="font-display text-xl font-bold">Products</h1>
           <p className="text-sm text-muted-foreground">{vendorProducts.length} products in your store</p>
         </div>
-        <Button className="gap-1.5"><Plus className="h-4 w-4" /> Add Product</Button>
+        <Button className="gap-1.5" onClick={() => navigate("/vendor/products/new")}><Plus className="h-4 w-4" /> Add Product</Button>
       </div>
 
       <div className="relative max-w-sm">
