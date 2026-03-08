@@ -18,9 +18,10 @@ export default function AdminSettings() {
       </div>
 
       <Tabs defaultValue="general">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="tax">Tax</TabsTrigger>
           <TabsTrigger value="shipping">Shipping</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
@@ -124,6 +125,61 @@ export default function AdminSettings() {
                 <Switch defaultChecked />
               </div>
               <Button>Save Changes</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tax" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Tax Configuration</CardTitle>
+              <CardDescription>Set GST and tax rules for the platform</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Default GST Rate (%)</Label>
+                  <Input type="number" defaultValue="18" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Platform GSTIN</Label>
+                  <Input defaultValue="29AABCU9603R1ZM" />
+                </div>
+              </div>
+              <Separator />
+              <p className="text-sm font-medium">Category-wise Tax Rates</p>
+              <div className="space-y-3">
+                {[
+                  { category: "Electronics", rate: "18%" },
+                  { category: "Fashion (Apparel < ₹1000)", rate: "5%" },
+                  { category: "Fashion (Apparel ≥ ₹1000)", rate: "12%" },
+                  { category: "Groceries (Essentials)", rate: "0%" },
+                  { category: "Books", rate: "0%" },
+                  { category: "Beauty & Personal Care", rate: "18%" },
+                  { category: "Home & Living", rate: "12%" },
+                ].map(t => (
+                  <div key={t.category} className="flex items-center justify-between py-1">
+                    <span className="text-sm">{t.category}</span>
+                    <Input defaultValue={t.rate.replace("%", "")} className="w-20 h-8 text-center text-sm" type="number" />
+                  </div>
+                ))}
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Include Tax in Display Price</Label>
+                  <p className="text-xs text-muted-foreground">Show prices inclusive of GST</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Auto-generate Tax Invoices</Label>
+                  <p className="text-xs text-muted-foreground">Automatically create GST invoices for each order</p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <Button>Save Tax Settings</Button>
             </CardContent>
           </Card>
         </TabsContent>
