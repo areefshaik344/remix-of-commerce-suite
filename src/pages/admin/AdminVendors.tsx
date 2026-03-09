@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { vendors } from "@/data/mock-users";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,7 @@ import { Check, X, Star, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function AdminVendors() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-4">
       <div>
@@ -31,7 +33,7 @@ export default function AdminVendors() {
               </thead>
               <tbody>
                 {vendors.map(v => (
-                  <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/vendors/${v.id}`)}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{v.logo}</span>

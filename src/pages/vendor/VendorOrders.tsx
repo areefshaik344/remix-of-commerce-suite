@@ -3,8 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function VendorOrders() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("all");
   const filtered = statusFilter === "all" ? orders : orders.filter(o => o.status === statusFilter);
 
@@ -45,7 +47,7 @@ export default function VendorOrders() {
               </thead>
               <tbody>
                 {filtered.map(order => (
-                  <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/vendor/orders/${order.id}`)}>
                     <td className="p-3 font-medium">{order.id}</td>
                     <td className="p-3 text-muted-foreground max-w-[200px] truncate">{order.items.map(i => i.productName).join(", ")}</td>
                     <td className="p-3 text-muted-foreground">{order.userId}</td>

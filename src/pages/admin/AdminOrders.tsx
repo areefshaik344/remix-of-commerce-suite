@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Eye } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning",
@@ -17,6 +18,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminOrders() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const filtered = orders.filter(o => o.id.toLowerCase().includes(search.toLowerCase()));
 
@@ -58,7 +60,7 @@ export default function AdminOrders() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{new Date(o.createdAt).toLocaleDateString("en-IN")}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/orders/${o.id}`)}><Eye className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}

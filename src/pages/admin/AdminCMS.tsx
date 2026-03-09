@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +35,7 @@ const pages = [
 ];
 
 export default function AdminCMS() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("banners");
 
   return (
@@ -54,7 +56,7 @@ export default function AdminCMS() {
 
         <TabsContent value="banners" className="space-y-4">
           <div className="flex justify-end">
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Banner</Button>
+            <Button size="sm" onClick={() => navigate("/admin/cms/banners/new")}><Plus className="h-4 w-4 mr-1" /> Add Banner</Button>
           </div>
           <Card>
             <CardContent className="p-0">
@@ -86,8 +88,8 @@ export default function AdminCMS() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
+                           <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/cms/banners/${b.id}/edit`)}><Eye className="h-4 w-4" /></Button>
+                           <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/cms/banners/${b.id}/edit`)}><Pencil className="h-4 w-4" /></Button>
                           <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                       </TableCell>

@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Eye, Ban, Check } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminProducts() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -62,7 +64,7 @@ export default function AdminProducts() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/products/${p.id}`)}><Eye className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"><Ban className="h-4 w-4" /></Button>
                     </div>
                   </TableCell>

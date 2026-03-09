@@ -4,6 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, Wallet, ArrowDownToLine } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const revenueData = [
   { month: "Sep", revenue: 820000, payout: 738000 },
@@ -25,9 +27,13 @@ const payouts = [
 const fmt = (p: number) => `₹${(p / 100000).toFixed(1)}L`;
 
 export default function VendorFinancials() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-xl font-bold">Financial Reports</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-xl font-bold">Financial Reports</h1>
+        <Button variant="outline" size="sm" onClick={() => navigate("/vendor/financials/payouts")}>View Payout History</Button>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Total Revenue" value="₹89.5L" icon={DollarSign} change="+12%" changeType="positive" />
