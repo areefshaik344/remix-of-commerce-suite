@@ -18,6 +18,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminOrders() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const filtered = orders.filter(o => o.id.toLowerCase().includes(search.toLowerCase()));
 
