@@ -56,7 +56,7 @@ export default function AdminCMS() {
 
         <TabsContent value="banners" className="space-y-4">
           <div className="flex justify-end">
-            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Banner</Button>
+            <Button size="sm" onClick={() => navigate("/admin/cms/banners/new")}><Plus className="h-4 w-4 mr-1" /> Add Banner</Button>
           </div>
           <Card>
             <CardContent className="p-0">
