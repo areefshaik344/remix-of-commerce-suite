@@ -31,7 +31,7 @@ export default function AdminVendors() {
               </thead>
               <tbody>
                 {vendors.map(v => (
-                  <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/vendors/${v.id}`)}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{v.logo}</span>
