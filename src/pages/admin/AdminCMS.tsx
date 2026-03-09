@@ -35,6 +35,7 @@ const pages = [
 ];
 
 export default function AdminCMS() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("banners");
 
   return (
