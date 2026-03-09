@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function VendorOrders() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("all");
   const filtered = statusFilter === "all" ? orders : orders.filter(o => o.status === statusFilter);
 
