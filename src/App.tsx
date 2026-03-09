@@ -21,23 +21,33 @@ import ProfilePage from "@/pages/customer/ProfilePage";
 import VendorDashboard from "@/pages/vendor/VendorDashboard";
 import VendorProducts from "@/pages/vendor/VendorProducts";
 import VendorProductForm from "@/pages/vendor/VendorProductForm";
+import VendorProductEdit from "@/pages/vendor/VendorProductEdit";
 import VendorOrders from "@/pages/vendor/VendorOrders";
+import VendorOrderDetail from "@/pages/vendor/VendorOrderDetail";
 import VendorReviews from "@/pages/vendor/VendorReviews";
 import VendorFinancials from "@/pages/vendor/VendorFinancials";
+import VendorPayoutHistory from "@/pages/vendor/VendorPayoutHistory";
 import VendorSettings from "@/pages/vendor/VendorSettings";
 import VendorCoupons from "@/pages/vendor/VendorCoupons";
+import VendorCreateCoupon from "@/pages/vendor/VendorCreateCoupon";
 import VendorOnboarding from "@/pages/vendor/VendorOnboarding";
 import VendorInventory from "@/pages/vendor/VendorInventory";
+import VendorLowStockAlerts from "@/pages/vendor/VendorLowStockAlerts";
 import VendorShipping from "@/pages/vendor/VendorShipping";
 
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminUserDetail from "@/pages/admin/AdminUserDetail";
 import AdminVendors from "@/pages/admin/AdminVendors";
+import AdminVendorDetail from "@/pages/admin/AdminVendorDetail";
 import AdminProducts from "@/pages/admin/AdminProducts";
+import AdminProductDetail from "@/pages/admin/AdminProductDetail";
 import AdminOrders from "@/pages/admin/AdminOrders";
+import AdminOrderDetail from "@/pages/admin/AdminOrderDetail";
 import AdminCategories from "@/pages/admin/AdminCategories";
 import AdminAnalytics from "@/pages/admin/AdminAnalytics";
 import AdminCMS from "@/pages/admin/AdminCMS";
+import AdminBannerForm from "@/pages/admin/AdminBannerForm";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminCoupons from "@/pages/admin/AdminCoupons";
 import AdminCommission from "@/pages/admin/AdminCommission";
@@ -105,12 +115,17 @@ const App = () => (
             <Route path="/vendor" element={<VendorDashboard />} />
             <Route path="/vendor/products" element={<VendorProducts />} />
             <Route path="/vendor/products/new" element={<VendorProductForm />} />
+            <Route path="/vendor/products/:id/edit" element={<VendorProductEdit />} />
             <Route path="/vendor/inventory" element={<VendorInventory />} />
+            <Route path="/vendor/inventory/low-stock" element={<VendorLowStockAlerts />} />
             <Route path="/vendor/orders" element={<VendorOrders />} />
+            <Route path="/vendor/orders/:id" element={<VendorOrderDetail />} />
             <Route path="/vendor/shipping" element={<VendorShipping />} />
             <Route path="/vendor/reviews" element={<VendorReviews />} />
             <Route path="/vendor/coupons" element={<VendorCoupons />} />
+            <Route path="/vendor/coupons/new" element={<VendorCreateCoupon />} />
             <Route path="/vendor/financials" element={<VendorFinancials />} />
+            <Route path="/vendor/financials/payouts" element={<VendorPayoutHistory />} />
             <Route path="/vendor/onboarding" element={<VendorOnboarding />} />
             <Route path="/vendor/settings" element={<VendorSettings />} />
           </Route>
@@ -119,9 +134,13 @@ const App = () => (
           <Route element={<DashboardLayout title="Admin Portal" navItems={adminNav} />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/users/:id" element={<AdminUserDetail />} />
             <Route path="/admin/vendors" element={<AdminVendors />} />
+            <Route path="/admin/vendors/:id" element={<AdminVendorDetail />} />
             <Route path="/admin/products" element={<AdminProducts />} />
+            <Route path="/admin/products/:id" element={<AdminProductDetail />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/commission" element={<AdminCommission />} />
             <Route path="/admin/coupons" element={<AdminCoupons />} />
@@ -129,6 +148,8 @@ const App = () => (
             <Route path="/admin/reporting" element={<AdminReporting />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/cms" element={<AdminCMS />} />
+            <Route path="/admin/cms/banners/new" element={<AdminBannerForm />} />
+            <Route path="/admin/cms/banners/:id/edit" element={<AdminBannerForm />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 

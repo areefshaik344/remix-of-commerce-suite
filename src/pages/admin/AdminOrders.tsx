@@ -60,7 +60,7 @@ export default function AdminOrders() {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{new Date(o.createdAt).toLocaleDateString("en-IN")}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Eye className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/admin/orders/${o.id}`)}><Eye className="h-4 w-4" /></Button>
                   </TableCell>
                 </TableRow>
               ))}

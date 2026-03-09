@@ -7,6 +7,7 @@ import { Check, X, Star, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function AdminVendors() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-4">
       <div>

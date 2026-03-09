@@ -20,7 +20,7 @@ export default function VendorCoupons() {
           <h1 className="text-2xl font-display font-bold">Coupons & Promotions</h1>
           <p className="text-sm text-muted-foreground">Create and manage your store discount codes</p>
         </div>
-        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Create Coupon</Button>
+        <Button size="sm" onClick={() => navigate("/vendor/coupons/new")}><Plus className="h-4 w-4 mr-1" /> Create Coupon</Button>
       </div>
 
       <Card>

@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminProducts() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
 
