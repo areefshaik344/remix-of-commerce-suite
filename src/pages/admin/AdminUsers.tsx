@@ -39,7 +39,7 @@ export default function AdminUsers() {
               </thead>
               <tbody>
                 {filtered.map(user => (
-                  <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/users/${user.id}`)}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">{user.name[0]}</div>
