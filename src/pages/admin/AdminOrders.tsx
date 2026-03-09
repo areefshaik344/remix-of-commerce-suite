@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Eye } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning",
