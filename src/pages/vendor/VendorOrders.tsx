@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function VendorOrders() {
   const [statusFilter, setStatusFilter] = useState("all");
