@@ -4,6 +4,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, TrendingUp, Wallet, ArrowDownToLine } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const revenueData = [
   { month: "Sep", revenue: 820000, payout: 738000 },
