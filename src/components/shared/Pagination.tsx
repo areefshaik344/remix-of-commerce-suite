@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -53,8 +54,7 @@ export function usePagination<T>(items: T[], pageSize = 10) {
   const [page, setPage] = useState(1);
   const totalPages = Math.ceil(items.length / pageSize);
   const paginatedItems = items.slice((page - 1) * pageSize, page * pageSize);
-  
-  // Reset page when items change
+
   const itemsLength = items.length;
   useEffect(() => {
     if (page > Math.ceil(itemsLength / pageSize)) setPage(1);
@@ -62,5 +62,3 @@ export function usePagination<T>(items: T[], pageSize = 10) {
 
   return { page, setPage, totalPages, paginatedItems, totalItems: items.length };
 }
-
-import { useState, useEffect } from "react";
