@@ -52,7 +52,7 @@ export default function AdminProducts() {
                 </TableHeader>
                 <TableBody>
                   {paginatedItems.map(p => (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className="cursor-pointer" onClick={() => navigate(`/admin/products/${p.id}`)}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <img src={p.images[0]} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />

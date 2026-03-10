@@ -218,7 +218,18 @@ export default function VendorProductEdit() {
                     {v.options.map((opt, oIdx) => <Badge key={oIdx} variant="outline" className="gap-1">{opt}<X className="h-3 w-3 cursor-pointer" onClick={() => removeVariantOption(vIdx, oIdx)} /></Badge>)}
                   </div>
                   <Input placeholder={`Add ${v.name.toLowerCase()} option...`} className="h-8 text-sm" onKeyDown={e => {
-                    if (e.key === "Enter") { e.preventDefault(); setVariantOptionInput((e.target as HTMLInputElement).value); setTimeout(() => addVariantOption(vIdx), 0); (e.target as HTMLInputElement).value = ""; }
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const val = (e.target as HTMLInputElement).value.trim();
+                      if (val) {
+                        const updated = [...variants];
+                        if (!updated[vIdx].options.includes(val)) {
+                          updated[vIdx].options.push(val);
+                          setVariants(updated);
+                        }
+                        (e.target as HTMLInputElement).value = "";
+                      }
+                    }
                   }} />
                 </div>
               ))}

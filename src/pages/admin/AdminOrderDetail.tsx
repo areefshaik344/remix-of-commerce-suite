@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Package, MapPin, CreditCard, Clock, RotateCcw, Truck } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, Clock, RotateCcw } from "lucide-react";
+import { users } from "@/data/mock-users";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 

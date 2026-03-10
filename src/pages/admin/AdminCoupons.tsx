@@ -28,7 +28,7 @@ export default function AdminCoupons() {
           <h1 className="text-2xl font-display font-bold">Coupons & Promotions</h1>
           <p className="text-sm text-muted-foreground">Manage discount codes and promotional campaigns</p>
         </div>
-        <Button size="sm" onClick={() => navigate("/vendor/coupons/new")}><Plus className="h-4 w-4 mr-1" /> Create Coupon</Button>
+        <Button size="sm" onClick={() => navigate("/admin/coupons/new")}><Plus className="h-4 w-4 mr-1" /> Create Coupon</Button>
       </div>
 
       <div className="grid grid-cols-3 gap-4">

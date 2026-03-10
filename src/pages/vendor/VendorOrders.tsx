@@ -2,9 +2,11 @@ import { orders } from "@/data/mock-orders";
 import { users } from "@/data/mock-users";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Search } from "lucide-react";
 import { SearchEmpty } from "@/components/shared/EmptyState";
 import { TablePagination, usePagination } from "@/components/shared/Pagination";
 
@@ -13,10 +15,23 @@ const getUserName = (userId: string) => {
   return user?.name || userId;
 };
 
+const statusColors: Record<string, string> = {
+  pending: "bg-warning/10 text-warning",
+  confirmed: "bg-primary/10 text-primary",
+  shipped: "bg-accent/10 text-accent-foreground",
+  delivered: "bg-success/10 text-success",
+  cancelled: "bg-destructive/10 text-destructive",
+};
+
 export default function VendorOrders() {
   const navigate = useNavigate();
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const filtered = statusFilter === "all" ? orders : orders.filter(o => o.status === statusFilter);
+
+  const filtered = orders
+    .filter(o => o.id.toLowerCase().includes(search.toLowerCase()) || o.items.some(i => i.productName.toLowerCase().includes(search.toLowerCase())))
+    .filter(o => statusFilter === "all" || o.status === statusFilter);
+
   const { page, setPage, totalPages, paginatedItems, totalItems } = usePagination(filtered, 8);
 
   return (
@@ -25,6 +40,13 @@ export default function VendorOrders() {
         <div>
           <h1 className="font-display text-xl font-bold">Orders</h1>
           <p className="text-sm text-muted-foreground">{orders.length} total orders</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by order ID or product..." className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36 text-xs"><SelectValue /></SelectTrigger>
@@ -42,7 +64,7 @@ export default function VendorOrders() {
       <Card className="shadow-card">
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <SearchEmpty query={statusFilter} />
+            <SearchEmpty query={search || statusFilter} />
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -61,11 +83,11 @@ export default function VendorOrders() {
                   <tbody>
                     {paginatedItems.map(order => (
                       <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/vendor/orders/${order.id}`)}>
-                        <td className="p-3 font-medium">{order.id}</td>
+                        <td className="p-3 font-mono text-sm font-medium">{order.id}</td>
                         <td className="p-3 text-muted-foreground max-w-[200px] truncate">{order.items.map(i => i.productName).join(", ")}</td>
                         <td className="p-3 text-muted-foreground">{getUserName(order.userId)}</td>
                         <td className="p-3 text-center">
-                          <Badge variant={order.status === "delivered" ? "default" : "secondary"} className="text-xs capitalize">{order.status}</Badge>
+                          <Badge variant="secondary" className={`text-xs capitalize border-0 ${statusColors[order.status] || ""}`}>{order.status}</Badge>
                         </td>
                         <td className="p-3 text-muted-foreground">{order.paymentMethod}</td>
                         <td className="p-3 text-right font-medium">₹{order.total.toLocaleString("en-IN")}</td>
