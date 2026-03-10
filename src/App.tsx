@@ -124,6 +124,7 @@ const App = () => (
             <Route path="/vendor/orders/:id" element={<VendorOrderDetail />} />
             <Route path="/vendor/shipping" element={<VendorShipping />} />
             <Route path="/vendor/reviews" element={<VendorReviews />} />
+            <Route path="/vendor/analytics" element={<VendorAnalytics />} />
             <Route path="/vendor/coupons" element={<VendorCoupons />} />
             <Route path="/vendor/coupons/new" element={<VendorCreateCoupon />} />
             <Route path="/vendor/financials" element={<VendorFinancials />} />
