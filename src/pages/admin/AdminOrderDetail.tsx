@@ -151,7 +151,7 @@ export default function AdminOrderDetail() {
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4" /> Shipping</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm">{order.shippingAddress}</p>
-              <p className="text-xs text-muted-foreground mt-2">Customer: {order.userId}</p>
+              <p className="text-xs text-muted-foreground mt-2">Customer: {users.find(u => u.id === order.userId)?.name || order.userId}</p>
             </CardContent>
           </Card>
 
