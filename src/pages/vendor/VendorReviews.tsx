@@ -1,11 +1,26 @@
+import { useState } from "react";
 import { reviews } from "@/data/mock-orders";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, ThumbsUp, MessageSquare } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Star, ThumbsUp, MessageSquare, Send } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "@/hooks/use-toast";
 
 export default function VendorReviews() {
   const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+  const [replyTarget, setReplyTarget] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replies, setReplies] = useState<Record<string, string>>({});
+
+  const handleReply = () => {
+    if (!replyText.trim() || !replyTarget) return;
+    setReplies(prev => ({ ...prev, [replyTarget]: replyText }));
+    toast({ title: "Reply posted", description: "Your response is now visible to the customer." });
+    setReplyText("");
+    setReplyTarget(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -43,15 +58,47 @@ export default function VendorReviews() {
                   <div className="flex items-center gap-3 mt-2">
                     <span className="flex items-center gap-1 text-xs text-muted-foreground"><ThumbsUp className="h-3 w-3" /> {review.helpful} helpful</span>
                   </div>
+                  {replies[review.id] && (
+                    <div className="mt-3 p-3 rounded-lg bg-muted/50 border-l-2 border-primary">
+                      <p className="text-xs font-medium text-primary mb-1">Your Reply</p>
+                      <p className="text-sm text-muted-foreground">{replies[review.id]}</p>
+                    </div>
+                  )}
                 </div>
-                <Button variant="outline" size="sm" className="gap-1 shrink-0">
-                  <MessageSquare className="h-3 w-3" /> Reply
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 shrink-0"
+                  onClick={() => { setReplyTarget(review.id); setReplyText(""); }}
+                  disabled={!!replies[review.id]}
+                >
+                  <MessageSquare className="h-3 w-3" /> {replies[review.id] ? "Replied" : "Reply"}
                 </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <Dialog open={!!replyTarget} onOpenChange={() => setReplyTarget(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Reply to Review</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <Textarea
+              value={replyText}
+              onChange={e => setReplyText(e.target.value)}
+              placeholder="Write a professional response to the customer..."
+              rows={4}
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setReplyTarget(null)}>Cancel</Button>
+              <Button onClick={handleReply} disabled={!replyText.trim()} className="gap-1.5">
+                <Send className="h-3.5 w-3.5" /> Send Reply
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

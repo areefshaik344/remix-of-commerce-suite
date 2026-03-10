@@ -34,6 +34,7 @@ import VendorOnboarding from "@/pages/vendor/VendorOnboarding";
 import VendorInventory from "@/pages/vendor/VendorInventory";
 import VendorLowStockAlerts from "@/pages/vendor/VendorLowStockAlerts";
 import VendorShipping from "@/pages/vendor/VendorShipping";
+import VendorAnalytics from "@/pages/vendor/VendorAnalytics";
 
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
@@ -68,6 +69,7 @@ const vendorNav = [
   { title: "Shipping", url: "/vendor/shipping", icon: Truck },
   { title: "Coupons", url: "/vendor/coupons", icon: Tag },
   { title: "Reviews", url: "/vendor/reviews", icon: Star },
+  { title: "Analytics", url: "/vendor/analytics", icon: BarChart3 },
   { title: "Financials", url: "/vendor/financials", icon: DollarSign },
   { title: "Onboarding", url: "/vendor/onboarding", icon: ClipboardCheck },
   { title: "Settings", url: "/vendor/settings", icon: Settings },
@@ -122,6 +124,7 @@ const App = () => (
             <Route path="/vendor/orders/:id" element={<VendorOrderDetail />} />
             <Route path="/vendor/shipping" element={<VendorShipping />} />
             <Route path="/vendor/reviews" element={<VendorReviews />} />
+            <Route path="/vendor/analytics" element={<VendorAnalytics />} />
             <Route path="/vendor/coupons" element={<VendorCoupons />} />
             <Route path="/vendor/coupons/new" element={<VendorCreateCoupon />} />
             <Route path="/vendor/financials" element={<VendorFinancials />} />
