@@ -34,6 +34,7 @@ import VendorOnboarding from "@/pages/vendor/VendorOnboarding";
 import VendorInventory from "@/pages/vendor/VendorInventory";
 import VendorLowStockAlerts from "@/pages/vendor/VendorLowStockAlerts";
 import VendorShipping from "@/pages/vendor/VendorShipping";
+import VendorAnalytics from "@/pages/vendor/VendorAnalytics";
 
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
