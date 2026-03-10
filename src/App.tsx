@@ -69,6 +69,7 @@ const vendorNav = [
   { title: "Shipping", url: "/vendor/shipping", icon: Truck },
   { title: "Coupons", url: "/vendor/coupons", icon: Tag },
   { title: "Reviews", url: "/vendor/reviews", icon: Star },
+  { title: "Analytics", url: "/vendor/analytics", icon: BarChart3 },
   { title: "Financials", url: "/vendor/financials", icon: DollarSign },
   { title: "Onboarding", url: "/vendor/onboarding", icon: ClipboardCheck },
   { title: "Settings", url: "/vendor/settings", icon: Settings },
