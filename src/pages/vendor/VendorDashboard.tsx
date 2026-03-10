@@ -1,12 +1,24 @@
 import { StatCard } from "@/components/shared/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { analyticsData, orders } from "@/data/mock-orders";
 import { DollarSign, Package, ShoppingCart, TrendingUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = ["hsl(142 71% 45%)", "hsl(221 83% 53%)", "hsl(38 92% 50%)", "hsl(280 67% 54%)", "hsl(0 72% 51%)", "hsl(220 10% 46%)"];
 
+const statusColors: Record<string, string> = {
+  delivered: "bg-success/10 text-success",
+  cancelled: "bg-destructive/10 text-destructive",
+  shipped: "bg-accent/10 text-accent-foreground",
+  pending: "bg-warning/10 text-warning",
+  confirmed: "bg-primary/10 text-primary",
+};
+
 export default function VendorDashboard() {
+  const navigate = useNavigate();
   const revenueData = analyticsData.monthlyRevenue.map(d => ({ ...d, revenue: d.revenue / 100000 }));
   const statusData = analyticsData.ordersByStatus;
 
@@ -56,7 +68,12 @@ export default function VendorDashboard() {
       </div>
 
       <Card className="shadow-card">
-        <CardHeader className="pb-2"><CardTitle className="text-sm font-display">Recent Orders</CardTitle></CardHeader>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-display">Recent Orders</CardTitle>
+            <Button variant="link" size="sm" className="text-xs" onClick={() => navigate("/vendor/orders")}>View All →</Button>
+          </div>
+        </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -71,10 +88,12 @@ export default function VendorDashboard() {
               </thead>
               <tbody>
                 {orders.slice(0, 5).map(order => (
-                  <tr key={order.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                    <td className="py-2.5 font-medium">{order.id}</td>
+                  <tr key={order.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/vendor/orders/${order.id}`)}>
+                    <td className="py-2.5 font-mono font-medium">{order.id}</td>
                     <td className="py-2.5 text-muted-foreground">{order.items[0]?.productName}</td>
-                    <td className="py-2.5"><span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${order.status === "delivered" ? "bg-success/10 text-success" : order.status === "cancelled" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{order.status}</span></td>
+                    <td className="py-2.5">
+                      <Badge variant="secondary" className={`text-xs capitalize border-0 ${statusColors[order.status] || ""}`}>{order.status}</Badge>
+                    </td>
                     <td className="py-2.5 text-right font-medium">₹{order.total.toLocaleString("en-IN")}</td>
                     <td className="py-2.5 text-right text-muted-foreground">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
                   </tr>

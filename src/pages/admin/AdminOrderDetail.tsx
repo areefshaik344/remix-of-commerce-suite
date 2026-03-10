@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, Package, MapPin, CreditCard, Clock, RotateCcw, Truck } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, Clock, RotateCcw } from "lucide-react";
+import { users } from "@/data/mock-users";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 
@@ -151,7 +152,7 @@ export default function AdminOrderDetail() {
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4" /> Shipping</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm">{order.shippingAddress}</p>
-              <p className="text-xs text-muted-foreground mt-2">Customer: {order.userId}</p>
+              <p className="text-xs text-muted-foreground mt-2">Customer: {users.find(u => u.id === order.userId)?.name || order.userId}</p>
             </CardContent>
           </Card>
 

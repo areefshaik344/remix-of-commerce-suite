@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LayoutDashboard, Package, ShoppingCart, Star, DollarSign, Settings, Users, Store, Tag, BarChart3, Image, Ticket, Truck, Archive, ClipboardCheck, Percent, ShieldAlert, FileBarChart } from "lucide-react";
+import AdminCreateCoupon from "@/pages/admin/AdminCreateCoupon";
 
 import CustomerLayout from "@/layouts/CustomerLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
@@ -147,6 +148,7 @@ const App = () => (
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/commission" element={<AdminCommission />} />
             <Route path="/admin/coupons" element={<AdminCoupons />} />
+            <Route path="/admin/coupons/new" element={<AdminCreateCoupon />} />
             <Route path="/admin/fraud" element={<AdminFraud />} />
             <Route path="/admin/reporting" element={<AdminReporting />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
