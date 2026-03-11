@@ -4,11 +4,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LayoutDashboard, Package, ShoppingCart, Star, DollarSign, Settings, Users, Store, Tag, BarChart3, Image, Ticket, Truck, Archive, ClipboardCheck, Percent, ShieldAlert, FileBarChart } from "lucide-react";
-import AdminCreateCoupon from "@/pages/admin/AdminCreateCoupon";
 
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CustomerLayout from "@/layouts/CustomerLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
 
+// Auth pages
+import LoginPage from "@/pages/auth/LoginPage";
+import SignupPage from "@/pages/auth/SignupPage";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import VendorRegisterPage from "@/pages/auth/VendorRegisterPage";
+import VendorRegisterSuccessPage from "@/pages/auth/VendorRegisterSuccessPage";
+
+// Customer pages
 import HomePage from "@/pages/customer/HomePage";
 import ProductsPage from "@/pages/customer/ProductsPage";
 import ProductDetailPage from "@/pages/customer/ProductDetailPage";
@@ -18,7 +26,9 @@ import OrderSuccessPage from "@/pages/customer/OrderSuccessPage";
 import OrdersPage from "@/pages/customer/OrdersPage";
 import WishlistPage from "@/pages/customer/WishlistPage";
 import ProfilePage from "@/pages/customer/ProfilePage";
+import NotificationsPage from "@/pages/customer/NotificationsPage";
 
+// Vendor pages
 import VendorDashboard from "@/pages/vendor/VendorDashboard";
 import VendorProducts from "@/pages/vendor/VendorProducts";
 import VendorProductForm from "@/pages/vendor/VendorProductForm";
@@ -37,6 +47,7 @@ import VendorLowStockAlerts from "@/pages/vendor/VendorLowStockAlerts";
 import VendorShipping from "@/pages/vendor/VendorShipping";
 import VendorAnalytics from "@/pages/vendor/VendorAnalytics";
 
+// Admin pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminUserDetail from "@/pages/admin/AdminUserDetail";
@@ -52,11 +63,10 @@ import AdminCMS from "@/pages/admin/AdminCMS";
 import AdminBannerForm from "@/pages/admin/AdminBannerForm";
 import AdminSettings from "@/pages/admin/AdminSettings";
 import AdminCoupons from "@/pages/admin/AdminCoupons";
+import AdminCreateCoupon from "@/pages/admin/AdminCreateCoupon";
 import AdminCommission from "@/pages/admin/AdminCommission";
 import AdminFraud from "@/pages/admin/AdminFraud";
 import AdminReporting from "@/pages/admin/AdminReporting";
-
-import NotificationsPage from "@/pages/customer/NotificationsPage";
 
 import NotFound from "@/pages/NotFound";
 
@@ -99,22 +109,33 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Customer */}
+          {/* Auth - public routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/vendor/register" element={<VendorRegisterPage />} />
+          <Route path="/vendor/register/success" element={<VendorRegisterSuccessPage />} />
+
+          {/* Customer - public browsing, auth for checkout/profile */}
           <Route element={<CustomerLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/order-success" element={<OrderSuccessPage />} />
-            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/checkout" element={<ProtectedRoute allowedRoles={["customer"]}><CheckoutPage /></ProtectedRoute>} />
+            <Route path="/order-success" element={<ProtectedRoute allowedRoles={["customer"]}><OrderSuccessPage /></ProtectedRoute>} />
+            <Route path="/orders" element={<ProtectedRoute allowedRoles={["customer"]}><OrdersPage /></ProtectedRoute>} />
             <Route path="/wishlist" element={<WishlistPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/profile" element={<ProtectedRoute allowedRoles={["customer"]}><ProfilePage /></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute allowedRoles={["customer"]}><NotificationsPage /></ProtectedRoute>} />
           </Route>
 
-          {/* Vendor */}
-          <Route element={<DashboardLayout title="Vendor Portal" navItems={vendorNav} />}>
+          {/* Vendor - protected */}
+          <Route element={
+            <ProtectedRoute allowedRoles={["vendor", "admin"]}>
+              <DashboardLayout title="Vendor Portal" navItems={vendorNav} />
+            </ProtectedRoute>
+          }>
             <Route path="/vendor" element={<VendorDashboard />} />
             <Route path="/vendor/products" element={<VendorProducts />} />
             <Route path="/vendor/products/new" element={<VendorProductForm />} />
@@ -134,8 +155,12 @@ const App = () => (
             <Route path="/vendor/settings" element={<VendorSettings />} />
           </Route>
 
-          {/* Admin */}
-          <Route element={<DashboardLayout title="Admin Portal" navItems={adminNav} />}>
+          {/* Admin - protected */}
+          <Route element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <DashboardLayout title="Admin Portal" navItems={adminNav} />
+            </ProtectedRoute>
+          }>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/users/:id" element={<AdminUserDetail />} />

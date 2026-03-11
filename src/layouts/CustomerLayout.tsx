@@ -42,7 +42,7 @@ export default function CustomerLayout() {
 
           <div className="flex items-center gap-1">
             {!isAuthenticated ? (
-              <Button size="sm" onClick={() => login("customer")}>Login</Button>
+              <Button size="sm" onClick={() => navigate("/login")}>Login</Button>
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
