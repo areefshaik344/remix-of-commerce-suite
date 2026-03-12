@@ -38,8 +38,8 @@ export default function SignupPage() {
     await new Promise(r => setTimeout(r, 1000));
     signupWithCredentials(name, email, phone, password);
     setLoading(false);
-    toast({ title: "Account created!", description: "Welcome to MarketHub." });
-    navigate("/");
+    toast({ title: "Account created!", description: "Please verify your email." });
+    navigate("/verify-email");
   };
 
   const passwordStrength = () => {

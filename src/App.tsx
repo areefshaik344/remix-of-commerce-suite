@@ -15,6 +15,7 @@ import SignupPage from "@/pages/auth/SignupPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import VendorRegisterPage from "@/pages/auth/VendorRegisterPage";
 import VendorRegisterSuccessPage from "@/pages/auth/VendorRegisterSuccessPage";
+import EmailVerificationPage from "@/pages/auth/EmailVerificationPage";
 
 // Customer pages
 import HomePage from "@/pages/customer/HomePage";
@@ -24,9 +25,12 @@ import CartPage from "@/pages/customer/CartPage";
 import CheckoutPage from "@/pages/customer/CheckoutPage";
 import OrderSuccessPage from "@/pages/customer/OrderSuccessPage";
 import OrdersPage from "@/pages/customer/OrdersPage";
+import OrderDetailPage from "@/pages/customer/OrderDetailPage";
 import WishlistPage from "@/pages/customer/WishlistPage";
 import ProfilePage from "@/pages/customer/ProfilePage";
 import NotificationsPage from "@/pages/customer/NotificationsPage";
+import VendorStorePage from "@/pages/customer/VendorStorePage";
+import ComparePage from "@/pages/customer/ComparePage";
 
 // Vendor pages
 import VendorDashboard from "@/pages/vendor/VendorDashboard";
@@ -112,6 +116,7 @@ const App = () => (
           {/* Auth - public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/vendor/register" element={<VendorRegisterPage />} />
           <Route path="/vendor/register/success" element={<VendorRegisterSuccessPage />} />
@@ -122,9 +127,12 @@ const App = () => (
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/store/:vendorSlug" element={<VendorStorePage />} />
+            <Route path="/compare" element={<ComparePage />} />
             <Route path="/checkout" element={<ProtectedRoute allowedRoles={["customer"]}><CheckoutPage /></ProtectedRoute>} />
             <Route path="/order-success" element={<ProtectedRoute allowedRoles={["customer"]}><OrderSuccessPage /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute allowedRoles={["customer"]}><OrdersPage /></ProtectedRoute>} />
+            <Route path="/orders/:id" element={<ProtectedRoute allowedRoles={["customer"]}><OrderDetailPage /></ProtectedRoute>} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/profile" element={<ProtectedRoute allowedRoles={["customer"]}><ProfilePage /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute allowedRoles={["customer"]}><NotificationsPage /></ProtectedRoute>} />

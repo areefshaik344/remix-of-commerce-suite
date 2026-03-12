@@ -1,5 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { products } from "@/data/mock-products";
+import { vendors } from "@/data/mock-users";
 import { reviews } from "@/data/mock-orders";
 import { useStore } from "@/store/useStore";
 import { Button } from "@/components/ui/button";
@@ -7,23 +8,33 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp } from "lucide-react";
-import { useState } from "react";
+import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
+import { PincodeChecker } from "@/components/shared/PincodeChecker";
+import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store } from "lucide-react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const product = products.find(p => p.slug === slug);
-  const { addToCart, toggleWishlist, isInWishlist } = useStore();
+  const { addToCart, toggleWishlist, isInWishlist, addToCompare, isInCompare, compareList, addToRecentlyViewed } = useStore();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [showReviewForm, setShowReviewForm] = useState(false);
+
+  useEffect(() => {
+    if (product) addToRecentlyViewed(product.id);
+  }, [product?.id]);
 
   if (!product) return <div className="container py-20 text-center text-muted-foreground">Product not found</div>;
 
   const productReviews = reviews.filter(r => r.productId === product.id);
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
   const wishlisted = isInWishlist(product.id);
+  const inCompare = isInCompare(product.id);
+  const vendor = vendors.find(v => v.id === product.vendorId);
+  const vendorSlug = vendor?.storeName.toLowerCase().replace(/\s+/g, "-");
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
 
   return (
@@ -79,6 +90,20 @@ export default function ProductDetailPage() {
             <p className="text-xs text-muted-foreground">Inclusive of all taxes</p>
           </div>
 
+          {/* Vendor link */}
+          {vendor && (
+            <Link
+              to={`/store/${vendorSlug}`}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors bg-muted/50 rounded-lg px-3 py-2"
+            >
+              <Store className="h-4 w-4" />
+              <span>Sold by <span className="font-medium text-foreground">{vendor.storeName}</span></span>
+              <div className="flex items-center gap-0.5 ml-1">
+                {vendor.rating} <Star className="h-3 w-3 fill-secondary text-secondary" />
+              </div>
+            </Link>
+          )}
+
           <Separator />
 
           {/* Variants */}
@@ -118,7 +143,20 @@ export default function ProductDetailPage() {
             <Button variant="outline" size="lg" onClick={() => toggleWishlist(product.id)} className={wishlisted ? "text-destructive border-destructive/50" : ""}>
               <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
             </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => addToCompare(product.id)}
+              disabled={inCompare || compareList.length >= 4}
+              className={inCompare ? "text-primary border-primary/50" : ""}
+              title={inCompare ? "Already in compare" : compareList.length >= 4 ? "Max 4 products" : "Add to compare"}
+            >
+              <GitCompareArrows className="h-4 w-4" />
+            </Button>
           </div>
+
+          {/* Pincode Checker */}
+          <PincodeChecker />
 
           {/* Delivery features */}
           <div className="grid grid-cols-3 gap-3 pt-2">
@@ -153,7 +191,19 @@ export default function ProductDetailPage() {
 
       {/* Reviews */}
       <section>
-        <h2 className="font-display text-lg font-bold mb-4">Customer Reviews ({productReviews.length})</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-lg font-bold">Customer Reviews ({productReviews.length})</h2>
+          <Button variant="outline" size="sm" onClick={() => setShowReviewForm(!showReviewForm)}>
+            {showReviewForm ? "Cancel" : "Write a Review"}
+          </Button>
+        </div>
+
+        {showReviewForm && (
+          <div className="mb-6">
+            <WriteReviewForm productId={product.id} onSubmit={() => setShowReviewForm(false)} />
+          </div>
+        )}
+
         {productReviews.length > 0 ? (
           <div className="space-y-3">
             {productReviews.map(review => (
@@ -176,7 +226,7 @@ export default function ProductDetailPage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No reviews yet.</p>
+          <p className="text-sm text-muted-foreground">No reviews yet. Be the first to review!</p>
         )}
       </section>
 

@@ -8,8 +8,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, CreditCard, Banknote, Smartphone, Building2, Check, ChevronLeft } from "lucide-react";
-import { users } from "@/data/mock-users";
+import { MapPin, CreditCard, Banknote, Smartphone, Building2, Check, ChevronLeft, Tag, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const paymentMethods = [
@@ -19,19 +18,38 @@ const paymentMethods = [
   { id: "cod", label: "Cash on Delivery", icon: Banknote, desc: "Pay when you receive" },
 ];
 
+const mockCoupons: Record<string, { discount: number; type: "percent" | "flat"; minOrder: number; label: string }> = {
+  "SAVE10": { discount: 10, type: "percent", minOrder: 1000, label: "10% off" },
+  "FLAT500": { discount: 500, type: "flat", minOrder: 3000, label: "₹500 off" },
+  "WELCOME": { discount: 15, type: "percent", minOrder: 500, label: "15% off (max ₹2000)" },
+  "FREEBIE": { discount: 200, type: "flat", minOrder: 0, label: "₹200 off" },
+};
+
 export default function CheckoutPage() {
-  const { cart, cartTotal, clearCart, isAuthenticated, login } = useStore();
+  const { cart, cartTotal, clearCart, currentUser } = useStore();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedAddress, setSelectedAddress] = useState("a-1");
   const [paymentMethod, setPaymentMethod] = useState("upi");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
-  if (!isAuthenticated) login("customer");
-
-  const customer = users[0];
-  const addresses = customer.addresses || [];
+  const addresses = currentUser?.addresses || [];
   const total = cartTotal();
   const tax = Math.round(total * 0.18);
+
+  // Coupon logic
+  let couponDiscount = 0;
+  if (appliedCoupon && mockCoupons[appliedCoupon]) {
+    const c = mockCoupons[appliedCoupon];
+    if (c.type === "percent") {
+      couponDiscount = Math.min(Math.round(total * c.discount / 100), 2000);
+    } else {
+      couponDiscount = c.discount;
+    }
+  }
+
+  const grandTotal = total + tax - couponDiscount;
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
 
   if (cart.length === 0) {
@@ -42,6 +60,27 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  const handleApplyCoupon = () => {
+    const code = couponCode.trim().toUpperCase();
+    const coupon = mockCoupons[code];
+    if (!coupon) {
+      toast({ title: "Invalid coupon", description: "This coupon code is not valid.", variant: "destructive" });
+      return;
+    }
+    if (total < coupon.minOrder) {
+      toast({ title: "Minimum order not met", description: `This coupon requires a minimum order of ${formatPrice(coupon.minOrder)}.`, variant: "destructive" });
+      return;
+    }
+    setAppliedCoupon(code);
+    toast({ title: "Coupon applied!", description: `${coupon.label} discount applied.` });
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast({ title: "Coupon removed" });
+  };
 
   const handlePlaceOrder = () => {
     clearCart();
@@ -143,15 +182,50 @@ export default function CheckoutPage() {
                 ))}
               </div>
               <Separator />
+
+              {/* Coupon Input */}
+              {!appliedCoupon ? (
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                    <Input
+                      placeholder="Coupon code"
+                      value={couponCode}
+                      onChange={e => setCouponCode(e.target.value.toUpperCase())}
+                      className="pl-8 text-xs h-9"
+                    />
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleApplyCoupon} disabled={!couponCode.trim()}>
+                    Apply
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between bg-success/10 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <Tag className="h-3 w-3 text-success" />
+                    <span className="text-xs font-medium text-success">{appliedCoupon}</span>
+                    <span className="text-xs text-success">(-{formatPrice(couponDiscount)})</span>
+                  </div>
+                  <button onClick={handleRemoveCoupon} className="text-muted-foreground hover:text-destructive">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground">Try: SAVE10, FLAT500, WELCOME, FREEBIE</p>
+
+              <Separator />
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(total)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span className="text-success">Free</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">GST (18%)</span><span>{formatPrice(tax)}</span></div>
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-success"><span>Coupon Discount</span><span>-{formatPrice(couponDiscount)}</span></div>
+                )}
               </div>
               <Separator />
               <div className="flex justify-between font-display font-bold text-lg">
                 <span>Total</span>
-                <span>{formatPrice(total + tax)}</span>
+                <span>{formatPrice(grandTotal)}</span>
               </div>
               <Button className="w-full gap-2" size="lg" onClick={handlePlaceOrder}>
                 <Check className="h-4 w-4" /> Place Order

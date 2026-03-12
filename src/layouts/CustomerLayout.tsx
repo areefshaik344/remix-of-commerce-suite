@@ -2,9 +2,11 @@ import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useStore } from "@/store/useStore";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
+import { CompareBar } from "@/components/shared/CompareBar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Heart, User, Package, ChevronDown, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ShoppingCart, Heart, User, ChevronDown, MapPin } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,12 +14,45 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { categories } from "@/data/mock-products";
+import { useState } from "react";
+
+const deliverablePincodes: Record<string, string> = {
+  "400001": "Mumbai",
+  "400002": "Mumbai",
+  "560001": "Bangalore",
+  "560066": "Bangalore",
+  "110001": "Delhi",
+  "411001": "Pune",
+  "500001": "Hyderabad",
+  "600001": "Chennai",
+  "700001": "Kolkata",
+};
 
 export default function CustomerLayout() {
-  const { cartCount, currentUser, isAuthenticated, login, logout } = useStore();
+  const { cartCount, currentUser, isAuthenticated, logout } = useStore();
   const navigate = useNavigate();
   const count = cartCount();
+  const [locationPincode, setLocationPincode] = useState("400001");
+  const [locationCity, setLocationCity] = useState("Mumbai");
+  const [tempPincode, setTempPincode] = useState("");
+  const [locationOpen, setLocationOpen] = useState(false);
+
+  const handleLocationChange = () => {
+    const city = deliverablePincodes[tempPincode];
+    if (city) {
+      setLocationPincode(tempPincode);
+      setLocationCity(city);
+      setLocationOpen(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -25,7 +60,30 @@ export default function CustomerLayout() {
       <div className="gradient-primary text-primary-foreground">
         <div className="container flex items-center justify-between py-1.5 text-xs">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> Deliver to Mumbai 400001</span>
+            <Dialog open={locationOpen} onOpenChange={setLocationOpen}>
+              <DialogTrigger asChild>
+                <button className="flex items-center gap-1 hover:opacity-80 transition-opacity">
+                  <MapPin className="h-3 w-3" /> Deliver to {locationCity} {locationPincode}
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xs">
+                <DialogHeader>
+                  <DialogTitle>Change Delivery Location</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 pt-2">
+                  <Input
+                    placeholder="Enter 6-digit pincode"
+                    value={tempPincode}
+                    onChange={e => setTempPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    maxLength={6}
+                  />
+                  <Button className="w-full" onClick={handleLocationChange} disabled={tempPincode.length !== 6}>
+                    Update Location
+                  </Button>
+                  <p className="text-xs text-muted-foreground">Try: 400001, 560001, 110001, 411001</p>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
           <RoleSwitcher />
         </div>
@@ -56,6 +114,7 @@ export default function CustomerLayout() {
                   <DropdownMenuItem onClick={() => navigate("/profile")}>My Profile</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/orders")}>My Orders</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/wishlist")}>Wishlist</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/compare")}>Compare</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -99,6 +158,9 @@ export default function CustomerLayout() {
       <main>
         <Outlet />
       </main>
+
+      {/* Compare Bar */}
+      <CompareBar />
 
       {/* Footer */}
       <footer className="mt-12 border-t bg-card">
