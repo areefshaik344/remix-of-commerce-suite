@@ -61,6 +61,17 @@ interface AppState {
   toggleWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
 
+  // Compare
+  compareList: string[];
+  addToCompare: (productId: string) => void;
+  removeFromCompare: (productId: string) => void;
+  clearCompare: () => void;
+  isInCompare: (productId: string) => boolean;
+
+  // Recently Viewed
+  recentlyViewed: string[];
+  addToRecentlyViewed: (productId: string) => void;
+
   // Search
   searchQuery: string;
   setSearchQuery: (query: string) => void;
