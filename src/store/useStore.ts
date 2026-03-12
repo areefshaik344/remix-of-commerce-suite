@@ -61,6 +61,17 @@ interface AppState {
   toggleWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
 
+  // Compare
+  compareList: string[];
+  addToCompare: (productId: string) => void;
+  removeFromCompare: (productId: string) => void;
+  clearCompare: () => void;
+  isInCompare: (productId: string) => boolean;
+
+  // Recently Viewed
+  recentlyViewed: string[];
+  addToRecentlyViewed: (productId: string) => void;
+
   // Search
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -183,6 +194,23 @@ export const useStore = create<AppState>()(
       },
       isInWishlist: (productId) => get().wishlist.includes(productId),
 
+      compareList: [],
+      addToCompare: (productId) => {
+        const { compareList } = get();
+        if (compareList.length >= 4 || compareList.includes(productId)) return;
+        set({ compareList: [...compareList, productId] });
+      },
+      removeFromCompare: (productId) => set({ compareList: get().compareList.filter(id => id !== productId) }),
+      clearCompare: () => set({ compareList: [] }),
+      isInCompare: (productId) => get().compareList.includes(productId),
+
+      recentlyViewed: [],
+      addToRecentlyViewed: (productId) => {
+        const { recentlyViewed } = get();
+        const updated = [productId, ...recentlyViewed.filter(id => id !== productId)].slice(0, 12);
+        set({ recentlyViewed: updated });
+      },
+
       searchQuery: "",
       setSearchQuery: (query) => set({ searchQuery: query }),
 
@@ -197,6 +225,8 @@ export const useStore = create<AppState>()(
         isAuthenticated: state.isAuthenticated,
         cart: state.cart,
         wishlist: state.wishlist,
+        compareList: state.compareList,
+        recentlyViewed: state.recentlyViewed,
         vendorApplications: state.vendorApplications,
       }),
     }

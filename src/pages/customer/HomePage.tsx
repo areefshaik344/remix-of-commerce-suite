@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { categories, banners, featuredProducts, trendingProducts, deals } from "@/data/mock-products";
+import { categories, banners, featuredProducts, trendingProducts, deals, products } from "@/data/mock-products";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Zap, TrendingUp, Star, Truck, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
+import { ArrowRight, Zap, TrendingUp, Star, Truck, ShieldCheck, RotateCcw, Headphones, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useStore } from "@/store/useStore";
 
 const features = [
   { icon: Truck, label: "Free Delivery", sub: "On orders over ₹499" },
@@ -15,6 +16,12 @@ const features = [
 ];
 
 export default function HomePage() {
+  const { recentlyViewed } = useStore();
+  const recentProducts = recentlyViewed
+    .map(id => products.find(p => p.id === id))
+    .filter(Boolean)
+    .slice(0, 6) as typeof products;
+
   return (
     <div className="space-y-8 pb-8">
       {/* Hero Banners */}
@@ -115,6 +122,21 @@ export default function HomePage() {
           {trendingProducts.map(p => <ProductCard key={p.id} product={p} />)}
         </div>
       </section>
+
+      {/* Recently Viewed */}
+      {recentProducts.length > 0 && (
+        <section className="container">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-muted-foreground" />
+              <h2 className="font-display text-lg font-bold">Recently Viewed</h2>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            {recentProducts.map(p => <ProductCard key={p.id} product={p} />)}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

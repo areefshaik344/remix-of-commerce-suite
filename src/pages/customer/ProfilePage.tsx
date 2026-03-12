@@ -1,28 +1,52 @@
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
-import { users } from "@/data/mock-users";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
+import { AddressFormDialog } from "@/components/shared/AddressFormDialog";
 import { User, MapPin, Bell, Shield, Edit2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Address } from "@/data/mock-users";
 
 export default function ProfilePage() {
-  const { isAuthenticated, login } = useStore();
+  const { currentUser } = useStore();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+  const [addresses, setAddresses] = useState<Address[]>(currentUser?.addresses || []);
 
-  if (!isAuthenticated) login("customer");
-  const customer = users[0];
-  const addresses = customer.addresses || [];
+  if (!currentUser) return null;
 
   const handleSave = () => {
     setEditing(false);
     toast({ title: "Profile updated", description: "Your changes have been saved." });
+  };
+
+  const handleEditAddress = (addr: Address) => {
+    setEditingAddress(addr);
+    setAddressDialogOpen(true);
+  };
+
+  const handleAddAddress = () => {
+    setEditingAddress(null);
+    setAddressDialogOpen(true);
+  };
+
+  const handleSaveAddress = (addr: Address) => {
+    setAddresses(prev => {
+      const exists = prev.find(a => a.id === addr.id);
+      if (exists) return prev.map(a => a.id === addr.id ? addr : a);
+      return [...prev, addr];
+    });
+  };
+
+  const handleRemoveAddress = (id: string) => {
+    setAddresses(prev => prev.filter(a => a.id !== id));
+    toast({ title: "Address removed" });
   };
 
   return (
@@ -48,17 +72,17 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-display font-bold text-primary">
-                  {customer.name[0]}
+                  {currentUser.name[0]}
                 </div>
                 <div>
-                  <h3 className="font-display font-semibold">{customer.name}</h3>
-                  <p className="text-sm text-muted-foreground">Member since {new Date(customer.joinedDate).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}</p>
+                  <h3 className="font-display font-semibold">{currentUser.name}</h3>
+                  <p className="text-sm text-muted-foreground">Member since {new Date(currentUser.joinedDate).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><Label className="text-xs">Full Name</Label><Input defaultValue={customer.name} disabled={!editing} className="mt-1" /></div>
-                <div><Label className="text-xs">Email</Label><Input defaultValue={customer.email} disabled={!editing} className="mt-1" /></div>
-                <div><Label className="text-xs">Phone</Label><Input defaultValue={customer.phone} disabled={!editing} className="mt-1" /></div>
+                <div><Label className="text-xs">Full Name</Label><Input defaultValue={currentUser.name} disabled={!editing} className="mt-1" /></div>
+                <div><Label className="text-xs">Email</Label><Input defaultValue={currentUser.email} disabled={!editing} className="mt-1" /></div>
+                <div><Label className="text-xs">Phone</Label><Input defaultValue={currentUser.phone} disabled={!editing} className="mt-1" /></div>
                 <div><Label className="text-xs">Gender</Label><Input defaultValue="Male" disabled={!editing} className="mt-1" /></div>
               </div>
             </CardContent>
@@ -79,14 +103,20 @@ export default function ProfilePage() {
                   <p className="text-sm text-muted-foreground">{addr.city}, {addr.state} - {addr.pincode}</p>
                   <p className="text-xs text-muted-foreground mt-1">📞 {addr.phone}</p>
                   <div className="flex gap-2 mt-3">
-                    <Button variant="outline" size="sm" className="text-xs">Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-xs text-destructive">Remove</Button>
+                    <Button variant="outline" size="sm" className="text-xs" onClick={() => handleEditAddress(addr)}>Edit</Button>
+                    <Button variant="ghost" size="sm" className="text-xs text-destructive" onClick={() => handleRemoveAddress(addr.id)}>Remove</Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
-            <Button variant="outline" className="w-full">+ Add New Address</Button>
+            <Button variant="outline" className="w-full" onClick={handleAddAddress}>+ Add New Address</Button>
           </div>
+          <AddressFormDialog
+            open={addressDialogOpen}
+            onOpenChange={setAddressDialogOpen}
+            address={editingAddress}
+            onSave={handleSaveAddress}
+          />
         </TabsContent>
 
         <TabsContent value="notifications">
