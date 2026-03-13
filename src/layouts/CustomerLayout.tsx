@@ -122,6 +122,7 @@ export default function CustomerLayout() {
               </DropdownMenu>
             )}
 
+            <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => navigate("/wishlist")} className="relative">
               <Heart className="h-4 w-4" />
             </Button>
