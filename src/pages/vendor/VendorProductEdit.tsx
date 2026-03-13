@@ -56,7 +56,7 @@ export default function VendorProductEdit() {
       setStockCount(product.stockCount.toString());
       setImages([...product.images]);
       setVariants(product.variants.map(v => ({ ...v, options: [...v.options] })));
-      setSpecs(Object.entries(product.specs).map(([key, value]) => ({ key, value })));
+      setSpecs(Object.entries(product.specs).map(([key, value]) => ({ key, value: String(value) })));
       setFeatured(product.featured);
     }
   }, [product]);
