@@ -1,6 +1,6 @@
 import { Building2, Users, Globe, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { SEOHead } from "@/components/shared/SEOHead";
+import SEOHead from "@/components/shared/SEOHead";
 
 const stats = [
   { icon: Users, label: "Active Customers", value: "89,000+" },

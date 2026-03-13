@@ -1,5 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { SEOHead } from "@/components/shared/SEOHead";
+import SEOHead from "@/components/shared/SEOHead";
 
 const faqs = [
   { q: "How do I place an order?", a: "Browse products, add them to your cart, and proceed to checkout. Choose your delivery address, payment method, and confirm your order." },

@@ -1,4 +1,4 @@
-import { SEOHead } from "@/components/shared/SEOHead";
+import SEOHead from "@/components/shared/SEOHead";
 
 export default function TermsPage() {
   return (
