@@ -91,7 +91,7 @@ export default function AdminProductDetail() {
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(product.specs).map(([k, v]) => (
-                    <div key={k} className="flex justify-between text-sm py-1 border-b last:border-0"><span className="text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>
+                    <div key={k} className="flex justify-between text-sm py-1 border-b last:border-0"><span className="text-muted-foreground">{k}</span><span className="font-medium">{String(v)}</span></div>
                   ))}
                 </div>
               </CardContent>

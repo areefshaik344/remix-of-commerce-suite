@@ -3,6 +3,7 @@ import { useStore } from "@/store/useStore";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
 import { CompareBar } from "@/components/shared/CompareBar";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -121,6 +122,7 @@ export default function CustomerLayout() {
               </DropdownMenu>
             )}
 
+            <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => navigate("/wishlist")} className="relative">
               <Heart className="h-4 w-4" />
             </Button>

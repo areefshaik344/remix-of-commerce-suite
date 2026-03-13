@@ -176,7 +176,7 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(product.specs).map(([k, v]) => (
                 <div key={k} className="text-sm">
-                  <span className="text-muted-foreground">{k}:</span> <span className="font-medium">{v}</span>
+                  <span className="text-muted-foreground">{k}:</span> <span className="font-medium">{String(v)}</span>
                 </div>
               ))}
             </div>

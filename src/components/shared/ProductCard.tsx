@@ -1,5 +1,6 @@
 import { Product } from "@/data/mock-products";
-import { useStore } from "@/store/useStore";
+import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +9,9 @@ import { Link } from "react-router-dom";
 import { memo, useCallback } from "react";
 
 function ProductCardInner({ product }: { product: Product }) {
-  const addToCart = useStore(s => s.addToCart);
-  const toggleWishlist = useStore(s => s.toggleWishlist);
-  const wishlisted = useStore(s => s.wishlist.includes(product.id));
+  const addToCart = useCartStore(s => s.addToCart);
+  const toggleWishlist = useWishlistStore(s => s.toggleWishlist);
+  const wishlisted = useWishlistStore(s => s.wishlist.includes(product.id));
 
   const handleAddToCart = useCallback(() => addToCart(product), [addToCart, product]);
   const handleToggleWishlist = useCallback(() => toggleWishlist(product.id), [toggleWishlist, product.id]);
