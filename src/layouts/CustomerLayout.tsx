@@ -169,33 +169,33 @@ export default function CustomerLayout() {
             <div>
               <h3 className="font-display font-semibold mb-3">About</h3>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p><Link to="/" className="hover:text-foreground transition-colors">About Us</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Careers</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Press</Link></p>
+                <p><Link to="/about" className="hover:text-foreground transition-colors">About Us</Link></p>
+                <p><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></p>
+                <p><Link to="/vendor/register" className="hover:text-foreground transition-colors">Sell on MarketHub</Link></p>
               </div>
             </div>
             <div>
               <h3 className="font-display font-semibold mb-3">Help</h3>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p><Link to="/" className="hover:text-foreground transition-colors">FAQ</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Shipping</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Returns</Link></p>
+                <p><Link to="/faq" className="hover:text-foreground transition-colors">FAQ</Link></p>
+                <p><Link to="/contact" className="hover:text-foreground transition-colors">Shipping Info</Link></p>
+                <p><Link to="/faq" className="hover:text-foreground transition-colors">Returns</Link></p>
               </div>
             </div>
             <div>
               <h3 className="font-display font-semibold mb-3">Policy</h3>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p><Link to="/" className="hover:text-foreground transition-colors">Privacy</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Terms</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Security</Link></p>
+                <p><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></p>
+                <p><Link to="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></p>
+                <p><Link to="/privacy" className="hover:text-foreground transition-colors">Security</Link></p>
               </div>
             </div>
             <div>
               <h3 className="font-display font-semibold mb-3">Connect</h3>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p><Link to="/" className="hover:text-foreground transition-colors">Twitter</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Instagram</Link></p>
-                <p><Link to="/" className="hover:text-foreground transition-colors">Facebook</Link></p>
+                <p><a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Twitter</a></p>
+                <p><a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Instagram</a></p>
+                <p><a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">Facebook</a></p>
               </div>
             </div>
           </div>
