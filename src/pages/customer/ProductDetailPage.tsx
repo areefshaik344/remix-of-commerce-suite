@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ProductCard } from "@/components/shared/ProductCard";
 import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
 import { PincodeChecker } from "@/components/shared/PincodeChecker";
+import { FrequentlyBoughtTogether } from "@/components/shared/FrequentlyBoughtTogether";
 import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
