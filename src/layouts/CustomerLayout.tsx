@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useStore } from "@/store/useStore";
+import { useNotificationStore } from "@/store/notificationStore";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
 import { CompareBar } from "@/components/shared/CompareBar";
@@ -7,40 +8,27 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, Heart, User, ChevronDown, MapPin } from "lucide-react";
+import { ShoppingCart, Heart, User, ChevronDown, MapPin, Bell, LogOut, Package, Settings } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { categories } from "@/data/mock-products";
 import { useState } from "react";
 
 const deliverablePincodes: Record<string, string> = {
-  "400001": "Mumbai",
-  "400002": "Mumbai",
-  "560001": "Bangalore",
-  "560066": "Bangalore",
-  "110001": "Delhi",
-  "411001": "Pune",
-  "500001": "Hyderabad",
-  "600001": "Chennai",
-  "700001": "Kolkata",
+  "400001": "Mumbai", "400002": "Mumbai", "560001": "Bangalore", "560066": "Bangalore",
+  "110001": "Delhi", "411001": "Pune", "500001": "Hyderabad", "600001": "Chennai", "700001": "Kolkata",
 };
 
 export default function CustomerLayout() {
-  const { cartCount, currentUser, isAuthenticated, logout } = useStore();
+  const { cartCount, currentUser, isAuthenticated, logout, currentRole } = useStore();
+  const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
   const count = cartCount();
+  const unread = unreadCount();
   const [locationPincode, setLocationPincode] = useState("400001");
   const [locationCity, setLocationCity] = useState("Mumbai");
   const [tempPincode, setTempPincode] = useState("");
@@ -53,6 +41,11 @@ export default function CustomerLayout() {
       setLocationCity(city);
       setLocationOpen(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
@@ -68,19 +61,10 @@ export default function CustomerLayout() {
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-xs">
-                <DialogHeader>
-                  <DialogTitle>Change Delivery Location</DialogTitle>
-                </DialogHeader>
+                <DialogHeader><DialogTitle>Change Delivery Location</DialogTitle></DialogHeader>
                 <div className="space-y-3 pt-2">
-                  <Input
-                    placeholder="Enter 6-digit pincode"
-                    value={tempPincode}
-                    onChange={e => setTempPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    maxLength={6}
-                  />
-                  <Button className="w-full" onClick={handleLocationChange} disabled={tempPincode.length !== 6}>
-                    Update Location
-                  </Button>
+                  <Input placeholder="Enter 6-digit pincode" value={tempPincode} onChange={e => setTempPincode(e.target.value.replace(/\D/g, "").slice(0, 6))} maxLength={6} />
+                  <Button className="w-full" onClick={handleLocationChange} disabled={tempPincode.length !== 6}>Update Location</Button>
                   <p className="text-xs text-muted-foreground">Try: 400001, 560001, 110001, 411001</p>
                 </div>
               </DialogContent>
@@ -96,9 +80,7 @@ export default function CustomerLayout() {
           <Link to="/" className="shrink-0">
             <h1 className="text-xl font-display font-bold text-gradient">MarketHub</h1>
           </Link>
-
           <SearchBar />
-
           <div className="flex items-center gap-1">
             {!isAuthenticated ? (
               <Button size="sm" onClick={() => navigate("/login")}>Login</Button>
@@ -106,23 +88,61 @@ export default function CustomerLayout() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-1">
-                    <User className="h-4 w-4" />
+                    <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-semibold text-primary">
+                      {currentUser?.name?.[0] || "U"}
+                    </div>
                     <span className="hidden md:inline text-xs">{currentUser?.name?.split(" ")[0]}</span>
                     <ChevronDown className="h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate("/profile")}>My Profile</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/orders")}>My Orders</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/wishlist")}>Wishlist</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/compare")}>Compare</DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuLabel className="font-normal">
+                    <p className="text-sm font-medium">{currentUser?.name}</p>
+                    <p className="text-xs text-muted-foreground">{currentUser?.email}</p>
+                    <Badge variant="outline" className="text-[10px] mt-1 capitalize">{currentRole}</Badge>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <User className="mr-2 h-4 w-4" /> My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/orders")}>
+                    <Package className="mr-2 h-4 w-4" /> My Orders
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/wishlist")}>
+                    <Heart className="mr-2 h-4 w-4" /> Wishlist
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/notifications")}>
+                    <Bell className="mr-2 h-4 w-4" /> Notifications
+                    {unread > 0 && <Badge className="ml-auto h-4 text-[10px]">{unread}</Badge>}
+                  </DropdownMenuItem>
+                  {(currentRole === "vendor" || currentRole === "admin") && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate(currentRole === "vendor" ? "/vendor" : "/admin")}>
+                        <Settings className="mr-2 h-4 w-4" /> {currentRole === "vendor" ? "Vendor Dashboard" : "Admin Panel"}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" /> Logout
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
 
             <ThemeToggle />
+
+            {/* Notifications bell */}
+            <Button variant="ghost" size="icon" onClick={() => navigate("/notifications")} className="relative">
+              <Bell className="h-4 w-4" />
+              {unread > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-4 min-w-4 p-0 flex items-center justify-center text-[10px] bg-destructive text-destructive-foreground">
+                  {unread}
+                </Badge>
+              )}
+            </Button>
+
             <Button variant="ghost" size="icon" onClick={() => navigate("/wishlist")} className="relative">
               <Heart className="h-4 w-4" />
             </Button>
@@ -157,11 +177,7 @@ export default function CustomerLayout() {
         </div>
       </header>
 
-      <main>
-        <Outlet />
-      </main>
-
-      {/* Compare Bar */}
+      <main><Outlet /></main>
       <CompareBar />
 
       {/* Footer */}

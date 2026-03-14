@@ -17,6 +17,8 @@ function ProductCardInner({ product }: { product: Product }) {
   const handleToggleWishlist = useCallback(() => toggleWishlist(product.id), [toggleWishlist, product.id]);
 
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
+  const isLowStock = product.inStock && product.stockCount > 0 && product.stockCount <= 10;
+  const isOutOfStock = !product.inStock || product.stockCount === 0;
 
   return (
     <Card className="group overflow-hidden border-border/50 hover:shadow-elevated transition-all duration-300 h-full">
@@ -32,6 +34,16 @@ function ProductCardInner({ product }: { product: Product }) {
         {product.discount > 0 && (
           <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-semibold">
             {product.discount}% OFF
+          </Badge>
+        )}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+            <Badge variant="destructive" className="text-xs">Out of Stock</Badge>
+          </div>
+        )}
+        {isLowStock && !isOutOfStock && (
+          <Badge className="absolute bottom-2 left-2 bg-warning text-warning-foreground text-[10px]">
+            Only {product.stockCount} left
           </Badge>
         )}
         <button
@@ -63,9 +75,10 @@ function ProductCardInner({ product }: { product: Product }) {
           size="sm"
           className="w-full mt-1 gap-1.5 text-xs"
           onClick={handleAddToCart}
+          disabled={isOutOfStock}
         >
           <ShoppingCart className="h-3.5 w-3.5" />
-          Add to Cart
+          {isOutOfStock ? "Out of Stock" : "Add to Cart"}
         </Button>
       </CardContent>
     </Card>
