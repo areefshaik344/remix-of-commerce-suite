@@ -231,6 +231,9 @@ export default function ProductDetailPage() {
         )}
       </section>
 
+      {/* Frequently Bought Together */}
+      <FrequentlyBoughtTogether product={product} />
+
       {/* Related */}
       {related.length > 0 && (
         <section>
