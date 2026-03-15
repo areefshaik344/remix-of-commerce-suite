@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { categories, banners, featuredProducts, trendingProducts, deals, products } from "@/data/mock-products";
+import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
+import { categories, banners, featuredProducts, trendingProducts, deals } from "@/data/mock-products";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Zap, TrendingUp, Star, Truck, ShieldCheck, RotateCcw, Headphones, Clock } from "lucide-react";
+import { ArrowRight, Zap, TrendingUp, Star, Truck, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
 import { motion } from "framer-motion";
-import { useStore } from "@/store/useStore";
+import SEOHead from "@/components/shared/SEOHead";
 
 const features = [
   { icon: Truck, label: "Free Delivery", sub: "On orders over ₹499" },
