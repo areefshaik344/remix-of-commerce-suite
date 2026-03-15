@@ -40,6 +40,27 @@ export default function ProductDetailPage() {
   const vendorSlug = vendor?.storeName.toLowerCase().replace(/\s+/g, "-");
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
 
+  const jsonLd = useMemo(() => ({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images[0],
+    brand: { "@type": "Brand", name: product.brand },
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "INR",
+      availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: product.vendorName },
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+    },
+  }), [product]);
+
   return (
     <div className="container py-6 space-y-8">
       {/* Breadcrumb */}
