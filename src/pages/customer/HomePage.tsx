@@ -125,19 +125,9 @@ export default function HomePage() {
       </section>
 
       {/* Recently Viewed */}
-      {recentProducts.length > 0 && (
-        <section className="container">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-display text-lg font-bold">Recently Viewed</h2>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {recentProducts.map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-        </section>
-      )}
+      <section className="container">
+        <RecentlyViewedSection maxItems={6} />
+      </section>
     </div>
   );
 }
