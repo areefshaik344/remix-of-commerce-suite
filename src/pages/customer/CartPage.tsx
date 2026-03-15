@@ -1,20 +1,19 @@
 import { useStore } from "@/store/useStore";
-import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Bookmark, Store, Clock } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Bookmark, Store } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { products } from "@/data/mock-products";
-import { ProductCard } from "@/components/shared/ProductCard";
+import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateCartQuantity, cartTotal, clearCart, savedForLater, saveForLater, moveToCart, removeSaved, recentlyViewed } = useStore();
+  const { cart, removeFromCart, updateCartQuantity, cartTotal, clearCart, savedForLater, saveForLater, moveToCart, removeSaved } = useStore();
   const navigate = useNavigate();
   const total = cartTotal();
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
+  const cartProductIds = cart.map(i => i.product.id);
 
   // Group cart items by vendor
   const vendorGroups = cart.reduce<Record<string, typeof cart>>((groups, item) => {
@@ -24,12 +23,6 @@ export default function CartPage() {
     return groups;
   }, {});
 
-  const recentProducts = recentlyViewed
-    .map(id => products.find(p => p.id === id))
-    .filter(Boolean)
-    .filter(p => !cart.some(i => i.product.id === p!.id))
-    .slice(0, 4) as typeof products;
-
   if (cart.length === 0 && savedForLater.length === 0) {
     return (
       <div className="container py-20 text-center">
@@ -38,16 +31,9 @@ export default function CartPage() {
         <p className="text-muted-foreground mb-4">Add items to get started</p>
         <Button asChild><Link to="/products">Continue Shopping</Link></Button>
 
-        {recentProducts.length > 0 && (
-          <div className="mt-12 text-left">
-            <h3 className="font-display text-lg font-bold mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-muted-foreground" /> Recently Viewed
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {recentProducts.map(p => <ProductCard key={p.id} product={p} />)}
-            </div>
-          </div>
-        )}
+        <div className="mt-12 text-left">
+          <RecentlyViewedSection excludeProductIds={cartProductIds} maxItems={4} />
+        </div>
       </div>
     );
   }

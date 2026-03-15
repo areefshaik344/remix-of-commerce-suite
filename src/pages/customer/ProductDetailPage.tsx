@@ -11,8 +11,10 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
 import { PincodeChecker } from "@/components/shared/PincodeChecker";
 import { FrequentlyBoughtTogether } from "@/components/shared/FrequentlyBoughtTogether";
+import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
+import SEOHead from "@/components/shared/SEOHead";
 import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 
 export default function ProductDetailPage() {
@@ -23,6 +25,27 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [showReviewForm, setShowReviewForm] = useState(false);
+
+  const jsonLd = useMemo(() => product ? ({
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: product.images[0],
+    brand: { "@type": "Brand", name: product.brand },
+    offers: {
+      "@type": "Offer",
+      price: product.price,
+      priceCurrency: "INR",
+      availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: product.vendorName },
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: product.rating,
+      reviewCount: product.reviewCount,
+    },
+  }) : undefined, [product]);
 
   useEffect(() => {
     if (product) addToRecentlyViewed(product.id);
@@ -40,6 +63,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="container py-6 space-y-8">
+      <SEOHead title={`${product.name} - MarketHub`} description={product.description.slice(0, 160)} jsonLd={jsonLd} />
       {/* Breadcrumb */}
       <div className="text-sm text-muted-foreground flex items-center gap-1">
         <Link to="/" className="hover:text-foreground">Home</Link> / 
@@ -243,6 +267,9 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Recently Viewed */}
+      <RecentlyViewedSection excludeProductIds={[product.id]} maxItems={6} />
     </div>
   );
 }

@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { ProductCard } from "@/components/shared/ProductCard";
-import { categories, banners, featuredProducts, trendingProducts, deals, products } from "@/data/mock-products";
+import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
+import { categories, banners, featuredProducts, trendingProducts, deals } from "@/data/mock-products";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Zap, TrendingUp, Star, Truck, ShieldCheck, RotateCcw, Headphones, Clock } from "lucide-react";
+import { ArrowRight, Zap, TrendingUp, Star, Truck, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
 import { motion } from "framer-motion";
-import { useStore } from "@/store/useStore";
+import SEOHead from "@/components/shared/SEOHead";
 
 const features = [
   { icon: Truck, label: "Free Delivery", sub: "On orders over ₹499" },
@@ -16,14 +17,9 @@ const features = [
 ];
 
 export default function HomePage() {
-  const { recentlyViewed } = useStore();
-  const recentProducts = recentlyViewed
-    .map(id => products.find(p => p.id === id))
-    .filter(Boolean)
-    .slice(0, 6) as typeof products;
-
   return (
     <div className="space-y-8 pb-8">
+      <SEOHead title="MarketHub - India's Premier Multi-Vendor Marketplace" description="Shop from 50+ brands across electronics, fashion, beauty, home and more." />
       {/* Hero Banners */}
       <section className="container pt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -124,19 +120,9 @@ export default function HomePage() {
       </section>
 
       {/* Recently Viewed */}
-      {recentProducts.length > 0 && (
-        <section className="container">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-display text-lg font-bold">Recently Viewed</h2>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {recentProducts.map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-        </section>
-      )}
+      <section className="container">
+        <RecentlyViewedSection maxItems={6} />
+      </section>
     </div>
   );
 }
