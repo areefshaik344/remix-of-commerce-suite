@@ -26,21 +26,7 @@ export default function ProductDetailPage() {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [showReviewForm, setShowReviewForm] = useState(false);
 
-  useEffect(() => {
-    if (product) addToRecentlyViewed(product.id);
-  }, [product?.id]);
-
-  if (!product) return <div className="container py-20 text-center text-muted-foreground">Product not found</div>;
-
-  const productReviews = reviews.filter(r => r.productId === product.id);
-  const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const wishlisted = isInWishlist(product.id);
-  const inCompare = isInCompare(product.id);
-  const vendor = vendors.find(v => v.id === product.vendorId);
-  const vendorSlug = vendor?.storeName.toLowerCase().replace(/\s+/g, "-");
-  const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
-
-  const jsonLd = useMemo(() => ({
+  const jsonLd = useMemo(() => product ? ({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
@@ -59,7 +45,21 @@ export default function ProductDetailPage() {
       ratingValue: product.rating,
       reviewCount: product.reviewCount,
     },
-  }), [product]);
+  }) : undefined, [product]);
+
+  useEffect(() => {
+    if (product) addToRecentlyViewed(product.id);
+  }, [product?.id]);
+
+  if (!product) return <div className="container py-20 text-center text-muted-foreground">Product not found</div>;
+
+  const productReviews = reviews.filter(r => r.productId === product.id);
+  const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+  const wishlisted = isInWishlist(product.id);
+  const inCompare = isInCompare(product.id);
+  const vendor = vendors.find(v => v.id === product.vendorId);
+  const vendorSlug = vendor?.storeName.toLowerCase().replace(/\s+/g, "-");
+  const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
 
   return (
     <div className="container py-6 space-y-8">
