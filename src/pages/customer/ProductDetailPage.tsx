@@ -11,8 +11,10 @@ import { ProductCard } from "@/components/shared/ProductCard";
 import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
 import { PincodeChecker } from "@/components/shared/PincodeChecker";
 import { FrequentlyBoughtTogether } from "@/components/shared/FrequentlyBoughtTogether";
+import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
+import SEOHead from "@/components/shared/SEOHead";
 import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 
 export default function ProductDetailPage() {
