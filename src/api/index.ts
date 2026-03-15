@@ -4,3 +4,7 @@ export { authApi } from "./authApi";
 export { orderApi } from "./orderApi";
 export { vendorApi } from "./vendorApi";
 export { adminApi } from "./adminApi";
+export { reviewApi } from "./reviewApi";
+export { notificationApi } from "./notificationApi";
+export { cartApi } from "./cartApi";
+export { wishlistApi } from "./wishlistApi";
