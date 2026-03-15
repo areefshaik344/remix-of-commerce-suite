@@ -17,14 +17,9 @@ const features = [
 ];
 
 export default function HomePage() {
-  const { recentlyViewed } = useStore();
-  const recentProducts = recentlyViewed
-    .map(id => products.find(p => p.id === id))
-    .filter(Boolean)
-    .slice(0, 6) as typeof products;
-
   return (
     <div className="space-y-8 pb-8">
+      <SEOHead title="MarketHub - India's Premier Multi-Vendor Marketplace" description="Shop from 50+ brands across electronics, fashion, beauty, home and more." />
       {/* Hero Banners */}
       <section className="container pt-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
