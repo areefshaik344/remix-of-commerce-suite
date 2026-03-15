@@ -267,6 +267,9 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Recently Viewed */}
+      <RecentlyViewedSection excludeProductIds={[product.id]} maxItems={6} />
     </div>
   );
 }
