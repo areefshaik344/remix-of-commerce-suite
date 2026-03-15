@@ -63,6 +63,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="container py-6 space-y-8">
+      <SEOHead title={`${product.name} - MarketHub`} description={product.description.slice(0, 160)} jsonLd={jsonLd} />
       {/* Breadcrumb */}
       <div className="text-sm text-muted-foreground flex items-center gap-1">
         <Link to="/" className="hover:text-foreground">Home</Link> / 
