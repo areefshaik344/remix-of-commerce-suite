@@ -1,14 +1,12 @@
 import { useStore } from "@/store/useStore";
-import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Bookmark, Store, Clock } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Bookmark, Store } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { products } from "@/data/mock-products";
-import { ProductCard } from "@/components/shared/ProductCard";
+import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateCartQuantity, cartTotal, clearCart, savedForLater, saveForLater, moveToCart, removeSaved, recentlyViewed } = useStore();
