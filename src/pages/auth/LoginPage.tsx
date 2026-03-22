@@ -24,6 +24,7 @@ export default function LoginPage() {
 
   const { loginWithCredentials } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
