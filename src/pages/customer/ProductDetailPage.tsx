@@ -61,6 +61,22 @@ export default function ProductDetailPage() {
   const vendor = vendors.find(v => v.id === product.vendorId);
   const vendorSlug = vendor?.storeName.toLowerCase().replace(/\s+/g, "-");
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
+  const isOutOfStock = !product.inStock || product.stockCount === 0;
+  const isLowStock = product.inStock && product.stockCount > 0 && product.stockCount <= 10;
+
+  // Simulated delivery estimate
+  const deliveryDays = Math.floor(Math.random() * 3) + 2;
+  const deliveryDate = new Date();
+  deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+  const deliveryStr = deliveryDate.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+
+  const handleImageHover = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
 
   return (
     <div className="container py-6 space-y-8">
