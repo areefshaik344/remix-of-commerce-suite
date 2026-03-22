@@ -69,7 +69,7 @@ function clearAuth(set: (partial: Partial<AuthState>) => void) {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       currentUser: null,
       currentRole: "customer",
