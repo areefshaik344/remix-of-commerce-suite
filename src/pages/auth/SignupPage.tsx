@@ -103,6 +103,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label>Email Address</Label>
                   <Input type="email" placeholder="rahul@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                  {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Phone Number</Label>
