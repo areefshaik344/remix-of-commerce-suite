@@ -28,17 +28,21 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
-      return;
-    }
-    if (!agreed) {
-      toast({ title: "Accept terms", description: "Please accept Terms & Conditions.", variant: "destructive" });
+    setFormErrors({});
+    const result = signupSchema.safeParse({ name, email, phone, password, confirmPassword, agreed });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0]?.toString() || "form";
+        if (!errors[field]) errors[field] = err.message;
+      });
+      setFormErrors(errors);
+      toast({ title: "Please fix the errors", description: Object.values(errors)[0], variant: "destructive" });
       return;
     }
     setLoading(true);
     await new Promise(r => setTimeout(r, 1000));
-    signupWithCredentials(name, email, phone, password);
+    signupWithCredentials(result.data.name, result.data.email, result.data.phone, result.data.password);
     setLoading(false);
     toast({ title: "Account created!", description: "Please verify your email." });
     navigate("/verify-email");
