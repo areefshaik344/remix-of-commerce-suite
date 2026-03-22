@@ -31,13 +31,15 @@ export default function VendorRegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agreed) {
-      toast({ title: "Accept terms", description: "Please agree to the vendor terms.", variant: "destructive" });
+    const result = vendorRegistrationSchema.safeParse({ name, email, phone, password, storeName, category, description, agreed });
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
       return;
     }
     setLoading(true);
     await new Promise(r => setTimeout(r, 1200));
-    registerVendor(name, email, phone, password, storeName, category, description);
+    registerVendor(result.data.name, result.data.email, result.data.phone, result.data.password, result.data.storeName, result.data.category, result.data.description || "");
     setLoading(false);
     toast({ title: "Application submitted!", description: "We'll review your application within 2-3 business days. You can complete onboarding after approval." });
     navigate("/vendor/register/success");

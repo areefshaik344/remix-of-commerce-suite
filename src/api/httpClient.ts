@@ -4,12 +4,15 @@
  * - Attaches access token to every request
  * - On 401 → refreshes token → retries original request
  * - Queues concurrent requests during token refresh
- * - Falls back to mock API layer when no backend is available
+ * - Maps all errors through errorMapper for user-friendly messages
+ * - Request timeout + cancellation support
  */
 
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { tokenService } from "@/lib/tokenService";
 import { API_BASE_URL, API_TIMEOUT } from "@/config/constants";
+import { mapApiError, type MappedApiError } from "@/api/errorMapper";
+import type { ApiErrorResponse } from "@/types/api";
 
 // Flag to use mock fallback when backend is unavailable
 const USE_MOCK_FALLBACK = true; // Set to false when real backend is connected
@@ -52,69 +55,84 @@ httpClient.interceptors.request.use(
 // ── Response Interceptor ─────────────────────────────────────────────────
 httpClient.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
+  async (error: AxiosError<ApiErrorResponse>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // If not 401 or already retried, reject
-    if (error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error);
-    }
+    // Map the error for consistent handling downstream
+    const mapped: MappedApiError = mapApiError(error);
 
-    // Queue requests during refresh
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        failedQueue.push({
-          resolve: (token: string) => {
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${token}`;
-            }
-            resolve(httpClient(originalRequest));
-          },
-          reject,
+    // Attach mapped error for consumers
+    (error as AxiosError & { mapped?: MappedApiError }).mapped = mapped;
+
+    // ── 401 refresh logic ────────────────────────────────────────────
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      // Queue requests during refresh
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({
+            resolve: (token: string) => {
+              if (originalRequest.headers) {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+              }
+              resolve(httpClient(originalRequest));
+            },
+            reject,
+          });
         });
-      });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshToken = tokenService.getStoredRefreshToken();
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+
+        const payload = tokenService.validateRefreshToken(refreshToken);
+        if (!payload) {
+          throw new Error("Refresh token invalid");
+        }
+
+        // In production: POST /auth/refresh { refreshToken }
+        const { mockUsers } = await import("@/mocks/mockUsers");
+        const user = mockUsers.find((u) => u.id === payload.sub);
+        if (!user) throw new Error("User not found");
+
+        const newTokens = tokenService.generateTokens(user);
+        tokenService.persistTokens(newTokens);
+
+        processQueue(null, newTokens.accessToken);
+
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+        }
+        return httpClient(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError, null);
+        tokenService.clearTokens();
+        window.dispatchEvent(new CustomEvent("auth:session-expired"));
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
     }
 
-    originalRequest._retry = true;
-    isRefreshing = true;
-
-    try {
-      const refreshToken = tokenService.getStoredRefreshToken();
-      if (!refreshToken) {
-        throw new Error("No refresh token available");
-      }
-
-      const payload = tokenService.validateRefreshToken(refreshToken);
-      if (!payload) {
-        throw new Error("Refresh token invalid");
-      }
-
-      // In production: POST /auth/refresh { refreshToken }
-      // For now: simulate token refresh using mock users
-      const { mockUsers } = await import("@/mocks/mockUsers");
-      const user = mockUsers.find((u) => u.id === payload.sub);
-      if (!user) throw new Error("User not found");
-
-      const newTokens = tokenService.generateTokens(user);
-      tokenService.persistTokens(newTokens);
-
-      processQueue(null, newTokens.accessToken);
-
-      if (originalRequest.headers) {
-        originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
-      }
-      return httpClient(originalRequest);
-    } catch (refreshError) {
-      processQueue(refreshError, null);
-      tokenService.clearTokens();
-      // Dispatch a custom event so auth store can react
-      window.dispatchEvent(new CustomEvent("auth:session-expired"));
-      return Promise.reject(refreshError);
-    } finally {
-      isRefreshing = false;
-    }
+    return Promise.reject(error);
   }
 );
+
+/**
+ * Helper: extract the mapped error from an Axios error.
+ * Use in catch blocks: `const err = getMappedError(e);`
+ */
+export function getMappedError(error: unknown): MappedApiError | null {
+  if (axios.isAxiosError(error)) {
+    return (error as AxiosError & { mapped?: MappedApiError }).mapped || mapApiError(error as AxiosError<ApiErrorResponse>);
+  }
+  return null;
+}
 
 export { httpClient, USE_MOCK_FALLBACK };
 export default httpClient;
