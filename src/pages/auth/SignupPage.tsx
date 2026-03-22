@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, ShieldCheck, ChevronRight } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
+import { signupSchema } from "@/lib/validators";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
