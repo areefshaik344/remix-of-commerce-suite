@@ -194,6 +194,37 @@ export default function ProductDetailPage() {
               </div>
             </Link>
           )}
+          {/* Stock Status */}
+          <div className="flex items-center gap-3">
+            {isOutOfStock ? (
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">Out of Stock</span>
+              </div>
+            ) : isLowStock ? (
+              <div className="flex items-center gap-2 text-warning">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">Only {product.stockCount} left — Hurry!</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-success">
+                <Package className="h-4 w-4" />
+                <span className="text-sm font-medium">In Stock</span>
+              </div>
+            )}
+          </div>
+
+          {/* Delivery Estimate */}
+          {!isOutOfStock && (
+            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+              <Truck className="h-4 w-4 text-primary" />
+              <div className="text-sm">
+                <span className="text-muted-foreground">Delivery by </span>
+                <span className="font-medium">{deliveryStr}</span>
+                {product.price >= 499 && <span className="text-success text-xs ml-2">FREE</span>}
+              </div>
+            </div>
+          )}
 
           <Separator />
 
