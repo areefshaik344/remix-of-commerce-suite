@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ProductCard, PincodeChecker, FrequentlyBoughtTogether, RecentlyViewedSection } from "@/features/product";
 import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
 import SEOHead from "@/components/shared/SEOHead";
-import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store, ZoomIn, Package, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 
 export default function ProductDetailPage() {
@@ -22,6 +23,9 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const imageRef = useRef<HTMLDivElement>(null);
 
   const jsonLd = useMemo(() => product ? ({
     "@context": "https://schema.org",
@@ -57,6 +61,22 @@ export default function ProductDetailPage() {
   const vendor = vendors.find(v => v.id === product.vendorId);
   const vendorSlug = vendor?.storeName.toLowerCase().replace(/\s+/g, "-");
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
+  const isOutOfStock = !product.inStock || product.stockCount === 0;
+  const isLowStock = product.inStock && product.stockCount > 0 && product.stockCount <= 10;
+
+  // Simulated delivery estimate
+  const deliveryDays = Math.floor(Math.random() * 3) + 2;
+  const deliveryDate = new Date();
+  deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+  const deliveryStr = deliveryDate.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+
+  const handleImageHover = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
 
   return (
     <div className="container py-6 space-y-8">
@@ -70,10 +90,24 @@ export default function ProductDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Images */}
+        {/* Images with zoom */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-          <div className="aspect-square rounded-xl overflow-hidden bg-muted/30 border">
+          <div
+            ref={imageRef}
+            className="aspect-square rounded-xl overflow-hidden bg-muted/30 border relative group cursor-zoom-in"
+            onMouseMove={handleImageHover}
+            onClick={() => setZoomOpen(true)}
+          >
             <img src={product.images[selectedImage]} alt={product.name} className="h-full w-full object-cover" />
+            {/* Hover zoom lens indicator */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+              <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-70 transition-opacity drop-shadow-lg" />
+            </div>
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                <Badge variant="destructive" className="text-sm px-4 py-1">Out of Stock</Badge>
+              </div>
+            )}
           </div>
           {product.images.length > 1 && (
             <div className="flex gap-2">
@@ -85,6 +119,41 @@ export default function ProductDetailPage() {
             </div>
           )}
         </motion.div>
+
+        {/* Zoom Dialog */}
+        <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden">
+            <div
+              className="w-full aspect-square overflow-hidden cursor-crosshair"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setZoomPos({
+                  x: ((e.clientX - rect.left) / rect.width) * 100,
+                  y: ((e.clientY - rect.top) / rect.height) * 100,
+                });
+              }}
+            >
+              <img
+                src={product.images[selectedImage]}
+                alt={product.name}
+                className="w-full h-full transition-transform duration-100"
+                style={{
+                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  transform: "scale(2)",
+                }}
+              />
+            </div>
+            {product.images.length > 1 && (
+              <div className="flex gap-2 p-3 border-t bg-card">
+                {product.images.map((img, i) => (
+                  <button key={i} onClick={() => setSelectedImage(i)} className={`h-12 w-12 rounded overflow-hidden border-2 transition-colors ${i === selectedImage ? "border-primary" : "border-border"}`}>
+                    <img src={img} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Info */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
@@ -124,6 +193,37 @@ export default function ProductDetailPage() {
                 {vendor.rating} <Star className="h-3 w-3 fill-secondary text-secondary" />
               </div>
             </Link>
+          )}
+          {/* Stock Status */}
+          <div className="flex items-center gap-3">
+            {isOutOfStock ? (
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">Out of Stock</span>
+              </div>
+            ) : isLowStock ? (
+              <div className="flex items-center gap-2 text-warning">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">Only {product.stockCount} left — Hurry!</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-success">
+                <Package className="h-4 w-4" />
+                <span className="text-sm font-medium">In Stock</span>
+              </div>
+            )}
+          </div>
+
+          {/* Delivery Estimate */}
+          {!isOutOfStock && (
+            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-2">
+              <Truck className="h-4 w-4 text-primary" />
+              <div className="text-sm">
+                <span className="text-muted-foreground">Delivery by </span>
+                <span className="font-medium">{deliveryStr}</span>
+                {product.price >= 499 && <span className="text-success text-xs ml-2">FREE</span>}
+              </div>
+            </div>
           )}
 
           <Separator />
