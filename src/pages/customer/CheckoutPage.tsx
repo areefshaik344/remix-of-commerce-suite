@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useStore } from "@/store/useStore";
+import { useAuthStore } from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
 import { useNotificationStore } from "@/features/notification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
