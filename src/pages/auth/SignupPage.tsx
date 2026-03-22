@@ -111,6 +111,7 @@ export default function SignupPage() {
                     <div className="flex items-center px-3 rounded-md border bg-muted text-sm font-medium text-muted-foreground">+91</div>
                     <Input placeholder="98765 43210" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} required />
                   </div>
+                  {formErrors.phone && <p className="text-xs text-destructive">{formErrors.phone}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Password</Label>
