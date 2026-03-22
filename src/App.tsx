@@ -165,6 +165,7 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={null}>
             <SessionListener />
+            <GlobalHooks />
           </Suspense>
           <Suspense fallback={<PageLoader />}>
             <Routes>
