@@ -16,7 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { categories } from "@/data/mock-products";
+import { categories } from "@/features/product";
 import { useState } from "react";
 
 const deliverablePincodes: Record<string, string> = {
