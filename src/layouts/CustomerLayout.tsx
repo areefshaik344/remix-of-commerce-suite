@@ -25,7 +25,8 @@ const deliverablePincodes: Record<string, string> = {
 };
 
 export default function CustomerLayout() {
-  const { cartCount, currentUser, isAuthenticated, logout, currentRole } = useStore();
+  const { user: currentUser, isAuthenticated, logout, role: currentRole } = useAuth();
+  const cartCount = useCartStore(s => s.cartCount);
   const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
   const count = cartCount();

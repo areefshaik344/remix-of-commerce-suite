@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { loginWithCredentials } = useStore();
+  const { loginWithCredentials } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
