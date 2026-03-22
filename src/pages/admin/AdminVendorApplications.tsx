@@ -15,7 +15,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminVendorApplications() {
-  const { vendorApplications, approveVendor, rejectVendor } = useStore();
+  const { vendorApplications, approveVendor, rejectVendor } = useAuth();
   const [approveTarget, setApproveTarget] = useState<VendorApplication | null>(null);
   const [rejectTarget, setRejectTarget] = useState<VendorApplication | null>(null);
   const [tab, setTab] = useState<"pending" | "all">("pending");

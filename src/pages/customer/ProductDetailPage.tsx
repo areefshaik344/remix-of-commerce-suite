@@ -10,7 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { ProductCard, PincodeChecker, FrequentlyBoughtTogether, RecentlyViewedSection } from "@/features/product";
 import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
 import SEOHead from "@/components/shared/SEOHead";
-import SEOHead from "@/components/shared/SEOHead";
 import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
