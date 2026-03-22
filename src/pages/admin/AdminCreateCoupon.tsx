@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { categories } from "@/data/mock-products";
-import { vendors } from "@/data/mock-users";
+import { categories } from "@/features/product";
+import { vendors } from "@/features/auth";
 
 export default function AdminCreateCoupon() {
   const navigate = useNavigate();

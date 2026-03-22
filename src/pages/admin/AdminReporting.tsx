@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { DollarSign, Users, TrendingUp, ShoppingBag, Download, Star } from "lucide-react";
-import { vendors } from "@/data/mock-users";
+import { vendors } from "@/features/auth";
 
 const gmvData = [
   { month: "Sep", gmv: 12500000, netRevenue: 1875000 },
