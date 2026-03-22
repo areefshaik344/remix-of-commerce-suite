@@ -90,10 +90,24 @@ export default function ProductDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Images */}
+        {/* Images with zoom */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-          <div className="aspect-square rounded-xl overflow-hidden bg-muted/30 border">
+          <div
+            ref={imageRef}
+            className="aspect-square rounded-xl overflow-hidden bg-muted/30 border relative group cursor-zoom-in"
+            onMouseMove={handleImageHover}
+            onClick={() => setZoomOpen(true)}
+          >
             <img src={product.images[selectedImage]} alt={product.name} className="h-full w-full object-cover" />
+            {/* Hover zoom lens indicator */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
+              <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-70 transition-opacity drop-shadow-lg" />
+            </div>
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                <Badge variant="destructive" className="text-sm px-4 py-1">Out of Stock</Badge>
+              </div>
+            )}
           </div>
           {product.images.length > 1 && (
             <div className="flex gap-2">
@@ -105,6 +119,41 @@ export default function ProductDetailPage() {
             </div>
           )}
         </motion.div>
+
+        {/* Zoom Dialog */}
+        <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
+          <DialogContent className="max-w-4xl p-0 overflow-hidden">
+            <div
+              className="w-full aspect-square overflow-hidden cursor-crosshair"
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setZoomPos({
+                  x: ((e.clientX - rect.left) / rect.width) * 100,
+                  y: ((e.clientY - rect.top) / rect.height) * 100,
+                });
+              }}
+            >
+              <img
+                src={product.images[selectedImage]}
+                alt={product.name}
+                className="w-full h-full transition-transform duration-100"
+                style={{
+                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                  transform: "scale(2)",
+                }}
+              />
+            </div>
+            {product.images.length > 1 && (
+              <div className="flex gap-2 p-3 border-t bg-card">
+                {product.images.map((img, i) => (
+                  <button key={i} onClick={() => setSelectedImage(i)} className={`h-12 w-12 rounded overflow-hidden border-2 transition-colors ${i === selectedImage ? "border-primary" : "border-border"}`}>
+                    <img src={img} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Info */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
