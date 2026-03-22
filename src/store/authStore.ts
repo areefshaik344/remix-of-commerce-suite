@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, devtools } from "zustand/middleware";
 import type { UserRole, User } from "@/data/mock-users";
 import { mockUsers, mockCredentials } from "@/mocks";
 import { tokenService, type TokenPair } from "@/lib/tokenService";
