@@ -30,7 +30,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       compareList: [],
       addToCompare: (productId) => {
