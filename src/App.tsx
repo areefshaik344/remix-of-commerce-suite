@@ -132,29 +132,18 @@ const adminNav = [
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
-// Session expiry listener
-const SessionListener = lazy(() =>
-  import("@/hooks/useSessionExpiry").then((mod) => ({
-    default: function SessionExpiryWrapper() {
-      mod.useSessionExpiry();
-      return null;
-    },
-  }))
-);
+// Global hooks component — not lazy-loaded since they're lightweight
+function GlobalListeners() {
+  useSessionExpiry();
+  useCrossTabSync();
+  useOnlineStatus();
+  return null;
+}
 
-// Cross-tab sync + offline detection
-const GlobalHooks = lazy(() =>
-  Promise.all([
-    import("@/hooks/useCrossTabSync"),
-    import("@/hooks/useOnlineStatus"),
-  ]).then(([crossTab, online]) => ({
-    default: function GlobalHooksWrapper() {
-      crossTab.useCrossTabSync();
-      online.useOnlineStatus();
-      return null;
-    },
-  }))
-);
+// Must be inside BrowserRouter
+function GlobalListenersWrapper() {
+  return <GlobalListeners />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -163,10 +152,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Suspense fallback={null}>
-            <SessionListener />
-            <GlobalHooks />
-          </Suspense>
+          <GlobalListenersWrapper />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Auth - public routes */}
