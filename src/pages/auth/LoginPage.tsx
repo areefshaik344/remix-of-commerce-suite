@@ -51,8 +51,9 @@ export default function LoginPage() {
   };
 
   const handleSendOTP = async () => {
-    if (!phone || phone.length < 10) {
-      toast({ title: "Invalid phone", description: "Enter a valid 10-digit phone number.", variant: "destructive" });
+    const result = phoneLoginSchema.safeParse({ phone });
+    if (!result.success) {
+      toast({ title: "Invalid phone", description: result.error.errors[0].message, variant: "destructive" });
       return;
     }
     setLoading(true);
