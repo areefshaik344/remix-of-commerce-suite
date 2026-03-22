@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useStore } from "@/store/useStore";
+import { useAuthStore } from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
 import { useNotificationStore } from "@/features/notification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +30,10 @@ const mockCoupons: Record<string, { discount: number; type: "percent" | "flat"; 
 const STEPS = ["Address", "Payment", "Review"] as const;
 
 export default function CheckoutPage() {
-  const { cart, cartTotal, clearCart, currentUser } = useStore();
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const cart = useCartStore((s) => s.cart);
+  const cartTotal = useCartStore((s) => s.cartTotal);
+  const clearCart = useCartStore((s) => s.clearCart);
   const { addNotification } = useNotificationStore();
   const navigate = useNavigate();
   const { toast } = useToast();

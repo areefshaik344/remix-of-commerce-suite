@@ -132,6 +132,16 @@ const adminNav = [
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
+// Session expiry listener — lazy loaded so it doesn't block initial render
+const SessionListener = lazy(() =>
+  import("@/hooks/useSessionExpiry").then((mod) => ({
+    default: function SessionExpiryWrapper() {
+      mod.useSessionExpiry();
+      return null;
+    },
+  }))
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -139,6 +149,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <Suspense fallback={null}>
+            <SessionListener />
+          </Suspense>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Auth - public routes */}

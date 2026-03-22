@@ -1,0 +1,106 @@
+/**
+ * API Endpoints Registry
+ * Central mapping of all backend API paths for easy maintenance.
+ */
+
+export const ENDPOINTS = {
+  // Auth
+  AUTH: {
+    LOGIN: "/auth/login",
+    SIGNUP: "/auth/signup",
+    LOGOUT: "/auth/logout",
+    REFRESH: "/auth/refresh",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
+    VERIFY_EMAIL: "/auth/verify-email",
+    ME: "/auth/me",
+  },
+
+  // Products
+  PRODUCTS: {
+    LIST: "/products",
+    DETAIL: (id: string) => `/products/${id}`,
+    BY_SLUG: (slug: string) => `/products/slug/${slug}`,
+    CATEGORIES: "/products/categories",
+    BRANDS: "/products/brands",
+    SEARCH: "/products/search",
+    FEATURED: "/products/featured",
+    TRENDING: "/products/trending",
+    DEALS: "/products/deals",
+    RELATED: (id: string) => `/products/${id}/related`,
+  },
+
+  // Cart
+  CART: {
+    GET: "/cart",
+    ADD: "/cart/items",
+    UPDATE: (itemId: string) => `/cart/items/${itemId}`,
+    REMOVE: (itemId: string) => `/cart/items/${itemId}`,
+    CLEAR: "/cart/clear",
+    VALIDATE_COUPON: "/cart/validate-coupon",
+    SHIPPING: "/cart/shipping",
+  },
+
+  // Orders
+  ORDERS: {
+    LIST: "/orders",
+    DETAIL: (id: string) => `/orders/${id}`,
+    CREATE: "/orders",
+    CANCEL: (id: string) => `/orders/${id}/cancel`,
+    RETURN: (id: string) => `/orders/${id}/return`,
+    TRACK: (id: string) => `/orders/${id}/track`,
+  },
+
+  // Reviews
+  REVIEWS: {
+    BY_PRODUCT: (productId: string) => `/products/${productId}/reviews`,
+    CREATE: "/reviews",
+    HELPFUL: (reviewId: string) => `/reviews/${reviewId}/helpful`,
+  },
+
+  // Wishlist
+  WISHLIST: {
+    LIST: "/wishlist",
+    TOGGLE: "/wishlist/toggle",
+  },
+
+  // Vendor
+  VENDOR: {
+    PROFILE: "/vendor/profile",
+    PRODUCTS: "/vendor/products",
+    ORDERS: "/vendor/orders",
+    ANALYTICS: "/vendor/analytics",
+    FINANCIALS: "/vendor/financials",
+    INVENTORY: "/vendor/inventory",
+    STORE: (vendorId: string) => `/vendors/${vendorId}`,
+  },
+
+  // Admin
+  ADMIN: {
+    USERS: "/admin/users",
+    USER_DETAIL: (id: string) => `/admin/users/${id}`,
+    VENDORS: "/admin/vendors",
+    VENDOR_DETAIL: (id: string) => `/admin/vendors/${id}`,
+    VENDOR_APPROVE: (id: string) => `/admin/vendors/${id}/approve`,
+    VENDOR_REJECT: (id: string) => `/admin/vendors/${id}/reject`,
+    PRODUCTS: "/admin/products",
+    ORDERS: "/admin/orders",
+    ANALYTICS: "/admin/analytics",
+    COUPONS: "/admin/coupons",
+    CATEGORIES: "/admin/categories",
+  },
+
+  // Notifications
+  NOTIFICATIONS: {
+    LIST: "/notifications",
+    MARK_READ: (id: string) => `/notifications/${id}/read`,
+    MARK_ALL_READ: "/notifications/read-all",
+  },
+
+  // User
+  USER: {
+    PROFILE: "/user/profile",
+    ADDRESSES: "/user/addresses",
+    UPDATE_PROFILE: "/user/profile",
+  },
+} as const;
