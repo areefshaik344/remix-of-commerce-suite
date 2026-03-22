@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Store, ArrowLeft, TrendingUp, Shield, Zap, IndianRupee } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
+import { vendorRegistrationSchema } from "@/lib/validators";
 
 export default function VendorRegisterPage() {
   const [name, setName] = useState("");
