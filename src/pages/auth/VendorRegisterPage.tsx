@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Store, ArrowLeft, TrendingUp, Shield, Zap, IndianRupee } from "lucide-react";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function VendorRegisterPage() {

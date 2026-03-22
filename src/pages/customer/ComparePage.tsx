@@ -1,5 +1,5 @@
 import { useStore } from "@/store/useStore";
-import { products } from "@/data/mock-products";
+import { products } from "@/features/product";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

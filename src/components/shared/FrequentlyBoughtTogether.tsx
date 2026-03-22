@@ -1,5 +1,5 @@
-import { Product, products } from "@/data/mock-products";
-import { useCartStore } from "@/store/cartStore";
+import { type Product, products } from "@/features/product";
+import { useCartStore } from "@/features/cart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ShoppingCart, Plus } from "lucide-react";

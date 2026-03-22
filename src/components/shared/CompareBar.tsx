@@ -1,5 +1,5 @@
 import { useStore } from "@/store/useStore";
-import { products } from "@/data/mock-products";
+import { products } from "@/features/product";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
