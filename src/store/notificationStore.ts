@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, devtools } from "zustand/middleware";
 
 export type NotificationType = "order" | "promo" | "delivery" | "review" | "system" | "vendor" | "admin";
 
