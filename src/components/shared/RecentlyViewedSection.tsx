@@ -1,4 +1,4 @@
-import { useStore } from "@/store/useStore";
+import { useUIStore } from "@/store/uiStore";
 import { products } from "@/features/product";
 import { ProductCard } from "@/features/product";
 import { Clock } from "lucide-react";
@@ -10,7 +10,7 @@ interface RecentlyViewedSectionProps {
 }
 
 export function RecentlyViewedSection({ excludeProductIds = [], maxItems = 6, title = "Recently Viewed" }: RecentlyViewedSectionProps) {
-  const { recentlyViewed } = useStore();
+  const recentlyViewed = useUIStore(s => s.recentlyViewed);
 
   const recentProducts = recentlyViewed
     .filter(id => !excludeProductIds.includes(id))

@@ -1,4 +1,4 @@
-import { useStore } from "@/store/useStore";
+import { useUIStore } from "@/store/uiStore";
 import { products } from "@/features/product";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight } from "lucide-react";
@@ -6,7 +6,9 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function CompareBar() {
-  const { compareList, removeFromCompare, clearCompare } = useStore();
+  const compareList = useUIStore(s => s.compareList);
+  const removeFromCompare = useUIStore(s => s.removeFromCompare);
+  const clearCompare = useUIStore(s => s.clearCompare);
   const compareProducts = compareList.map(id => products.find(p => p.id === id)).filter(Boolean);
 
   if (compareList.length === 0) return null;
