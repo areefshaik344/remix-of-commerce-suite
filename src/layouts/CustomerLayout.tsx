@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/hooks/useAuth";
+import { useCartStore } from "@/store/cartStore";
 import { useNotificationStore } from "@/store/notificationStore";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
