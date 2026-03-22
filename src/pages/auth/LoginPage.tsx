@@ -27,14 +27,22 @@ export default function LoginPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate with Zod
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
+      return;
+    }
     setLoading(true);
-    // Mock: simulate API delay
     await new Promise(r => setTimeout(r, 800));
-    const success = loginWithCredentials(email, password);
+    const success = loginWithCredentials(result.data.email, result.data.password);
     setLoading(false);
     if (success) {
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
-      navigate("/");
+      // Redirect to intended route or home
+      const from = (location.state as { from?: string })?.from || "/";
+      navigate(from, { replace: true });
     } else {
       toast({ title: "Invalid credentials", description: "Please check your email and password.", variant: "destructive" });
     }
