@@ -1,7 +1,5 @@
 import { Link } from "react-router-dom";
-import { ProductCard } from "@/components/shared/ProductCard";
-import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
-import { categories, banners, featuredProducts, trendingProducts, deals } from "@/data/mock-products";
+import { ProductCard, RecentlyViewedSection, categories, banners, featuredProducts, trendingProducts, deals } from "@/features/product";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

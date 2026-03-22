@@ -1,4 +1,5 @@
-import { useStore, VendorApplication } from "@/store/useStore";
+import { useAuth } from "@/features/auth";
+import type { VendorApplication } from "@/features/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

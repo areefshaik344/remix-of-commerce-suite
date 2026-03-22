@@ -1,13 +1,10 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { products, categories } from "@/data/mock-products";
-import { ProductCard } from "@/components/shared/ProductCard";
+import { products, categories, ProductCard, FilterPanel, RecentlyViewedSection } from "@/features/product";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FilterPanel } from "@/components/shared/FilterPanel";
-import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import SEOHead from "@/components/shared/SEOHead";
 
