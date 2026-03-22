@@ -5,14 +5,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, Mail, Check } from "lucide-react";
+import { forgotPasswordSchema } from "@/lib/validators";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = forgotPasswordSchema.safeParse({ email });
+    if (!result.success) {
+      toast({ title: "Validation Error", description: result.error.errors[0].message, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     await new Promise(r => setTimeout(r, 1000));
     setSent(true);
