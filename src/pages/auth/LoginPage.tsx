@@ -64,18 +64,18 @@ export default function LoginPage() {
   };
 
   const handleVerifyOTP = async () => {
+    const result = otpSchema.safeParse({ otp });
+    if (!result.success) {
+      toast({ title: "Invalid OTP", description: result.error.errors[0].message, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     await new Promise(r => setTimeout(r, 800));
-    // Mock: any 6-digit OTP works
-    if (otp.length === 6) {
-      loginWithCredentials(`${phone}@phone.mock`, "phone-otp");
-      setLoading(false);
-      toast({ title: "Welcome!", description: "Phone verified successfully." });
-      navigate("/");
-    } else {
-      setLoading(false);
-      toast({ title: "Invalid OTP", description: "Please enter a valid 6-digit OTP.", variant: "destructive" });
-    }
+    loginWithCredentials(`${phone}@phone.mock`, "phone-otp");
+    setLoading(false);
+    toast({ title: "Welcome!", description: "Phone verified successfully." });
+    const from = (location.state as { from?: string })?.from || "/";
+    navigate(from, { replace: true });
   };
 
   return (
