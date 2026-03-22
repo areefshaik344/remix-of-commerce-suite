@@ -22,5 +22,5 @@ export const useWishlistStore = create<WishlistState>()(
       isInWishlist: (productId) => get().wishlist.includes(productId),
     }),
     { name: "markethub-wishlist" }
-  )
+  ), { name: "WishlistStore" })
 );

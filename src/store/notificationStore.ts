@@ -69,5 +69,5 @@ export const useNotificationStore = create<NotificationState>()(
       name: "markethub-notifications",
       partialize: (state) => ({ notifications: state.notifications }),
     }
-  )
+  ), { name: "NotificationStore" })
 );

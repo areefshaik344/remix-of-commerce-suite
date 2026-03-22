@@ -223,5 +223,5 @@ export const useAuthStore = create<AuthState>()(
         lastActivity: state.lastActivity,
       }),
     }
-  )
+  ), { name: "AuthStore" })
 );

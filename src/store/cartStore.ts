@@ -91,5 +91,5 @@ export const useCartStore = create<CartState>()(
         savedForLater: state.savedForLater,
       }),
     }
-  )
+  ), { name: "CartStore" })
 );
