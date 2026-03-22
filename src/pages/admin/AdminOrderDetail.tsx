@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { orders } from "@/data/mock-orders";
+import { orders } from "@/features/order";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
