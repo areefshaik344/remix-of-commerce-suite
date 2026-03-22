@@ -1,4 +1,4 @@
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/data/mock-users";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ const roles: { role: UserRole; label: string; icon: React.ReactNode; path: strin
 ];
 
 export function RoleSwitcher() {
-  const { currentRole, login } = useStore();
+  const { role: currentRole, login } = useAuth();
   const navigate = useNavigate();
 
   return (
