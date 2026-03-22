@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Phone, Eye, EyeOff, ShieldCheck, ChevronRight, Truck, Tag, Headphones } from "lucide-react";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import OTPInput from "@/components/auth/OTPInput";
 
