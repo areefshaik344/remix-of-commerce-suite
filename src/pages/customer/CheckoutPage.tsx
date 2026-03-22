@@ -30,7 +30,10 @@ const mockCoupons: Record<string, { discount: number; type: "percent" | "flat"; 
 const STEPS = ["Address", "Payment", "Review"] as const;
 
 export default function CheckoutPage() {
-  const { cart, cartTotal, clearCart, currentUser } = useStore();
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const cart = useCartStore((s) => s.cart);
+  const cartTotal = useCartStore((s) => s.cartTotal);
+  const clearCart = useCartStore((s) => s.clearCart);
   const { addNotification } = useNotificationStore();
   const navigate = useNavigate();
   const { toast } = useToast();

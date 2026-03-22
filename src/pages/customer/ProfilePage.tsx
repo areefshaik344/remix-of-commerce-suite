@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useStore } from "@/store/useStore";
+import { useAuthStore } from "@/store/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/features/auth";
 
 export default function ProfilePage() {
-  const { currentUser } = useStore();
+  const currentUser = useAuthStore((s) => s.currentUser);
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
