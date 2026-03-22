@@ -53,7 +53,7 @@ function DashboardSidebar({ title, navItems }: DashboardLayoutProps) {
 }
 
 export default function DashboardLayout({ title, navItems }: DashboardLayoutProps) {
-  const { currentUser, currentRole, logout } = useStore();
+  const { user: currentUser, role: currentRole, logout } = useAuth();
   const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
   const unread = unreadCount();
