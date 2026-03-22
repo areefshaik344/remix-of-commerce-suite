@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Upload, X, Plus, Trash2, GripVertical, ImagePlus, Save } from "lucide-react";
-import { categories, products } from "@/data/mock-products";
+import { categories, products } from "@/features/product";
 import { toast } from "@/hooks/use-toast";
 
 interface Variant { name: string; options: string[]; }

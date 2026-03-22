@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddressFormDialog } from "@/components/shared/AddressFormDialog";
 import { User, MapPin, Bell, Shield, Edit2, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Address } from "@/data/mock-users";
+import type { Address } from "@/features/auth";
 
 export default function ProfilePage() {
   const { currentUser } = useStore();

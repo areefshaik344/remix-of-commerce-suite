@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { products } from "@/features/product";
-import { vendors } from "@/data/mock-users";
-import { reviews } from "@/data/mock-orders";
+import { vendors } from "@/features/auth";
+import { reviews } from "@/features/order";
 import { useStore } from "@/store/useStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

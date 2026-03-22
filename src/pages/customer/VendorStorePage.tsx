@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { vendors } from "@/data/mock-users";
+import { vendors } from "@/features/auth";
 import { products, ProductCard } from "@/features/product";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

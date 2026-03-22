@@ -1,4 +1,4 @@
-import { orders } from "@/data/mock-orders";
+import { orders } from "@/features/order";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Package, Truck, CheckCircle2, XCircle, Clock, RotateCcw } from "lucide-react";
