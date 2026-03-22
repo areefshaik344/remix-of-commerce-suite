@@ -37,12 +37,17 @@ export const useCartStore = create<CartState>()(
       savedForLater: [],
 
       addToCart: (product, quantity = 1, variants = {}) => {
+        // Stock validation
+        if (product.stockCount !== undefined && product.stockCount <= 0) return;
         const { cart } = get();
         const existing = cart.find(i => i.product.id === product.id);
         if (existing) {
-          set({ cart: cart.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i) });
+          const newQty = existing.quantity + quantity;
+          // Don't exceed available stock
+          const maxQty = product.stockCount !== undefined ? Math.min(newQty, product.stockCount) : newQty;
+          set({ cart: cart.map(i => i.product.id === product.id ? { ...i, quantity: Math.min(maxQty, 10) } : i) });
         } else {
-          set({ cart: [...cart, { product, quantity, selectedVariants: variants }] });
+          set({ cart: [...cart, { product, quantity: Math.min(quantity, 10), selectedVariants: variants }] });
         }
       },
 
