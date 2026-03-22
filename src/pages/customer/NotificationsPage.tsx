@@ -1,5 +1,5 @@
 import { useNotificationStore } from "@/features/notification";
-import type { NotificationType } from "@/store/notificationStore";
+import type { NotificationType } from "@/features/notification";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
