@@ -132,6 +132,23 @@ const adminNav = [
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
+function SessionExpiryListener() {
+  // Must be inside BrowserRouter for useNavigate
+  const { useSessionExpiry } = require("@/hooks/useSessionExpiry");
+  useSessionExpiry();
+  return null;
+}
+
+// Lazy wrapper to avoid require
+const SessionListener = lazy(() =>
+  import("@/hooks/useSessionExpiry").then((mod) => ({
+    default: function SessionExpiryWrapper() {
+      mod.useSessionExpiry();
+      return null;
+    },
+  }))
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -139,6 +156,9 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <Suspense fallback={null}>
+            <SessionListener />
+          </Suspense>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Auth - public routes */}
