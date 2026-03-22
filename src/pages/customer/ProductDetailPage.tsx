@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ProductCard, PincodeChecker, FrequentlyBoughtTogether, RecentlyViewedSection } from "@/features/product";
 import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
 import SEOHead from "@/components/shared/SEOHead";
-import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store, ZoomIn, Package, AlertTriangle } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 
 export default function ProductDetailPage() {
