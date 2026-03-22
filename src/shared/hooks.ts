@@ -4,4 +4,4 @@
 export { useAuth } from "@/hooks/useAuth";
 export { useAnalytics } from "@/hooks/useAnalytics";
 export { useToast } from "@/hooks/use-toast";
-export { useMobile } from "@/hooks/use-mobile";
+export { useIsMobile } from "@/hooks/use-mobile";
