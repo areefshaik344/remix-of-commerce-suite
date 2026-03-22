@@ -1,6 +1,6 @@
 import { useStore } from "@/store/useStore";
-import { products } from "@/data/mock-products";
-import { ProductCard } from "@/components/shared/ProductCard";
+import { products } from "@/features/product";
+import { ProductCard } from "@/features/product";
 import { Clock } from "lucide-react";
 
 interface RecentlyViewedSectionProps {

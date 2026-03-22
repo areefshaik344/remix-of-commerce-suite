@@ -1,4 +1,4 @@
-import { useUIStore } from "@/store/uiStore";
+import { useUIStore } from "@/features/search";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { orders } from "@/data/mock-orders";
+import { orders } from "@/features/order";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Package, MapPin, CreditCard, Clock, RotateCcw } from "lucide-react";
-import { users } from "@/data/mock-users";
+import { users } from "@/features/auth";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 

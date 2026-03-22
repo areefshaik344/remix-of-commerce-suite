@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/shared/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { analyticsData } from "@/data/mock-orders";
-import { vendors } from "@/data/mock-users";
+import { analyticsData } from "@/features/order";
+import { vendors } from "@/features/auth";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Users, Store, ShoppingCart } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";

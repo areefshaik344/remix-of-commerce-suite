@@ -10,3 +10,6 @@ export * from "./api";
 export * from "./store";
 export * from "./hooks";
 export * from "./components";
+
+// Re-export data for convenience
+export { users, vendors } from "@/data/mock-users";

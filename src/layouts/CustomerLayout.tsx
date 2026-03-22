@@ -1,9 +1,9 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useCartStore } from "@/store/cartStore";
-import { useNotificationStore } from "@/store/notificationStore";
-import { SearchBar } from "@/components/shared/SearchBar";
-import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
+import { useAuth } from "@/features/auth";
+import { useCartStore } from "@/features/cart";
+import { useNotificationStore } from "@/features/notification";
+import { SearchBar } from "@/features/search";
+import { RoleSwitcher } from "@/features/auth";
 import { CompareBar } from "@/components/shared/CompareBar";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { categories } from "@/data/mock-products";
+import { categories } from "@/features/product";
 import { useState } from "react";
 
 const deliverablePincodes: Record<string, string> = {

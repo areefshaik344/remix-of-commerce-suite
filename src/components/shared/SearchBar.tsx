@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useStore } from "@/store/useStore";
-import { products } from "@/data/mock-products";
+import { products } from "@/features/product";
 import { Search, X, Clock, TrendingUp, ArrowUpRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

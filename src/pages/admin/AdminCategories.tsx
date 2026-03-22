@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { categories } from "@/data/mock-products";
+import { categories } from "@/features/product";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";

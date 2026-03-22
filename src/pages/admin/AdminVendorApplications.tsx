@@ -1,4 +1,5 @@
-import { useStore, VendorApplication } from "@/store/useStore";
+import { useAuth } from "@/features/auth";
+import type { VendorApplication } from "@/features/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminVendorApplications() {
-  const { vendorApplications, approveVendor, rejectVendor } = useStore();
+  const { vendorApplications, approveVendor, rejectVendor } = useAuth();
   const [approveTarget, setApproveTarget] = useState<VendorApplication | null>(null);
   const [rejectTarget, setRejectTarget] = useState<VendorApplication | null>(null);
   const [tab, setTab] = useState<"pending" | "all">("pending");

@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { vendors } from "@/data/mock-users";
+import { vendors } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function VendorSettings() {

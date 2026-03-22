@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useStore } from "@/store/useStore";
-import { useNotificationStore } from "@/store/notificationStore";
+import { useNotificationStore } from "@/features/notification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

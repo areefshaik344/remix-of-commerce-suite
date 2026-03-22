@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Bookmark, Store } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { RecentlyViewedSection } from "@/components/shared/RecentlyViewedSection";
+import { RecentlyViewedSection } from "@/features/product";
 
 export default function CartPage() {
   const { cart, removeFromCart, updateCartQuantity, cartTotal, clearCart, savedForLater, saveForLater, moveToCart, removeSaved } = useStore();

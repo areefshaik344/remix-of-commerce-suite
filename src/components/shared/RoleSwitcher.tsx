@@ -1,5 +1,5 @@
-import { useAuth } from "@/hooks/useAuth";
-import { UserRole } from "@/data/mock-users";
+import { useAuth } from "@/features/auth";
+import type { UserRole } from "@/features/auth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Store, Shield } from "lucide-react";

@@ -1,6 +1,6 @@
-import { Product } from "@/data/mock-products";
-import { useCartStore } from "@/store/cartStore";
-import { useWishlistStore } from "@/store/wishlistStore";
+import type { Product } from "@/features/product";
+import { useCartStore } from "@/features/cart";
+import { useWishlistStore } from "@/features/wishlist";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

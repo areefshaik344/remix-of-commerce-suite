@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, ShieldCheck, ChevronRight } from "lucide-react";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SignupPage() {
@@ -20,7 +20,7 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { signupWithCredentials } = useStore();
+  const { signupWithCredentials } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 

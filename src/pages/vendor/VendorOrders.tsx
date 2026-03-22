@@ -1,5 +1,5 @@
-import { orders } from "@/data/mock-orders";
-import { users } from "@/data/mock-users";
+import { orders } from "@/features/order";
+import { users } from "@/features/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
