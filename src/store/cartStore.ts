@@ -31,7 +31,7 @@ interface CartState {
 }
 
 export const useCartStore = create<CartState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       cart: [],
       savedForLater: [],
