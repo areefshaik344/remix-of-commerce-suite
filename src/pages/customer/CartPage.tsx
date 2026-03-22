@@ -1,4 +1,4 @@
-import { useStore } from "@/store/useStore";
+import { useCartStore } from "@/store/cartStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -9,7 +9,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RecentlyViewedSection } from "@/features/product";
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateCartQuantity, cartTotal, clearCart, savedForLater, saveForLater, moveToCart, removeSaved } = useStore();
+  const cart = useCartStore(s => s.cart);
+  const removeFromCart = useCartStore(s => s.removeFromCart);
+  const updateCartQuantity = useCartStore(s => s.updateCartQuantity);
+  const cartTotal = useCartStore(s => s.cartTotal);
+  const clearCart = useCartStore(s => s.clearCart);
+  const savedForLater = useCartStore(s => s.savedForLater);
+  const saveForLater = useCartStore(s => s.saveForLater);
+  const moveToCart = useCartStore(s => s.moveToCart);
+  const removeSaved = useCartStore(s => s.removeSaved);
   const navigate = useNavigate();
   const total = cartTotal();
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;

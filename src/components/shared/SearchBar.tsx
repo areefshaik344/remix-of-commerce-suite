@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useStore } from "@/store/useStore";
+import { useUIStore } from "@/store/uiStore";
 import { products } from "@/features/product";
 import { Search, X, Clock, TrendingUp, ArrowUpRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,11 @@ import { useNavigate } from "react-router-dom";
 const TRENDING_SEARCHES = ["iPhone 15", "Nike shoes", "PlayStation 5", "MacBook", "Samsung Galaxy", "Headphones"];
 
 export function SearchBar() {
-  const { searchQuery, setSearchQuery, searchHistory, addToSearchHistory, clearSearchHistory } = useStore();
+  const searchQuery = useUIStore(s => s.searchQuery);
+  const setSearchQuery = useUIStore(s => s.setSearchQuery);
+  const searchHistory = useUIStore(s => s.searchHistory);
+  const addToSearchHistory = useUIStore(s => s.addToSearchHistory);
+  const clearSearchHistory = useUIStore(s => s.clearSearchHistory);
   const [focused, setFocused] = useState(false);
   const [localQuery, setLocalQuery] = useState(searchQuery);
   const navigate = useNavigate();

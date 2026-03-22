@@ -1,4 +1,5 @@
-import { useStore } from "@/store/useStore";
+import { useUIStore } from "@/store/uiStore";
+import { useCartStore } from "@/store/cartStore";
 import { products } from "@/features/product";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,7 +8,10 @@ import { Star, X, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function ComparePage() {
-  const { compareList, removeFromCompare, clearCompare, addToCart } = useStore();
+  const compareList = useUIStore(s => s.compareList);
+  const removeFromCompare = useUIStore(s => s.removeFromCompare);
+  const clearCompare = useUIStore(s => s.clearCompare);
+  const addToCart = useCartStore(s => s.addToCart);
   const compareProducts = compareList.map(id => products.find(p => p.id === id)).filter(Boolean) as typeof products;
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
 

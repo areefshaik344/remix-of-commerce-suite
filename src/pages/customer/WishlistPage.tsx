@@ -1,4 +1,4 @@
-import { useStore } from "@/store/useStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { products } from "@/features/product";
 import { ProductCard } from "@/features/product";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function WishlistPage() {
-  const { wishlist } = useStore();
+  const wishlist = useWishlistStore(s => s.wishlist);
   const wishlistProducts = products.filter(p => wishlist.includes(p.id));
 
   if (wishlistProducts.length === 0) {
