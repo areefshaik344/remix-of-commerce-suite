@@ -20,7 +20,7 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { signupWithCredentials } = useStore();
+  const { signupWithCredentials } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 

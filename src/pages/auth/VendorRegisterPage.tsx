@@ -24,7 +24,7 @@ export default function VendorRegisterPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { registerVendor } = useStore();
+  const { registerVendor } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
