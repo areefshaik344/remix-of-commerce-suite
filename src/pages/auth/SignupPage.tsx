@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { signupSchema } from "@/lib/validators";
 
 export default function SignupPage() {
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
