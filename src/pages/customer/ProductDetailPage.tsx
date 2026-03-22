@@ -23,6 +23,9 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const imageRef = useRef<HTMLDivElement>(null);
 
   const jsonLd = useMemo(() => product ? ({
     "@context": "https://schema.org",
