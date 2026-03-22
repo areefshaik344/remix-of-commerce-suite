@@ -1,5 +1,6 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/hooks/useAuth";
+import { useCartStore } from "@/store/cartStore";
 import { useNotificationStore } from "@/store/notificationStore";
 import { SearchBar } from "@/components/shared/SearchBar";
 import { RoleSwitcher } from "@/components/shared/RoleSwitcher";
@@ -24,7 +25,8 @@ const deliverablePincodes: Record<string, string> = {
 };
 
 export default function CustomerLayout() {
-  const { cartCount, currentUser, isAuthenticated, logout, currentRole } = useStore();
+  const { user: currentUser, isAuthenticated, logout, role: currentRole } = useAuth();
+  const cartCount = useCartStore(s => s.cartCount);
   const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
   const count = cartCount();

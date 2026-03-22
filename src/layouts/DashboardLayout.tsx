@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { useStore } from "@/store/useStore";
+import { useAuth } from "@/hooks/useAuth";
 import { useNotificationStore } from "@/store/notificationStore";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -53,7 +53,7 @@ function DashboardSidebar({ title, navItems }: DashboardLayoutProps) {
 }
 
 export default function DashboardLayout({ title, navItems }: DashboardLayoutProps) {
-  const { currentUser, currentRole, logout } = useStore();
+  const { user: currentUser, role: currentRole, logout } = useAuth();
   const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
   const unread = unreadCount();
