@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { DollarSign, Percent, TrendingUp, Settings2 } from "lucide-react";
-import { categories } from "@/data/mock-products";
-import { vendors } from "@/data/mock-users";
+import { categories } from "@/features/product";
+import { vendors } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
 
 const categoryCommissions = [

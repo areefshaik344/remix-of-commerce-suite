@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { reviews } from "@/data/mock-orders";
+import { reviews } from "@/features/order";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

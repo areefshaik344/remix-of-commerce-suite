@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { TrendingUp, Eye, ShoppingCart, DollarSign, Users, Download, ArrowUp, ArrowDown } from "lucide-react";
-import { products } from "@/data/mock-products";
+import { products } from "@/features/product";
 import { useState } from "react";
 
 const salesData = [
