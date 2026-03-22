@@ -8,7 +8,7 @@ interface WishlistState {
 }
 
 export const useWishlistStore = create<WishlistState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       wishlist: [],
       toggleWishlist: (productId) => {
