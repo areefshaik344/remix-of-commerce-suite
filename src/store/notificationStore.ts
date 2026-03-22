@@ -35,7 +35,7 @@ const initialNotifications: Notification[] = [
 ];
 
 export const useNotificationStore = create<NotificationState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       notifications: initialNotifications,
 
