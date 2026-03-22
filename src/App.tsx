@@ -10,6 +10,9 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import CustomerLayout from "@/layouts/CustomerLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
+import { useSessionExpiry } from "@/hooks/useSessionExpiry";
+import { useCrossTabSync } from "@/hooks/useCrossTabSync";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 // Lazy-loaded pages
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
