@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, devtools } from "zustand/middleware";
 
 interface UIState {
   // Compare
@@ -30,7 +30,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       compareList: [],
       addToCompare: (productId) => {
@@ -85,5 +85,5 @@ export const useUIStore = create<UIState>()(
         theme: state.theme,
       }),
     }
-  )
+  ), { name: "UIStore" })
 );

@@ -9,8 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, ShieldCheck, ChevronRight } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
+import { signupSchema } from "@/lib/validators";
 
 export default function SignupPage() {
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -26,17 +28,21 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      toast({ title: "Passwords don't match", variant: "destructive" });
-      return;
-    }
-    if (!agreed) {
-      toast({ title: "Accept terms", description: "Please accept Terms & Conditions.", variant: "destructive" });
+    setFormErrors({});
+    const result = signupSchema.safeParse({ name, email, phone, password, confirmPassword, agreed });
+    if (!result.success) {
+      const errors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0]?.toString() || "form";
+        if (!errors[field]) errors[field] = err.message;
+      });
+      setFormErrors(errors);
+      toast({ title: "Please fix the errors", description: Object.values(errors)[0], variant: "destructive" });
       return;
     }
     setLoading(true);
     await new Promise(r => setTimeout(r, 1000));
-    signupWithCredentials(name, email, phone, password);
+    signupWithCredentials(result.data.name, result.data.email, result.data.phone, result.data.password);
     setLoading(false);
     toast({ title: "Account created!", description: "Please verify your email." });
     navigate("/verify-email");
@@ -97,6 +103,7 @@ export default function SignupPage() {
                 <div className="space-y-2">
                   <Label>Email Address</Label>
                   <Input type="email" placeholder="rahul@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                  {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Phone Number</Label>
@@ -104,6 +111,7 @@ export default function SignupPage() {
                     <div className="flex items-center px-3 rounded-md border bg-muted text-sm font-medium text-muted-foreground">+91</div>
                     <Input placeholder="98765 43210" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} required />
                   </div>
+                  {formErrors.phone && <p className="text-xs text-destructive">{formErrors.phone}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label>Password</Label>

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, devtools } from "zustand/middleware";
 import type { UserRole, User } from "@/data/mock-users";
 import { mockUsers, mockCredentials } from "@/mocks";
 import { tokenService, type TokenPair } from "@/lib/tokenService";
@@ -69,7 +69,7 @@ function clearAuth(set: (partial: Partial<AuthState>) => void) {
 }
 
 export const useAuthStore = create<AuthState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       currentUser: null,
       currentRole: "customer",
@@ -223,5 +223,5 @@ export const useAuthStore = create<AuthState>()(
         lastActivity: state.lastActivity,
       }),
     }
-  )
+  ), { name: "AuthStore" })
 );

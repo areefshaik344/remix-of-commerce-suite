@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, devtools } from "zustand/middleware";
 
 interface WishlistState {
   wishlist: string[];
@@ -8,7 +8,7 @@ interface WishlistState {
 }
 
 export const useWishlistStore = create<WishlistState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       wishlist: [],
       toggleWishlist: (productId) => {
@@ -22,5 +22,5 @@ export const useWishlistStore = create<WishlistState>()(
       isInWishlist: (productId) => get().wishlist.includes(productId),
     }),
     { name: "markethub-wishlist" }
-  )
+  ), { name: "WishlistStore" })
 );

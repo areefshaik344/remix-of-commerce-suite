@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { loginSchema, phoneLoginSchema, otpSchema } from "@/lib/validators";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -23,26 +24,36 @@ export default function LoginPage() {
 
   const { loginWithCredentials } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate with Zod
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
+      return;
+    }
     setLoading(true);
-    // Mock: simulate API delay
     await new Promise(r => setTimeout(r, 800));
-    const success = loginWithCredentials(email, password);
+    const success = loginWithCredentials(result.data.email, result.data.password);
     setLoading(false);
     if (success) {
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
-      navigate("/");
+      // Redirect to intended route or home
+      const from = (location.state as { from?: string })?.from || "/";
+      navigate(from, { replace: true });
     } else {
       toast({ title: "Invalid credentials", description: "Please check your email and password.", variant: "destructive" });
     }
   };
 
   const handleSendOTP = async () => {
-    if (!phone || phone.length < 10) {
-      toast({ title: "Invalid phone", description: "Enter a valid 10-digit phone number.", variant: "destructive" });
+    const result = phoneLoginSchema.safeParse({ phone });
+    if (!result.success) {
+      toast({ title: "Invalid phone", description: result.error.errors[0].message, variant: "destructive" });
       return;
     }
     setLoading(true);
@@ -53,18 +64,18 @@ export default function LoginPage() {
   };
 
   const handleVerifyOTP = async () => {
+    const result = otpSchema.safeParse({ otp });
+    if (!result.success) {
+      toast({ title: "Invalid OTP", description: result.error.errors[0].message, variant: "destructive" });
+      return;
+    }
     setLoading(true);
     await new Promise(r => setTimeout(r, 800));
-    // Mock: any 6-digit OTP works
-    if (otp.length === 6) {
-      loginWithCredentials(`${phone}@phone.mock`, "phone-otp");
-      setLoading(false);
-      toast({ title: "Welcome!", description: "Phone verified successfully." });
-      navigate("/");
-    } else {
-      setLoading(false);
-      toast({ title: "Invalid OTP", description: "Please enter a valid 6-digit OTP.", variant: "destructive" });
-    }
+    loginWithCredentials(`${phone}@phone.mock`, "phone-otp");
+    setLoading(false);
+    toast({ title: "Welcome!", description: "Phone verified successfully." });
+    const from = (location.state as { from?: string })?.from || "/";
+    navigate(from, { replace: true });
   };
 
   return (

@@ -132,11 +132,25 @@ const adminNav = [
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
-// Session expiry listener — lazy loaded so it doesn't block initial render
+// Session expiry listener
 const SessionListener = lazy(() =>
   import("@/hooks/useSessionExpiry").then((mod) => ({
     default: function SessionExpiryWrapper() {
       mod.useSessionExpiry();
+      return null;
+    },
+  }))
+);
+
+// Cross-tab sync + offline detection
+const GlobalHooks = lazy(() =>
+  Promise.all([
+    import("@/hooks/useCrossTabSync"),
+    import("@/hooks/useOnlineStatus"),
+  ]).then(([crossTab, online]) => ({
+    default: function GlobalHooksWrapper() {
+      crossTab.useCrossTabSync();
+      online.useOnlineStatus();
       return null;
     },
   }))
@@ -151,6 +165,7 @@ const App = () => (
         <BrowserRouter>
           <Suspense fallback={null}>
             <SessionListener />
+            <GlobalHooks />
           </Suspense>
           <Suspense fallback={<PageLoader />}>
             <Routes>

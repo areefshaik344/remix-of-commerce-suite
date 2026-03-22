@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, devtools } from "zustand/middleware";
 
 export type NotificationType = "order" | "promo" | "delivery" | "review" | "system" | "vendor" | "admin";
 
@@ -35,7 +35,7 @@ const initialNotifications: Notification[] = [
 ];
 
 export const useNotificationStore = create<NotificationState>()(
-  persist(
+  devtools(persist(
     (set, get) => ({
       notifications: initialNotifications,
 
@@ -69,5 +69,5 @@ export const useNotificationStore = create<NotificationState>()(
       name: "markethub-notifications",
       partialize: (state) => ({ notifications: state.notifications }),
     }
-  )
+  ), { name: "NotificationStore" })
 );
