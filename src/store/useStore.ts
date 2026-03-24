@@ -3,12 +3,9 @@ import { useAuthStore } from "./authStore";
 import { useCartStore } from "./cartStore";
 import { useWishlistStore } from "./wishlistStore";
 import { useUIStore } from "./uiStore";
-import type { UserRole, User } from "@/data/mock-users";
-import type { Product } from "@/data/mock-products";
 
 export type { VendorApplication } from "./authStore";
 
-// Combined hook for backward compatibility — pages can gradually migrate to individual stores
 export function useStore() {
   const auth = useAuthStore();
   const cart = useCartStore();
@@ -20,11 +17,8 @@ export function useStore() {
     currentUser: auth.currentUser,
     currentRole: auth.currentRole,
     isAuthenticated: auth.isAuthenticated,
-    login: auth.login,
-    loginWithCredentials: auth.loginWithCredentials,
-    signupWithCredentials: auth.signupWithCredentials,
-    registerVendor: auth.registerVendor,
-    logout: auth.logout,
+    setAuth: auth.setAuth,
+    clearAuth: auth.clearAuth,
     vendorApplications: auth.vendorApplications,
     approveVendor: auth.approveVendor,
     rejectVendor: auth.rejectVendor,
