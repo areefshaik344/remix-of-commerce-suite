@@ -138,6 +138,7 @@ const adminNav = [
 
 // Global hooks component — not lazy-loaded since they're lightweight
 function GlobalListeners() {
+  useAuthInit();
   useSessionExpiry();
   useCrossTabSync();
   useOnlineStatus();
