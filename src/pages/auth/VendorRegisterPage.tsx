@@ -38,11 +38,15 @@ export default function VendorRegisterPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    registerVendor(result.data.name, result.data.email, result.data.phone, result.data.password, result.data.storeName, result.data.category, result.data.description || "");
-    setLoading(false);
-    toast({ title: "Application submitted!", description: "We'll review your application within 2-3 business days. You can complete onboarding after approval." });
-    navigate("/vendor/register/success");
+    try {
+      await signup(result.data.name, result.data.email, result.data.phone, result.data.password);
+      toast({ title: "Application submitted!", description: "We'll review your application within 2-3 business days." });
+      navigate("/vendor/register/success");
+    } catch (err: any) {
+      toast({ title: "Registration failed", description: err?.message || "Something went wrong", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
