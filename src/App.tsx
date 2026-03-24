@@ -13,6 +13,7 @@ import DashboardLayout from "@/layouts/DashboardLayout";
 import { useSessionExpiry } from "@/hooks/useSessionExpiry";
 import { useCrossTabSync } from "@/hooks/useCrossTabSync";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useAuthInit } from "@/hooks/useAuthInit";
 
 // Lazy-loaded pages
 const LoginPage = lazy(() => import("@/pages/auth/LoginPage"));
