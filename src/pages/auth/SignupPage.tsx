@@ -10,6 +10,7 @@ import { Eye, EyeOff, ShieldCheck, ChevronRight } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
 import { signupSchema } from "@/lib/validators";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function SignupPage() {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -22,7 +23,7 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { signupWithCredentials } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -41,11 +42,15 @@ export default function SignupPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    signupWithCredentials(result.data.name, result.data.email, result.data.phone, result.data.password);
-    setLoading(false);
-    toast({ title: "Account created!", description: "Please verify your email." });
-    navigate("/verify-email");
+    try {
+      await signup(result.data.name, result.data.email, result.data.phone, result.data.password);
+      toast({ title: "Account created!", description: "Please verify your email." });
+      navigate("/verify-email");
+    } catch (err) {
+      toast({ title: "Signup failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const passwordStrength = () => {

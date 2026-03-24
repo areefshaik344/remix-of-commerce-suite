@@ -1,6 +1,10 @@
-import { mockSuccess, simulateDelay, ApiError, type ApiResponse } from "./apiClient";
-import { mockUsers, mockCredentials } from "@/mocks";
-import type { User } from "@/data/mock-users";
+/**
+ * Auth API — Real backend calls
+ * All token storage is handled by httpOnly cookies (refresh) and Zustand (access).
+ */
+
+import httpClient from "@/api/httpClient";
+import { ENDPOINTS } from "@/api/endpoints";
 
 export interface LoginRequest {
   email: string;
@@ -14,82 +18,82 @@ export interface SignupRequest {
   password: string;
 }
 
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  role: "customer" | "vendor" | "admin";
+  joinedDate?: string;
+}
+
 export interface AuthResponse {
-  user: User;
-  token: string;
+  accessToken: string;
+  user: AuthUser;
 }
 
 export const authApi = {
-  async login(req: LoginRequest): Promise<ApiResponse<AuthResponse>> {
-    await simulateDelay(500);
-
-    // Phone OTP mock
-    if (req.password === "phone-otp") {
-      const user = mockUsers.find(u => u.role === "customer") || mockUsers[0];
-      return mockSuccess({ user, token: `mock-token-${user.id}` }, "Login successful");
-    }
-
-    const cred = mockCredentials.find(c => c.email === req.email && c.password === req.password);
-    if (!cred) throw new ApiError("Invalid email or password", 401);
-
-    const user = mockUsers.find(u => u.id === cred.userId);
-    if (!user) throw new ApiError("User not found", 404);
-
-    return mockSuccess({ user, token: `mock-token-${user.id}` }, "Login successful");
-  },
-
-  async signup(req: SignupRequest): Promise<ApiResponse<AuthResponse>> {
-    await simulateDelay(600);
-
-    if (mockCredentials.find(c => c.email === req.email)) {
-      throw new ApiError("Email already registered", 409);
-    }
-
-    const newUser: User = {
-      id: `u-${Date.now()}`,
-      name: req.name,
-      email: req.email,
-      avatar: "",
-      role: "customer",
-      phone: `+91 ${req.phone}`,
-      joinedDate: new Date().toISOString().split("T")[0],
+  /** POST /auth/login — returns accessToken + user, sets refresh cookie */
+  async login(req: LoginRequest): Promise<AuthResponse> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.LOGIN, req);
+    const data = res.data?.data || res.data;
+    return {
+      accessToken: data.accessToken || data.token,
+      user: data.user,
     };
-
-    mockCredentials.push({ email: req.email, password: req.password, userId: newUser.id });
-    mockUsers.push(newUser);
-
-    return mockSuccess({ user: newUser, token: `mock-token-${newUser.id}` }, "Account created");
   },
 
-  async forgotPassword(email: string): Promise<ApiResponse<{ message: string }>> {
-    await simulateDelay(500);
-    const exists = mockCredentials.find(c => c.email === email);
-    // Always return success to prevent email enumeration
-    return mockSuccess({ message: "If this email exists, a reset link has been sent." });
+  /** POST /auth/signup — returns accessToken + user, sets refresh cookie */
+  async signup(req: SignupRequest): Promise<AuthResponse> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.SIGNUP, req);
+    const data = res.data?.data || res.data;
+    return {
+      accessToken: data.accessToken || data.token,
+      user: data.user,
+    };
   },
 
-  async resetPassword(token: string, newPassword: string): Promise<ApiResponse<{ message: string }>> {
-    await simulateDelay(500);
-    return mockSuccess({ message: "Password reset successful" });
+  /** POST /auth/refresh — cookie sent automatically, returns new accessToken */
+  async refresh(): Promise<AuthResponse> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.REFRESH);
+    const data = res.data?.data || res.data;
+    return {
+      accessToken: data.accessToken || data.token,
+      user: data.user,
+    };
   },
 
-  async verifyEmail(code: string): Promise<ApiResponse<{ verified: boolean }>> {
-    await simulateDelay(400);
-    // Accept any 6-digit code
-    return mockSuccess({ verified: code.length === 6 });
+  /** POST /auth/logout — clears refresh cookie on server */
+  async logout(): Promise<void> {
+    try {
+      await httpClient.post(ENDPOINTS.AUTH.LOGOUT);
+    } catch {
+      // Always clear locally even if server call fails
+    }
   },
 
-  async getCurrentUser(): Promise<ApiResponse<User | null>> {
-    await simulateDelay(100);
-    // In a real app, this would validate the session token
-    return mockSuccess(null);
+  /** POST /auth/forgot-password */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
+    return res.data?.data || res.data;
   },
 
-  async updateProfile(userId: string, data: Partial<User>): Promise<ApiResponse<User>> {
-    await simulateDelay(400);
-    const userIdx = mockUsers.findIndex(u => u.id === userId);
-    if (userIdx === -1) throw new ApiError("User not found", 404);
-    mockUsers[userIdx] = { ...mockUsers[userIdx], ...data };
-    return mockSuccess(mockUsers[userIdx], "Profile updated");
+  /** POST /auth/reset-password */
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.RESET_PASSWORD, { token, password: newPassword });
+    return res.data?.data || res.data;
+  },
+
+  /** POST /auth/verify-email */
+  async verifyEmail(code: string): Promise<{ verified: boolean }> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.VERIFY_EMAIL, { code });
+    return res.data?.data || res.data;
+  },
+
+  /** GET /auth/me — get current user from token */
+  async getCurrentUser(): Promise<AuthUser> {
+    const res = await httpClient.get(ENDPOINTS.AUTH.ME);
+    return res.data?.data || res.data;
   },
 };

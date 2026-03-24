@@ -1,32 +1,29 @@
 /**
  * Cross-Tab Session Sync
- * Listens for localStorage changes to sync logout/login across browser tabs.
+ * Listens for Zustand persist storage changes to sync logout across tabs.
  */
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useNotificationStore } from "@/store/notificationStore";
-import { tokenService } from "@/lib/tokenService";
 import { useToast } from "@/hooks/use-toast";
 
 const AUTH_STORAGE_KEY = "markethub-auth";
 
 export function useCrossTabSync() {
-  const logout = useAuthStore((s) => s.logout);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const clearCart = useCartStore((s) => s.clearCart);
   const clearNotifications = useNotificationStore((s) => s.clearAll);
   const { toast } = useToast();
 
   useEffect(() => {
     const handler = (e: StorageEvent) => {
-      // Auth store was cleared in another tab (logout)
       if (e.key === AUTH_STORAGE_KEY && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
           const state = parsed?.state;
           if (state && !state.isAuthenticated) {
-            tokenService.clearTokens();
-            logout();
+            clearAuth();
             clearCart();
             clearNotifications();
             toast({
@@ -35,14 +32,12 @@ export function useCrossTabSync() {
             });
           }
         } catch {
-          // ignore parse errors
+          // ignore
         }
       }
 
-      // Auth store removed entirely
       if (e.key === AUTH_STORAGE_KEY && e.newValue === null) {
-        tokenService.clearTokens();
-        logout();
+        clearAuth();
         clearCart();
         clearNotifications();
       }
@@ -50,5 +45,5 @@ export function useCrossTabSync() {
 
     window.addEventListener("storage", handler);
     return () => window.removeEventListener("storage", handler);
-  }, [logout, clearCart, clearNotifications, toast]);
+  }, [clearAuth, clearCart, clearNotifications, toast]);
 }

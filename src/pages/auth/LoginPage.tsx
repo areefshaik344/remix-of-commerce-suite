@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Phone, Eye, EyeOff, ShieldCheck, ChevronRight, Truck, Tag, Headphones } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/api/errorMapper";
 import OTPInput from "@/components/auth/OTPInput";
 
 export default function LoginPage() {
@@ -22,31 +23,28 @@ export default function LoginPage() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { loginWithCredentials } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validate with Zod
     const result = loginSchema.safeParse({ email, password });
     if (!result.success) {
-      const firstError = result.error.errors[0];
-      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
+      toast({ title: "Validation Error", description: result.error.errors[0].message, variant: "destructive" });
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    const success = loginWithCredentials(result.data.email, result.data.password);
-    setLoading(false);
-    if (success) {
+    try {
+      await login(result.data.email, result.data.password);
       toast({ title: "Welcome back!", description: "You've been logged in successfully." });
-      // Redirect to intended route or home
       const from = (location.state as { from?: string })?.from || "/";
       navigate(from, { replace: true });
-    } else {
-      toast({ title: "Invalid credentials", description: "Please check your email and password.", variant: "destructive" });
+    } catch (err) {
+      toast({ title: "Login failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,12 +68,16 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
-    loginWithCredentials(`${phone}@phone.mock`, "phone-otp");
-    setLoading(false);
-    toast({ title: "Welcome!", description: "Phone verified successfully." });
-    const from = (location.state as { from?: string })?.from || "/";
-    navigate(from, { replace: true });
+    try {
+      await login(`${phone}@phone.otp`, otp);
+      toast({ title: "Welcome!", description: "Phone verified successfully." });
+      const from = (location.state as { from?: string })?.from || "/";
+      navigate(from, { replace: true });
+    } catch (err) {
+      toast({ title: "Verification failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -186,9 +188,6 @@ export default function LoginPage() {
                       {loading ? "Signing in..." : "Sign In"}
                     </Button>
                   </form>
-                  <p className="text-xs text-muted-foreground mt-3 text-center">
-                    Demo: use <span className="font-mono bg-muted px-1 rounded">rahul@example.com</span> / <span className="font-mono bg-muted px-1 rounded">password</span>
-                  </p>
                 </TabsContent>
 
                 <TabsContent value="phone" className="mt-4">

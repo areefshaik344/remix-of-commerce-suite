@@ -2,8 +2,8 @@ export const APP_NAME = "MarketHub";
 export const APP_DESCRIPTION = "India's Premier Multi-Vendor Marketplace";
 export const APP_VERSION = "1.0.0";
 
-export const API_BASE_URL = "/api/v1";
-export const API_TIMEOUT = 5000;
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api/v1";
+export const API_TIMEOUT = 10000;
 
 export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 12,
