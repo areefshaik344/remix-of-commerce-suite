@@ -1,22 +1,19 @@
 /**
- * Production-ready Axios HTTP Client
- * 
- * - Attaches access token to every request
- * - On 401 → refreshes token → retries original request
- * - Queues concurrent requests during token refresh
- * - Maps all errors through errorMapper for user-friendly messages
- * - Request timeout + cancellation support
+ * Production Axios HTTP Client
+ *
+ * - Reads accessToken from Zustand store (memory-only)
+ * - Sends httpOnly refresh cookie automatically (withCredentials)
+ * - On 401 → POST /auth/refresh → retry queued requests
+ * - If refresh fails → dispatch session-expired event
  */
 
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
-import { tokenService } from "@/lib/tokenService";
 import { API_BASE_URL, API_TIMEOUT } from "@/config/constants";
+import { ENDPOINTS } from "@/api/endpoints";
 import { mapApiError, type MappedApiError } from "@/api/errorMapper";
 import type { ApiErrorResponse } from "@/types/api";
 
-// Flag to use mock fallback when backend is unavailable
-const USE_MOCK_FALLBACK = true; // Set to false when real backend is connected
-
+// ── Refresh queue ──────────────────────────────────────────────────────────
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (token: string) => void;
@@ -31,19 +28,42 @@ function processQueue(error: unknown, token: string | null = null) {
   failedQueue = [];
 }
 
-// Create Axios instance
+// ── Lazy import to avoid circular dependency ───────────────────────────────
+let _getStore: (() => typeof import("@/store/authStore"))["prototype"] | null = null;
+async function getAuthStore() {
+  if (!_getStore) {
+    const mod = await import("@/store/authStore");
+    _getStore = mod;
+  }
+  return _getStore.useAuthStore.getState();
+}
+
+function getAuthStoreSync() {
+  // After first load, module is cached — safe to use require-style
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = _getStore;
+    return mod?.useAuthStore.getState() ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Create Axios instance ──────────────────────────────────────────────────
 const httpClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
+  withCredentials: true, // CRITICAL: sends httpOnly refresh cookie
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// ── Request Interceptor ──────────────────────────────────────────────────
+// ── Request Interceptor: attach access token ───────────────────────────────
 httpClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = tokenService.getStoredAccessToken();
+    const store = getAuthStoreSync();
+    const token = store?.accessToken;
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -52,21 +72,23 @@ httpClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ── Response Interceptor ─────────────────────────────────────────────────
+// ── Response Interceptor: 401 refresh + retry ──────────────────────────────
 httpClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<ApiErrorResponse>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
-    // Map the error for consistent handling downstream
+    // Map error for consumers
     const mapped: MappedApiError = mapApiError(error);
-
-    // Attach mapped error for consumers
     (error as AxiosError & { mapped?: MappedApiError }).mapped = mapped;
 
-    // ── 401 refresh logic ────────────────────────────────────────────
+    // ── 401 refresh logic ─────────────────────────────────────────────
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Queue requests during refresh
+      // Don't retry refresh endpoint itself
+      if (originalRequest.url?.includes(ENDPOINTS.AUTH.REFRESH)) {
+        return Promise.reject(error);
+      }
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({
@@ -85,33 +107,31 @@ httpClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = tokenService.getStoredRefreshToken();
-        if (!refreshToken) {
-          throw new Error("No refresh token available");
-        }
+        // Cookie is sent automatically — no body needed
+        const response = await axios.post(
+          `${API_BASE_URL}${ENDPOINTS.AUTH.REFRESH}`,
+          {},
+          { withCredentials: true }
+        );
 
-        const payload = tokenService.validateRefreshToken(refreshToken);
-        if (!payload) {
-          throw new Error("Refresh token invalid");
-        }
+        const newAccessToken: string = response.data.data?.accessToken || response.data.accessToken;
+        if (!newAccessToken) throw new Error("No access token in refresh response");
 
-        // In production: POST /auth/refresh { refreshToken }
-        const { mockUsers } = await import("@/mocks/mockUsers");
-        const user = mockUsers.find((u) => u.id === payload.sub);
-        if (!user) throw new Error("User not found");
+        // Update store
+        const store = await getAuthStore();
+        store.setAccessToken(newAccessToken);
 
-        const newTokens = tokenService.generateTokens(user);
-        tokenService.persistTokens(newTokens);
-
-        processQueue(null, newTokens.accessToken);
+        processQueue(null, newAccessToken);
 
         if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
         return httpClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        tokenService.clearTokens();
+        // Session is dead
+        const store = await getAuthStore();
+        store.clearAuth();
         window.dispatchEvent(new CustomEvent("auth:session-expired"));
         return Promise.reject(refreshError);
       } finally {
@@ -123,10 +143,7 @@ httpClient.interceptors.response.use(
   }
 );
 
-/**
- * Helper: extract the mapped error from an Axios error.
- * Use in catch blocks: `const err = getMappedError(e);`
- */
+// ── Helper ─────────────────────────────────────────────────────────────────
 export function getMappedError(error: unknown): MappedApiError | null {
   if (axios.isAxiosError(error)) {
     return (error as AxiosError & { mapped?: MappedApiError }).mapped || mapApiError(error as AxiosError<ApiErrorResponse>);
@@ -134,5 +151,5 @@ export function getMappedError(error: unknown): MappedApiError | null {
   return null;
 }
 
-export { httpClient, USE_MOCK_FALLBACK };
+export { httpClient };
 export default httpClient;
