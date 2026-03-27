@@ -40,7 +40,7 @@ export default function AdminEmailTemplates() {
 
   const toggleTemplate = async (tmpl: EmailTemplate) => {
     try {
-      await adminApi.updateEmailTemplate(tmpl.id, { ...tmpl, enabled: !tmpl.enabled });
+      await adminApi.updateEmailTemplate(tmpl.id, { ...tmpl, enabled: !tmpl.enabled } as unknown as Record<string, unknown>);
       toast({ title: "Template updated" });
       refetch();
     } catch (e) {
