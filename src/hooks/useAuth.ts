@@ -33,6 +33,11 @@ export function useAuth() {
     return true;
   }, [store]);
 
+  /** Login with a pre-obtained auth response (e.g. from OTP verification) */
+  const loginWithToken = useCallback((accessToken: string, user: any) => {
+    store.setAuth(accessToken, user);
+  }, [store]);
+
   /** Full logout: API call + clear all state */
   const logout = useCallback(async () => {
     await authApi.logout();
