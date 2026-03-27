@@ -88,6 +88,26 @@ export const adminApi = {
     return res.data?.data || res.data;
   },
 
+  async getReporting() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.REPORTING);
+    return res.data?.data || res.data;
+  },
+
+  async getOrderById(orderId: string) {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.ORDER_DETAIL(orderId));
+    return res.data?.data || res.data;
+  },
+
+  async getProductById(productId: string) {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.PRODUCT_DETAIL(productId));
+    return res.data?.data || res.data;
+  },
+
+  async refundOrder(orderId: string, amount: number, reason: string) {
+    const res = await httpClient.post(ENDPOINTS.ADMIN.ORDER_REFUND(orderId), { amount, reason });
+    return res.data?.data || res.data;
+  },
+
   async getAuditLog() {
     const res = await httpClient.get(ENDPOINTS.ADMIN.AUDIT_LOG);
     return res.data?.data || res.data;

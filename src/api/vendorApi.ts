@@ -57,6 +57,41 @@ export const vendorApi = {
     return res.data?.data || res.data;
   },
 
+  async deleteCoupon(couponId: string) {
+    const res = await httpClient.delete(ENDPOINTS.VENDOR.COUPON_DETAIL(couponId));
+    return res.data?.data || res.data;
+  },
+
+  async getVendorInventory() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.INVENTORY);
+    return res.data?.data || res.data;
+  },
+
+  async updateInventory(productId: string, stock: number) {
+    const res = await httpClient.patch(ENDPOINTS.VENDOR.INVENTORY_UPDATE(productId), { stock });
+    return res.data?.data || res.data;
+  },
+
+  async getVendorReturns() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.RETURNS);
+    return res.data?.data || res.data;
+  },
+
+  async updateReturnStatus(returnId: string, status: string, note?: string) {
+    const res = await httpClient.patch(ENDPOINTS.VENDOR.RETURN_DETAIL(returnId), { status, note });
+    return res.data?.data || res.data;
+  },
+
+  async getVendorOrderById(orderId: string) {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.ORDER_DETAIL(orderId));
+    return res.data?.data || res.data;
+  },
+
+  async updateOrderStatus(orderId: string, status: string) {
+    const res = await httpClient.patch(ENDPOINTS.VENDOR.ORDER_DETAIL(orderId), { status });
+    return res.data?.data || res.data;
+  },
+
   async getVendorStoreProducts(vendorId: string) {
     const res = await httpClient.get(ENDPOINTS.VENDOR.STORE_PRODUCTS(vendorId));
     return res.data?.data || res.data;

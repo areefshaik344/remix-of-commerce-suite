@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { orders } from "@/features/order";
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Package, MapPin, CreditCard, Clock, RotateCcw } from "lucide-react";
-import { users } from "@/features/auth";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning",
@@ -26,29 +27,44 @@ const statusColors: Record<string, string> = {
 export default function AdminOrderDetail() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const order = orders.find(o => o.id === id);
-  const [status, setStatus] = useState(order?.status || "pending");
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("");
 
-  if (!order) {
-    return <div className="flex items-center justify-center h-64"><div className="text-center"><p className="text-lg font-medium">Order not found</p><Button variant="link" onClick={() => navigate("/admin/orders")}>Back</Button></div></div>;
-  }
+  const { data: orderResp, isLoading, error, refetch } = useApiQuery(
+    () => adminApi.getOrderById(id!), [id], { enabled: !!id }
+  );
 
-  const handleStatusUpdate = (s: string) => {
-    setStatus(s as any);
-    toast({ title: "Status updated", description: `Order ${order.id} → ${s}` });
+  const order = orderResp?.data ?? orderResp;
+  const [status, setStatus] = useState(order?.status || "pending");
+
+  if (isLoading) return <DashboardSkeleton />;
+  if (error) return <PageError message={error} onRetry={refetch} />;
+  if (!order) return <div className="flex items-center justify-center h-64"><div className="text-center"><p className="text-lg font-medium">Order not found</p><Button variant="link" onClick={() => navigate("/admin/orders")}>Back</Button></div></div>;
+
+  const handleStatusUpdate = async (s: string) => {
+    try {
+      await adminApi.updateOrderStatus(order.id, s);
+      setStatus(s);
+      toast({ title: "Status updated", description: `Order ${order.id} → ${s}` });
+    } catch {
+      toast({ title: "Failed to update status", variant: "destructive" });
+    }
   };
 
-  const handleRefund = () => {
+  const handleRefund = async () => {
     const amount = parseFloat(refundAmount);
     if (!amount || amount <= 0 || amount > order.total) {
       toast({ title: "Invalid amount", description: "Enter a valid refund amount.", variant: "destructive" });
       return;
     }
-    toast({ title: "Refund processed", description: `₹${amount.toLocaleString("en-IN")} refunded for ${order.id}.` });
-    setRefundAmount("");
-    setRefundReason("");
+    try {
+      await adminApi.refundOrder(order.id, amount, refundReason);
+      toast({ title: "Refund processed", description: `₹${amount.toLocaleString("en-IN")} refunded for ${order.id}.` });
+      setRefundAmount("");
+      setRefundReason("");
+    } catch {
+      toast({ title: "Refund failed", variant: "destructive" });
+    }
   };
 
   const timeline = [
@@ -74,18 +90,18 @@ export default function AdminOrderDetail() {
           <Card className="shadow-card">
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Package className="h-4 w-4" /> Items</CardTitle></CardHeader>
             <CardContent>
-              {order.items.map((item, i) => (
+              {(order.items || []).map((item: any, i: number) => (
                 <div key={i} className="flex items-center gap-4 py-3 border-b last:border-0">
                   <div className="h-14 w-14 rounded-lg bg-muted flex items-center justify-center"><Package className="h-6 w-6 text-muted-foreground" /></div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{item.productName}</p>
-                    <p className="text-xs text-muted-foreground">Qty: {item.quantity} × ₹{item.price.toLocaleString("en-IN")}</p>
+                    <p className="text-xs text-muted-foreground">Qty: {item.quantity} × ₹{item.price?.toLocaleString("en-IN")}</p>
                   </div>
                   <p className="font-semibold text-sm">₹{(item.price * item.quantity).toLocaleString("en-IN")}</p>
                 </div>
               ))}
               <Separator className="my-3" />
-              <div className="flex justify-between"><span className="text-sm text-muted-foreground">Total</span><span className="text-lg font-bold">₹{order.total.toLocaleString("en-IN")}</span></div>
+              <div className="flex justify-between"><span className="text-sm text-muted-foreground">Total</span><span className="text-lg font-bold">₹{order.total?.toLocaleString("en-IN")}</span></div>
             </CardContent>
           </Card>
 
@@ -129,20 +145,19 @@ export default function AdminOrderDetail() {
             </CardContent>
           </Card>
 
-          {/* Refund */}
           <Card className="shadow-card border-destructive/10">
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><RotateCcw className="h-4 w-4" /> Issue Refund</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
                 <Label className="text-sm">Refund Amount (₹)</Label>
-                <Input type="number" value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={`Max: ${order.total.toLocaleString("en-IN")}`} />
+                <Input type="number" value={refundAmount} onChange={e => setRefundAmount(e.target.value)} placeholder={`Max: ${order.total?.toLocaleString("en-IN")}`} />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm">Reason</Label>
                 <Textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} placeholder="Reason for refund..." rows={2} />
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => { setRefundAmount(order.total.toString()); }}>Full Refund</Button>
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => setRefundAmount(order.total?.toString())}>Full Refund</Button>
                 <Button size="sm" variant="destructive" className="flex-1" onClick={handleRefund}>Process</Button>
               </div>
             </CardContent>
@@ -152,7 +167,7 @@ export default function AdminOrderDetail() {
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><MapPin className="h-4 w-4" /> Shipping</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm">{order.shippingAddress}</p>
-              <p className="text-xs text-muted-foreground mt-2">Customer: {users.find(u => u.id === order.userId)?.name || order.userId}</p>
+              <p className="text-xs text-muted-foreground mt-2">Customer: {order.customerName || order.userId}</p>
             </CardContent>
           </Card>
 
@@ -160,7 +175,7 @@ export default function AdminOrderDetail() {
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><CreditCard className="h-4 w-4" /> Payment</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Method</span><span>{order.paymentMethod}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium">₹{order.total.toLocaleString("en-IN")}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium">₹{order.total?.toLocaleString("en-IN")}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Vendor</span><Button variant="link" className="p-0 h-auto text-sm" onClick={() => navigate(`/admin/vendors/${order.vendorId}`)}>View →</Button></div>
             </CardContent>
           </Card>

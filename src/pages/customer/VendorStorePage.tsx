@@ -1,14 +1,35 @@
 import { useParams, Link } from "react-router-dom";
-import { vendors } from "@/features/auth";
-import { products, ProductCard } from "@/features/product";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { ProductCard } from "@/features/product";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Star, Package, ShoppingCart, MapPin } from "lucide-react";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 export default function VendorStorePage() {
   const { vendorSlug } = useParams();
-  const vendor = vendors.find(v => v.storeName.toLowerCase().replace(/\s+/g, "-") === vendorSlug);
+
+  const { data: vendorResp, isLoading: vendorLoading, error: vendorError, refetch: refetchVendor } = useApiQuery(
+    () => vendorApi.getVendorBySlug(vendorSlug!),
+    [vendorSlug],
+    { enabled: !!vendorSlug }
+  );
+
+  const vendor = vendorResp?.data ?? vendorResp;
+
+  const { data: productsResp, isLoading: productsLoading } = useApiQuery(
+    () => vendorApi.getVendorStoreProducts(vendor?.id),
+    [vendor?.id],
+    { enabled: !!vendor?.id }
+  );
+
+  const vendorProducts = (productsResp?.data ?? productsResp ?? []) as any[];
+
+  if (vendorLoading || productsLoading) return <DashboardSkeleton />;
+  if (vendorError) return <PageError message={vendorError} onRetry={refetchVendor} />;
 
   if (!vendor) {
     return (
@@ -19,17 +40,14 @@ export default function VendorStorePage() {
     );
   }
 
-  const vendorProducts = products.filter(p => p.vendorId === vendor.id);
-
   return (
     <div className="container py-6 space-y-6">
-      {/* Store Header */}
       <Card className="shadow-card overflow-hidden">
         <div className="gradient-primary h-24" />
         <CardContent className="p-6 -mt-10 relative">
           <div className="flex items-end gap-4">
             <div className="h-20 w-20 rounded-xl bg-card border-4 border-card flex items-center justify-center text-4xl shadow-elevated">
-              {vendor.logo}
+              {vendor.logo || "🏪"}
             </div>
             <div className="flex-1 pb-1">
               <div className="flex items-center gap-2">
@@ -54,7 +72,7 @@ export default function VendorStorePage() {
               <p className="text-xs text-muted-foreground">Products</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
-              <p className="text-lg font-display font-bold">{vendor.totalOrders.toLocaleString()}</p>
+              <p className="text-lg font-display font-bold">{(vendor.totalOrders || 0).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Orders</p>
             </div>
             <div className="text-center p-3 rounded-lg bg-muted/50">
@@ -65,12 +83,11 @@ export default function VendorStorePage() {
         </CardContent>
       </Card>
 
-      {/* Products */}
       <div>
         <h2 className="font-display text-lg font-bold mb-4">All Products ({vendorProducts.length})</h2>
         {vendorProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {vendorProducts.map(p => <ProductCard key={p.id} product={p} />)}
+            {vendorProducts.map((p: any) => <ProductCard key={p.id} product={p} />)}
           </div>
         ) : (
           <div className="text-center py-12 text-muted-foreground">
