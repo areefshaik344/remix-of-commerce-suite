@@ -22,7 +22,10 @@ interface SpecRow { key: string; value: string; }
 export default function VendorProductEdit() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const product = products.find(p => p.id === id);
+  const { data: product, isLoading: productLoading, error: productError } = useApiQuery(
+    () => vendorApi.getVendorProducts().then((prods: any[]) => prods?.find((p: any) => p.id === id)),
+    [id]
+  );
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
