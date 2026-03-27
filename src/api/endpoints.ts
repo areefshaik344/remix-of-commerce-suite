@@ -98,6 +98,10 @@ export const ENDPOINTS = {
     COUPON_TOGGLE: (id: string) => `/admin/coupons/${id}/toggle`,
     COUPON_DELETE: (id: string) => `/admin/coupons/${id}`,
     CATEGORIES: "/admin/categories",
+    AUDIT_LOG: "/admin/audit-log",
+    VENDOR_APPLICATIONS: "/admin/vendor-applications",
+    VENDOR_APPLICATION_APPROVE: (id: string) => `/admin/vendor-applications/${id}/approve`,
+    VENDOR_APPLICATION_REJECT: (id: string) => `/admin/vendor-applications/${id}/reject`,
   },
 
   // Notifications
