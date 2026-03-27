@@ -19,6 +19,8 @@ describe("API Endpoints Registry", () => {
       expect(ENDPOINTS.AUTH.RESET_PASSWORD).toBe("/auth/reset-password");
       expect(ENDPOINTS.AUTH.VERIFY_EMAIL).toBe("/auth/verify-email");
       expect(ENDPOINTS.AUTH.ME).toBe("/auth/me");
+      expect(ENDPOINTS.AUTH.SEND_OTP).toBe("/auth/send-otp");
+      expect(ENDPOINTS.AUTH.VERIFY_OTP).toBe("/auth/verify-otp");
       expect(ENDPOINTS.AUTH.SESSIONS).toBe("/auth/sessions");
     });
 
