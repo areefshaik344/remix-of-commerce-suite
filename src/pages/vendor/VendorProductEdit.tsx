@@ -10,8 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Upload, X, Plus, Trash2, GripVertical, ImagePlus, Save } from "lucide-react";
-import { categories, products } from "@/features/product";
+import { categories } from "@/features/product";
 import { toast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { getErrorMessage } from "@/api/errorMapper";
 
 interface Variant { name: string; options: string[]; }
 interface SpecRow { key: string; value: string; }
