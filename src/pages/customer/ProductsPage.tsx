@@ -1,14 +1,17 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { products, categories, ProductCard, FilterPanel, RecentlyViewedSection } from "@/features/product";
+import { ProductCard, FilterPanel, RecentlyViewedSection } from "@/features/product";
+import { productApi } from "@/api/productApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import SEOHead from "@/components/shared/SEOHead";
+import { ProductGridSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
-const brands = [...new Set(products.map(p => p.brand))];
 const PAGE_SIZE = 12;
 
 export default function ProductsPage() {
@@ -23,29 +26,29 @@ export default function ProductsPage() {
   const [minRating, setMinRating] = useState(0);
   const [sortBy, setSortBy] = useState("relevance");
 
-  const filtered = useMemo(() => {
-    let result = products.filter(p => {
-      if (querySearch && !p.name.toLowerCase().includes(querySearch.toLowerCase()) && !p.brand.toLowerCase().includes(querySearch.toLowerCase()) && !p.category.toLowerCase().includes(querySearch.toLowerCase())) return false;
-      if (selectedCategories.length && !selectedCategories.includes(p.category.toLowerCase().replace(/ & /g, "-").replace(/ /g, "-"))) return false;
-      if (selectedBrands.length && !selectedBrands.includes(p.brand)) return false;
-      if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
-      if (p.rating < minRating) return false;
-      return true;
-    });
+  const { data: productsResp, isLoading, error, refetch } = useApiQuery(
+    () => productApi.getProducts({
+      search: querySearch || undefined,
+      category: selectedCategories[0] || undefined,
+      brand: selectedBrands[0] || undefined,
+      minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
+      maxPrice: priceRange[1] < 200000 ? priceRange[1] : undefined,
+      minRating: minRating > 0 ? minRating : undefined,
+      sortBy: sortBy !== "relevance" ? sortBy : undefined,
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+    }),
+    [querySearch, selectedCategories, selectedBrands, priceRange, minRating, sortBy, currentPage]
+  );
 
-    switch (sortBy) {
-      case "price-asc": result.sort((a, b) => a.price - b.price); break;
-      case "price-desc": result.sort((a, b) => b.price - a.price); break;
-      case "rating": result.sort((a, b) => b.rating - a.rating); break;
-      case "discount": result.sort((a, b) => b.discount - a.discount); break;
-      case "newest": result.sort((a, b) => b.id.localeCompare(a.id)); break;
-    }
-    return result;
-  }, [querySearch, selectedCategories, selectedBrands, priceRange, minRating, sortBy]);
+  const { data: brandsResp } = useApiQuery(() => productApi.getBrands(), []);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const safePage = Math.min(Math.max(1, currentPage), totalPages || 1);
-  const paginatedProducts = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  // Extract data from response (handles both wrapped and unwrapped)
+  const products = productsResp?.items ?? productsResp?.data?.items ?? productsResp?.data ?? productsResp ?? [];
+  const totalItems = productsResp?.total ?? productsResp?.data?.total ?? (products as any[]).length;
+  const totalPages = Math.ceil(totalItems / PAGE_SIZE) || 1;
+  const brands = brandsResp?.data ?? brandsResp ?? [];
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
 
   const goToPage = (page: number) => {
     const params = new URLSearchParams(searchParams);
@@ -60,23 +63,31 @@ export default function ProductsPage() {
   const activeFilters = selectedCategories.length + selectedBrands.length + (minRating > 0 ? 1 : 0);
 
   const filterProps = {
-    selectedCategories, selectedBrands, priceRange, minRating, brands,
+    selectedCategories, selectedBrands, priceRange, minRating, brands: brands as string[],
     onToggleCategory: toggleCategory, onToggleBrand: toggleBrand,
     onPriceChange: setPriceRange, onRatingChange: setMinRating, onClearAll: clearAll,
   };
 
   const pageTitle = querySearch ? `Search: "${querySearch}" - MarketHub` : "All Products - MarketHub";
 
+  if (error) {
+    return (
+      <div className="container py-6">
+        <PageError message={error} onRetry={refetch} />
+      </div>
+    );
+  }
+
   return (
     <div className="container py-6">
-      <SEOHead title={pageTitle} description={`Browse ${filtered.length} products on MarketHub marketplace`} />
+      <SEOHead title={pageTitle} description={`Browse products on MarketHub marketplace`} />
 
       <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="font-display text-xl font-bold">
             {querySearch ? `Results for "${querySearch}"` : "All Products"}
           </h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} products found</p>
+          <p className="text-sm text-muted-foreground">{totalItems} products found</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="md:hidden">
@@ -115,7 +126,9 @@ export default function ProductsPage() {
           </div>
         </aside>
         <div className="flex-1">
-          {paginatedProducts.length === 0 ? (
+          {isLoading ? (
+            <ProductGridSkeleton count={PAGE_SIZE} />
+          ) : (products as any[]).length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <p className="text-lg font-medium">No products found</p>
               <p className="text-sm mt-1">Try adjusting your filters</p>
@@ -126,10 +139,9 @@ export default function ProductsPage() {
           ) : (
             <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {paginatedProducts.map(p => <ProductCard key={p.id} product={p} />)}
+                {(products as any[]).map((p: any) => <ProductCard key={p.id} product={p} />)}
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
                   <Button variant="outline" size="icon" className="h-8 w-8" disabled={safePage <= 1} onClick={() => goToPage(safePage - 1)}>
@@ -146,13 +158,7 @@ export default function ProductsPage() {
                       p === "..." ? (
                         <span key={`dots-${i}`} className="px-1 text-sm text-muted-foreground">…</span>
                       ) : (
-                        <Button
-                          key={p}
-                          variant={p === safePage ? "default" : "outline"}
-                          size="sm"
-                          className="h-8 w-8 p-0 text-xs"
-                          onClick={() => goToPage(p as number)}
-                        >
+                        <Button key={p} variant={p === safePage ? "default" : "outline"} size="sm" className="h-8 w-8 p-0 text-xs" onClick={() => goToPage(p as number)}>
                           {p}
                         </Button>
                       )
@@ -164,14 +170,13 @@ export default function ProductsPage() {
               )}
 
               <p className="text-center text-xs text-muted-foreground mt-3">
-                Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of {filtered.length} products
+                Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, totalItems)} of {totalItems} products
               </p>
             </>
           )}
         </div>
       </div>
 
-      {/* Recently viewed at bottom */}
       <div className="mt-10">
         <RecentlyViewedSection maxItems={6} />
       </div>

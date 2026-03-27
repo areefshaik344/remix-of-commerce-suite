@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
-import { orders } from "@/features/order";
+import { orderApi } from "@/api/orderApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, Truck, CheckCircle2, Clock, ChevronLeft, MapPin, CreditCard, RotateCcw, Download, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 const timelineSteps = [
   { key: "pending", label: "Order Placed", icon: Clock },
@@ -24,10 +27,20 @@ const statusOrder = ["pending", "confirmed", "shipped", "delivered"];
 export default function OrderDetailPage() {
   const { id } = useParams();
   const { toast } = useToast();
-  const order = orders.find(o => o.id === id);
   const [returnOpen, setReturnOpen] = useState(false);
   const [returnReason, setReturnReason] = useState("");
   const [returnType, setReturnType] = useState("return");
+
+  const { data: orderResp, isLoading, error, refetch } = useApiQuery(
+    () => orderApi.getOrderById(id!),
+    [id],
+    { enabled: !!id }
+  );
+
+  const order = orderResp?.data ?? orderResp;
+
+  if (isLoading) return <div className="container py-6 max-w-4xl"><DashboardSkeleton /></div>;
+  if (error) return <div className="container py-6 max-w-4xl"><PageError message={error} onRetry={refetch} /></div>;
 
   if (!order) {
     return (
@@ -50,7 +63,6 @@ export default function OrderDetailPage() {
   };
 
   const handleDownloadInvoice = () => {
-    // Generate a simple invoice text file as mock
     const invoiceContent = `
 ═══════════════════════════════════════
           MARKETHUB - TAX INVOICE
@@ -63,7 +75,7 @@ Status: ${order.status.toUpperCase()}
 ───────────────────────────────────────
 ITEMS
 ───────────────────────────────────────
-${order.items.map(item => `${item.productName}
+${order.items.map((item: any) => `${item.productName}
   Qty: ${item.quantity}  |  Price: ${formatPrice(item.price)}  |  Total: ${formatPrice(item.price * item.quantity)}`).join("\n\n")}
 
 ───────────────────────────────────────
@@ -116,9 +128,7 @@ Thank you for shopping with MarketHub!
                 </Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Request Return / Refund</DialogTitle>
-                </DialogHeader>
+                <DialogHeader><DialogTitle>Request Return / Refund</DialogTitle></DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div>
                     <Label className="text-xs">Request Type</Label>
@@ -149,9 +159,7 @@ Thank you for shopping with MarketHub!
                     <Label className="text-xs">Additional Details</Label>
                     <Textarea placeholder="Describe the issue..." className="mt-1" rows={3} />
                   </div>
-                  <Button className="w-full" onClick={handleReturnSubmit} disabled={!returnReason}>
-                    Submit Request
-                  </Button>
+                  <Button className="w-full" onClick={handleReturnSubmit} disabled={!returnReason}>Submit Request</Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -162,17 +170,11 @@ Thank you for shopping with MarketHub!
       {/* Order Tracking Timeline */}
       {!isCancelled && !isReturned && (
         <Card className="shadow-card mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Order Tracking</CardTitle>
-          </CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-base">Order Tracking</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-center justify-between relative">
-              {/* Progress line */}
               <div className="absolute top-5 left-[10%] right-[10%] h-0.5 bg-muted">
-                <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{ width: `${(currentStep / (timelineSteps.length - 1)) * 100}%` }}
-                />
+                <div className="h-full bg-primary transition-all duration-500" style={{ width: `${(currentStep / (timelineSteps.length - 1)) * 100}%` }} />
               </div>
               {timelineSteps.map((step, i) => {
                 const StepIcon = step.icon;
@@ -180,14 +182,10 @@ Thank you for shopping with MarketHub!
                 const isCurrent = i === currentStep;
                 return (
                   <div key={step.key} className="flex flex-col items-center relative z-10">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                      isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
-                    } ${isCurrent ? "ring-4 ring-primary/20" : ""}`}>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"} ${isCurrent ? "ring-4 ring-primary/20" : ""}`}>
                       <StepIcon className="h-4 w-4" />
                     </div>
-                    <span className={`text-xs mt-2 font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>
-                      {step.label}
-                    </span>
+                    <span className={`text-xs mt-2 font-medium ${isActive ? "text-foreground" : "text-muted-foreground"}`}>{step.label}</span>
                     {isCurrent && (
                       <span className="text-[10px] text-primary mt-0.5">
                         {new Date(order.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
@@ -219,14 +217,11 @@ Thank you for shopping with MarketHub!
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Items */}
         <div className="md:col-span-2">
           <Card className="shadow-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Items ({order.items.length})</CardTitle>
-            </CardHeader>
+            <CardHeader className="pb-3"><CardTitle className="text-base">Items ({order.items.length})</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {order.items.map((item, i) => (
+              {order.items.map((item: any, i: number) => (
                 <div key={i} className="flex items-center gap-4 p-3 rounded-lg bg-muted/30">
                   <div className="h-16 w-16 rounded-lg bg-muted flex items-center justify-center">
                     <Package className="h-6 w-6 text-muted-foreground" />
@@ -242,7 +237,6 @@ Thank you for shopping with MarketHub!
           </Card>
         </div>
 
-        {/* Summary sidebar */}
         <div className="space-y-4">
           <Card className="shadow-card">
             <CardContent className="p-4 space-y-3">
