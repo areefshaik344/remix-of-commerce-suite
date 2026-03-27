@@ -41,6 +41,7 @@ export default function SignupPage() {
   const { signup, loginWithToken } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { cooldown, isCoolingDown, startCooldown, resetCooldown } = useOtpCooldown();
 
   // ── Email Signup ──
   const handleEmailSignup = async (e: React.FormEvent) => {
