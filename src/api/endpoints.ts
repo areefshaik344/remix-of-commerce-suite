@@ -15,6 +15,8 @@ export const ENDPOINTS = {
     RESET_PASSWORD: "/auth/reset-password",
     VERIFY_EMAIL: "/auth/verify-email",
     ME: "/auth/me",
+    SEND_OTP: "/auth/send-otp",
+    VERIFY_OTP: "/auth/verify-otp",
     SESSIONS: "/auth/sessions",
     REVOKE_SESSION: (id: string) => `/auth/sessions/${id}`,
   },

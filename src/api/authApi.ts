@@ -96,4 +96,20 @@ export const authApi = {
     const res = await httpClient.get(ENDPOINTS.AUTH.ME);
     return res.data?.data || res.data;
   },
+
+  /** POST /auth/send-otp — sends OTP to phone number */
+  async sendOtp(phone: string): Promise<{ message: string; otp?: string }> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.SEND_OTP, { phone });
+    return res.data?.data || res.data;
+  },
+
+  /** POST /auth/verify-otp — verifies OTP and returns auth tokens */
+  async verifyOtp(phone: string, otp: string): Promise<AuthResponse> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.VERIFY_OTP, { phone, otp });
+    const data = res.data?.data || res.data;
+    return {
+      accessToken: data.accessToken || data.token,
+      user: data.user,
+    };
+  },
 };
