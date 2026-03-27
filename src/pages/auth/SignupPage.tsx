@@ -305,7 +305,12 @@ export default function SignupPage() {
                         {loading ? "Verifying..." : "Verify OTP"}
                       </Button>
                       <p className="text-xs text-center text-muted-foreground">
-                        Didn't receive? <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        Didn't receive?{" "}
+                        {isCoolingDown ? (
+                          <span className="text-muted-foreground">Resend in {cooldown}s</span>
+                        ) : (
+                          <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        )}
                       </p>
                     </div>
                   ) : (

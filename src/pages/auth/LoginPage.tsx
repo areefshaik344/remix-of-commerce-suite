@@ -237,7 +237,12 @@ export default function LoginPage() {
                         {loading ? "Verifying..." : "Verify & Login"}
                       </Button>
                       <p className="text-xs text-center text-muted-foreground">
-                        Didn't receive? <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        Didn't receive?{" "}
+                        {isCoolingDown ? (
+                          <span className="text-muted-foreground">Resend in {cooldown}s</span>
+                        ) : (
+                          <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        )}
                       </p>
                     </div>
                   )}
