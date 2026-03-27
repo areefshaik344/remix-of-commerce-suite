@@ -52,7 +52,7 @@ export default function AdminEmailTemplates() {
     if (!editingTemplate) return;
     setSaving(true);
     try {
-      await adminApi.updateEmailTemplate(editingTemplate.id, editingTemplate);
+      await adminApi.updateEmailTemplate(editingTemplate.id, editingTemplate as unknown as Record<string, unknown>);
       toast({ title: "Template saved" });
       setEditingTemplate(null);
       refetch();
