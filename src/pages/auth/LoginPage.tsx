@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const { cooldown, isCoolingDown, startCooldown, resetCooldown } = useOtpCooldown();
 
   const { login, loginWithToken } = useAuth();
   const navigate = useNavigate();
