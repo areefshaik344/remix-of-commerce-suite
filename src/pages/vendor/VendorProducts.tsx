@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { products } from "@/features/product";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,22 +11,37 @@ import { SearchEmpty } from "@/components/shared/EmptyState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { TablePagination, usePagination } from "@/components/shared/Pagination";
 import { toast } from "@/hooks/use-toast";
+import { TableSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 export default function VendorProducts() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
-  const vendorProducts = products.filter(p => p.vendorId === "v-1");
-  const filtered = vendorProducts.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+  const { data: productsResp, isLoading, error, refetch } = useApiQuery(
+    () => vendorApi.getVendorProducts(), []
+  );
+
+  const vendorProducts = (productsResp?.data ?? productsResp ?? []) as any[];
+  const filtered = vendorProducts.filter((p: any) => p.name.toLowerCase().includes(search.toLowerCase()));
   const { page, setPage, totalPages, paginatedItems, totalItems } = usePagination(filtered, 8);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteTarget) {
-      toast({ title: "Product deleted", description: `"${deleteTarget.name}" has been removed.` });
+      try {
+        await vendorApi.deleteProduct(deleteTarget.id);
+        toast({ title: "Product deleted", description: `"${deleteTarget.name}" has been removed.` });
+        refetch();
+      } catch {
+        toast({ title: "Error", description: "Failed to delete product.", variant: "destructive" });
+      }
       setDeleteTarget(null);
     }
   };
+
+  if (isLoading) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">Products</h1><TableSkeleton rows={6} cols={5} /></div>;
+  if (error) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">Products</h1><PageError message={error} onRetry={refetch} /></div>;
 
   return (
     <div className="space-y-4">
@@ -61,11 +77,11 @@ export default function VendorProducts() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedItems.map(product => (
+                    {paginatedItems.map((product: any) => (
                       <tr key={product.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                         <td className="p-3">
                           <div className="flex items-center gap-3">
-                            <img src={product.images[0]} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
+                            <img src={product.images?.[0]} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
                             <div>
                               <p className="font-medium line-clamp-1">{product.name}</p>
                               <p className="text-xs text-muted-foreground">{product.brand}</p>
@@ -73,7 +89,7 @@ export default function VendorProducts() {
                           </div>
                         </td>
                         <td className="p-3 text-muted-foreground">{product.category}</td>
-                        <td className="p-3 text-right font-medium">₹{product.price.toLocaleString("en-IN")}</td>
+                        <td className="p-3 text-right font-medium">₹{product.price?.toLocaleString("en-IN")}</td>
                         <td className="p-3 text-center">
                           <Badge variant={product.stockCount > 100 ? "default" : product.stockCount > 10 ? "secondary" : "destructive"} className="text-xs">
                             {product.stockCount}
