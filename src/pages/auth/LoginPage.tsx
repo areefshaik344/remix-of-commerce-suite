@@ -61,7 +61,7 @@ export default function LoginPage() {
     try {
       const res = await authApi.sendOtp(phone);
       setOtpSent(true);
-      // In dev mode, backend returns the OTP in the response for testing
+      startCooldown();
       const devOtp = res.otp ? ` (Dev OTP: ${res.otp})` : "";
       toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}${devOtp}` });
     } catch (err) {
