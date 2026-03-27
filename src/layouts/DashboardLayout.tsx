@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
 import { useNotificationStore } from "@/features/notification";
+import { useNotificationPolling } from "@/hooks/useNotificationPolling";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -57,6 +58,9 @@ export default function DashboardLayout({ title, navItems }: DashboardLayoutProp
   const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
   const unread = unreadCount();
+
+  // Poll backend for new notifications every 30s, pause when tab is hidden
+  useNotificationPolling({ interval: 30_000, enabled: true });
 
   const handleLogout = () => {
     logout();
