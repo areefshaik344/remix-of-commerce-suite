@@ -1,0 +1,184 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Store, ArrowLeft, TrendingUp, Shield, Zap, IndianRupee } from "lucide-react";
+import { useAuth } from "@/features/auth";
+import { useToast } from "@/hooks/use-toast";
+import { vendorRegistrationSchema } from "@/lib/validators";
+
+export default function VendorRegisterPage() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const { signup } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = vendorRegistrationSchema.safeParse({ name, email, phone, password, storeName, category, description, agreed });
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast({ title: "Validation Error", description: firstError.message, variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      await signup(result.data.name, result.data.email, result.data.phone, result.data.password);
+      toast({ title: "Application submitted!", description: "We'll review your application within 2-3 business days." });
+      navigate("/vendor/register/success");
+    } catch (err: any) {
+      toast({ title: "Registration failed", description: err?.message || "Something went wrong", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* Left panel */}
+      <div className="hidden lg:flex lg:w-[480px] gradient-primary flex-col justify-between p-10 text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 -left-10 w-60 h-60 rounded-full bg-white/20 blur-3xl" />
+          <div className="absolute bottom-20 right-0 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
+        </div>
+        <div className="relative z-10">
+          <Link to="/">
+            <h1 className="text-3xl font-display font-bold">MarketHub</h1>
+          </Link>
+          <p className="text-sm mt-1 opacity-80">Sell to millions across India</p>
+        </div>
+        <div className="relative z-10 space-y-5">
+          <p className="text-lg font-display font-semibold">Why sell on MarketHub?</p>
+          <div className="space-y-4">
+            {[
+              { icon: TrendingUp, title: "89K+ Active Customers", desc: "Reach a massive buyer base" },
+              { icon: IndianRupee, title: "₹256Cr+ Revenue", desc: "Marketplace-level transactions" },
+              { icon: Shield, title: "Secure Payments", desc: "7-day settlement guarantee" },
+              { icon: Zap, title: "Easy Dashboard", desc: "Manage inventory, orders & analytics" },
+            ].map(item => (
+              <div key={item.title} className="flex items-start gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{item.title}</p>
+                  <p className="text-xs opacity-70">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="relative z-10 text-xs opacity-60">© 2025 MarketHub. All rights reserved.</p>
+      </div>
+
+      {/* Right form */}
+      <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
+        <div className="w-full max-w-lg space-y-6">
+          <div>
+            <Link to="/login" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
+              <ArrowLeft className="h-4 w-4" /> Back to login
+            </Link>
+            <h2 className="text-2xl font-display font-bold flex items-center gap-2">
+              <Store className="h-6 w-6 text-primary" /> Become a Seller
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">Register your store and start selling today</p>
+          </div>
+
+          <Card className="shadow-elevated border-0">
+            <CardContent className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Personal Details</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Full Name *</Label>
+                    <Input placeholder="Your name" value={name} onChange={e => setName(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Phone *</Label>
+                    <Input placeholder="+91 98765 43210" value={phone} onChange={e => setPhone(e.target.value)} required />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Email *</Label>
+                    <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Password *</Label>
+                    <Input type="password" placeholder="Min 6 characters" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+                  </div>
+                </div>
+
+                <Separator />
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Store Details</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Store Name *</Label>
+                    <Input placeholder="e.g. TechZone Electronics" value={storeName} onChange={e => setStoreName(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Primary Category *</Label>
+                    <Select value={category} onValueChange={setCategory} required>
+                      <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>
+                        {["Electronics", "Fashion", "Home & Living", "Beauty", "Sports", "Books", "Groceries", "Toys & Games"].map(c => (
+                          <SelectItem key={c} value={c.toLowerCase()}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Store Description</Label>
+                  <Textarea placeholder="What do you sell?" value={description} onChange={e => setDescription(e.target.value)} rows={3} />
+                </div>
+
+                <div className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                  <p className="font-medium text-foreground mb-1">What happens next?</p>
+                  <ol className="list-decimal list-inside space-y-0.5">
+                    <li>We review your application (2-3 business days)</li>
+                    <li>Once approved, complete KYC & bank details</li>
+                    <li>Start listing products and selling!</li>
+                  </ol>
+                </div>
+
+                <div className="flex items-start gap-2">
+                  <Checkbox id="vendor-terms" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+                  <label htmlFor="vendor-terms" className="text-xs text-muted-foreground leading-relaxed">
+                    I agree to the <Link to="/" className="text-primary hover:underline">Vendor Agreement</Link>,{" "}
+                    <Link to="/" className="text-primary hover:underline">Commission Policy</Link>, and{" "}
+                    <Link to="/" className="text-primary hover:underline">Terms of Service</Link>
+                  </label>
+                </div>
+
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Submitting application..." : "Submit Application"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

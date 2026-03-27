@@ -1,0 +1,151 @@
+import { httpClient } from "./httpClient";
+import { ENDPOINTS } from "./endpoints";
+
+export const vendorApi = {
+  async getVendorProfile() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.PROFILE);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorProducts() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.PRODUCTS);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorOrders() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.ORDERS);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorBySlug(slug: string) {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.STORE(slug));
+    return res.data?.data || res.data;
+  },
+
+  async updateVendorProfile(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.PROFILE, data);
+    return res.data?.data || res.data;
+  },
+
+  async createProduct(product: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.PRODUCTS, product);
+    return res.data?.data || res.data;
+  },
+
+  async updateProduct(productId: string, data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.PRODUCT_DETAIL(productId), data);
+    return res.data?.data || res.data;
+  },
+
+  async deleteProduct(productId: string) {
+    const res = await httpClient.delete(ENDPOINTS.VENDOR.PRODUCT_DETAIL(productId));
+    return res.data?.data || res.data;
+  },
+
+  async getVendorAnalytics() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.ANALYTICS);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorFinancials() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.FINANCIALS);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorCoupons() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.COUPONS);
+    return res.data?.data || res.data;
+  },
+
+  async createCoupon(data: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.COUPON_CREATE, data);
+    return res.data?.data || res.data;
+  },
+
+  async deleteCoupon(couponId: string) {
+    const res = await httpClient.delete(ENDPOINTS.VENDOR.COUPON_DETAIL(couponId));
+    return res.data?.data || res.data;
+  },
+
+  async getShippingSettings() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.SHIPPING_SETTINGS);
+    return res.data?.data || res.data;
+  },
+
+  async updateShippingSettings(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.SHIPPING_SETTINGS, data);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorInventory() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.INVENTORY);
+    return res.data?.data || res.data;
+  },
+
+  async updateInventory(productId: string, stock: number) {
+    const res = await httpClient.patch(ENDPOINTS.VENDOR.INVENTORY_UPDATE(productId), { stock });
+    return res.data?.data || res.data;
+  },
+
+  async getVendorReturns() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.RETURNS);
+    return res.data?.data || res.data;
+  },
+
+  async updateReturnStatus(returnId: string, status: string, note?: string) {
+    const res = await httpClient.patch(ENDPOINTS.VENDOR.RETURN_DETAIL(returnId), { status, note });
+    return res.data?.data || res.data;
+  },
+
+  async getVendorOrderById(orderId: string) {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.ORDER_DETAIL(orderId));
+    return res.data?.data || res.data;
+  },
+
+  async updateOrderStatus(orderId: string, status: string) {
+    const res = await httpClient.patch(ENDPOINTS.VENDOR.ORDER_DETAIL(orderId), { status });
+    return res.data?.data || res.data;
+  },
+
+  async getVendorStoreProducts(vendorId: string) {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.STORE_PRODUCTS(vendorId));
+    return res.data?.data || res.data;
+  },
+
+  async getAllVendors() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.VENDORS);
+    return res.data?.data || res.data;
+  },
+
+  async submitOnboarding(data: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.ONBOARDING, data);
+    return res.data?.data || res.data;
+  },
+
+  async getStoreCustomization() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.STORE_CUSTOMIZATION);
+    return res.data?.data || res.data;
+  },
+
+  async updateStoreCustomization(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.STORE_CUSTOMIZATION, data);
+    return res.data?.data || res.data;
+  },
+
+  async getPayoutHistory() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.PAYOUTS);
+    return res.data?.data || res.data;
+  },
+
+  async bulkUploadProducts(formData: FormData) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.BULK_UPLOAD, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data?.data || res.data;
+  },
+
+  async getLowStockProducts() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.LOW_STOCK);
+    return res.data?.data || res.data;
+  },
+};

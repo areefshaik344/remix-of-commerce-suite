@@ -1,0 +1,88 @@
+import type { Product } from "@/features/product";
+import { useCartStore } from "@/features/cart";
+import { useWishlistStore } from "@/features/wishlist";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Link } from "react-router-dom";
+import { memo, useCallback } from "react";
+
+function ProductCardInner({ product }: { product: Product }) {
+  const addToCart = useCartStore(s => s.addToCart);
+  const toggleWishlist = useWishlistStore(s => s.toggleWishlist);
+  const wishlisted = useWishlistStore(s => s.wishlist.includes(product.id));
+
+  const handleAddToCart = useCallback(() => addToCart(product), [addToCart, product]);
+  const handleToggleWishlist = useCallback(() => toggleWishlist(product.id), [toggleWishlist, product.id]);
+
+  const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
+  const isLowStock = product.inStock && product.stockCount > 0 && product.stockCount <= 10;
+  const isOutOfStock = !product.inStock || product.stockCount === 0;
+
+  return (
+    <Card className="group overflow-hidden border-border/50 hover:shadow-elevated transition-all duration-300 h-full">
+      <div className="relative aspect-square overflow-hidden bg-muted/30">
+        <Link to={`/product/${product.slug}`}>
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        </Link>
+        {product.discount > 0 && (
+          <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs font-semibold">
+            {product.discount}% OFF
+          </Badge>
+        )}
+        {isOutOfStock && (
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+            <Badge variant="destructive" className="text-xs">Out of Stock</Badge>
+          </div>
+        )}
+        {isLowStock && !isOutOfStock && (
+          <Badge className="absolute bottom-2 left-2 bg-warning text-warning-foreground text-[10px]">
+            Only {product.stockCount} left
+          </Badge>
+        )}
+        <button
+          onClick={handleToggleWishlist}
+          className="absolute top-2 right-2 rounded-full bg-card/80 backdrop-blur-sm p-2 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+        >
+          <Heart className={`h-4 w-4 ${wishlisted ? "fill-destructive text-destructive" : "text-foreground"}`} />
+        </button>
+      </div>
+      <CardContent className="p-3 space-y-1.5">
+        <p className="text-xs text-muted-foreground">{product.brand}</p>
+        <Link to={`/product/${product.slug}`}>
+          <h3 className="font-medium text-sm leading-tight line-clamp-2 hover:text-primary transition-colors">{product.name}</h3>
+        </Link>
+        <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 bg-success/10 text-success px-1.5 py-0.5 rounded text-xs font-semibold">
+            <span>{product.rating}</span>
+            <Star className="h-3 w-3 fill-current" />
+          </div>
+          <span className="text-xs text-muted-foreground">({product.reviewCount.toLocaleString()})</span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="font-display font-bold text-base">{formatPrice(product.price)}</span>
+          {product.originalPrice > product.price && (
+            <span className="text-xs text-muted-foreground line-through">{formatPrice(product.originalPrice)}</span>
+          )}
+        </div>
+        <Button
+          size="sm"
+          className="w-full mt-1 gap-1.5 text-xs"
+          onClick={handleAddToCart}
+          disabled={isOutOfStock}
+        >
+          <ShoppingCart className="h-3.5 w-3.5" />
+          {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+export const ProductCard = memo(ProductCardInner);
