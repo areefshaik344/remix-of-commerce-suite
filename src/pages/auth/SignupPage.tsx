@@ -14,6 +14,7 @@ import { signupSchema, phoneLoginSchema, otpSchema } from "@/lib/validators";
 import { getErrorMessage } from "@/api/errorMapper";
 import { authApi } from "@/api/authApi";
 import OTPInput from "@/components/auth/OTPInput";
+import { useOtpCooldown } from "@/hooks/useOtpCooldown";
 
 export default function SignupPage() {
   const [tab, setTab] = useState<"email" | "phone">("email");
