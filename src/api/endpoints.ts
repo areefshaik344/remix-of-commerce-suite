@@ -71,33 +71,43 @@ export const ENDPOINTS = {
   VENDOR: {
     PROFILE: "/vendor/profile",
     PRODUCTS: "/vendor/products",
+    PRODUCT_DETAIL: (id: string) => `/vendor/products/${id}`,
     ORDERS: "/vendor/orders",
     ANALYTICS: "/vendor/analytics",
     FINANCIALS: "/vendor/financials",
     INVENTORY: "/vendor/inventory",
+    COUPONS: "/vendor/coupons",
     STORE: (vendorId: string) => `/vendors/${vendorId}`,
+    STORE_PRODUCTS: (vendorId: string) => `/vendors/${vendorId}/products`,
   },
 
   // Admin
   ADMIN: {
     USERS: "/admin/users",
     USER_DETAIL: (id: string) => `/admin/users/${id}`,
+    USER_TOGGLE: (id: string) => `/admin/users/${id}/toggle-active`,
     VENDORS: "/admin/vendors",
     VENDOR_DETAIL: (id: string) => `/admin/vendors/${id}`,
     VENDOR_APPROVE: (id: string) => `/admin/vendors/${id}/approve`,
     VENDOR_REJECT: (id: string) => `/admin/vendors/${id}/reject`,
     PRODUCTS: "/admin/products",
     ORDERS: "/admin/orders",
+    ORDER_STATUS: (id: string) => `/admin/orders/${id}/status`,
     ANALYTICS: "/admin/analytics",
     COUPONS: "/admin/coupons",
+    COUPON_TOGGLE: (id: string) => `/admin/coupons/${id}/toggle`,
+    COUPON_DELETE: (id: string) => `/admin/coupons/${id}`,
     CATEGORIES: "/admin/categories",
   },
 
   // Notifications
   NOTIFICATIONS: {
     LIST: "/notifications",
+    UNREAD_COUNT: "/notifications/unread-count",
     MARK_READ: (id: string) => `/notifications/${id}/read`,
     MARK_ALL_READ: "/notifications/read-all",
+    CREATE: "/notifications",
+    SEND_EMAIL: "/notifications/email",
   },
 
   // User
