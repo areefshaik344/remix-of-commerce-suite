@@ -1,16 +1,33 @@
 import { useNavigate } from "react-router-dom";
 import { StatCard } from "@/components/shared/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { analyticsData } from "@/features/order";
-import { vendors } from "@/features/auth";
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Badge } from "@/components/ui/badge";
 import { DollarSign, Users, Store, ShoppingCart } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
-  const revenueData = analyticsData.monthlyRevenue.map(d => ({ ...d, revenue: d.revenue / 100000 }));
-  const categoryData = analyticsData.topCategories.map(d => ({ ...d, revenue: d.revenue / 100000 }));
+
+  const { data: statsResp, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useApiQuery(
+    () => adminApi.getDashboardStats(), []
+  );
+  const { data: vendorsResp, isLoading: vendorsLoading } = useApiQuery(
+    () => adminApi.getVendors(), []
+  );
+
+  const analyticsData = statsResp?.data ?? statsResp;
+  const vendors = vendorsResp?.data ?? vendorsResp ?? [];
+
+  if (statsLoading || vendorsLoading) return <DashboardSkeleton />;
+  if (statsError) return <PageError message={statsError} onRetry={refetchStats} />;
+  if (!analyticsData) return <PageError message="No analytics data available" />;
+
+  const revenueData = (analyticsData.monthlyRevenue || []).map((d: any) => ({ ...d, revenue: d.revenue / 100000 }));
+  const categoryData = (analyticsData.topCategories || []).map((d: any) => ({ ...d, revenue: d.revenue / 100000 }));
 
   return (
     <div className="space-y-6">
@@ -20,10 +37,10 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value="₹25.7Cr" change="+15.3% vs last quarter" changeType="positive" icon={DollarSign} iconClassName="bg-success/10 text-success" />
-        <StatCard title="Total Orders" value="1,17,600" change="+9.8% this month" changeType="positive" icon={ShoppingCart} iconClassName="bg-primary/10 text-primary" />
-        <StatCard title="Customers" value="89,450" change="+2,340 new this month" changeType="positive" icon={Users} iconClassName="bg-accent/10 text-accent" />
-        <StatCard title="Active Vendors" value={String(vendors.filter(v => v.status === "active").length)} change="1 pending approval" changeType="neutral" icon={Store} iconClassName="bg-secondary/10 text-secondary" />
+        <StatCard title="Total Revenue" value={`₹${((analyticsData.totalRevenue || 0) / 10000000).toFixed(1)}Cr`} change="+15.3% vs last quarter" changeType="positive" icon={DollarSign} iconClassName="bg-success/10 text-success" />
+        <StatCard title="Total Orders" value={(analyticsData.totalOrders || 0).toLocaleString()} change="+9.8% this month" changeType="positive" icon={ShoppingCart} iconClassName="bg-primary/10 text-primary" />
+        <StatCard title="Customers" value={(analyticsData.totalCustomers || 0).toLocaleString()} change="Growing steadily" changeType="positive" icon={Users} iconClassName="bg-accent/10 text-accent" />
+        <StatCard title="Active Vendors" value={String((vendors as any[]).filter((v: any) => v.status === "active").length)} change="1 pending approval" changeType="neutral" icon={Store} iconClassName="bg-secondary/10 text-secondary" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -74,7 +91,7 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {vendors.map(v => (
+                {(vendors as any[]).map((v: any) => (
                   <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/vendors/${v.id}`)}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
@@ -87,8 +104,8 @@ export default function AdminDashboard() {
                       <Badge variant={v.status === "active" ? "default" : v.status === "pending" ? "secondary" : "destructive"} className="text-xs capitalize">{v.status}</Badge>
                     </td>
                     <td className="p-3 text-right">{v.totalProducts}</td>
-                    <td className="p-3 text-right">{v.totalOrders.toLocaleString()}</td>
-                    <td className="p-3 text-right font-medium">₹{(v.totalRevenue / 100000).toFixed(1)}L</td>
+                    <td className="p-3 text-right">{(v.totalOrders || 0).toLocaleString()}</td>
+                    <td className="p-3 text-right font-medium">₹{((v.totalRevenue || 0) / 100000).toFixed(1)}L</td>
                   </tr>
                 ))}
               </tbody>

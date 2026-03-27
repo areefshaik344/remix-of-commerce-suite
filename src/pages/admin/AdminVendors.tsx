@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { vendors } from "@/features/auth";
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,13 +10,24 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { TablePagination, usePagination } from "@/components/shared/Pagination";
 import { toast } from "@/hooks/use-toast";
+import { TableSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 export default function AdminVendors() {
   const navigate = useNavigate();
   const [approveTarget, setApproveTarget] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
   const [suspendTarget, setSuspendTarget] = useState<string | null>(null);
+
+  const { data: vendorsResp, isLoading, error, refetch } = useApiQuery(
+    () => adminApi.getVendors(), []
+  );
+
+  const vendors = (vendorsResp?.data ?? vendorsResp ?? []) as any[];
   const { page, setPage, totalPages, paginatedItems, totalItems } = usePagination(vendors, 8);
+
+  if (isLoading) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">Vendor Management</h1><TableSkeleton rows={5} cols={7} /></div>;
+  if (error) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">Vendor Management</h1><PageError message={error} onRetry={refetch} /></div>;
 
   return (
     <div className="space-y-4">
@@ -41,7 +53,7 @@ export default function AdminVendors() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map(v => (
+                {paginatedItems.map((v: any) => (
                   <tr key={v.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/vendors/${v.id}`)}>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
@@ -60,8 +72,8 @@ export default function AdminVendors() {
                       <span className="inline-flex items-center gap-0.5 text-xs"><Star className="h-3 w-3 fill-warning text-warning" />{v.rating}</span>
                     </td>
                     <td className="p-3 text-right">{v.totalProducts}</td>
-                    <td className="p-3 text-right">{v.totalOrders.toLocaleString()}</td>
-                    <td className="p-3 text-right font-medium">₹{(v.totalRevenue / 100000).toFixed(1)}L</td>
+                    <td className="p-3 text-right">{(v.totalOrders || 0).toLocaleString()}</td>
+                    <td className="p-3 text-right font-medium">₹{((v.totalRevenue || 0) / 100000).toFixed(1)}L</td>
                     <td className="p-3 text-right">
                       <div className="flex justify-end gap-1" onClick={e => e.stopPropagation()}>
                         {v.status === "pending" && (
@@ -89,31 +101,9 @@ export default function AdminVendors() {
         </CardContent>
       </Card>
 
-      <ConfirmDialog
-        open={!!approveTarget}
-        onOpenChange={() => setApproveTarget(null)}
-        title="Approve Vendor"
-        description={`Approve "${approveTarget}" to start selling on the platform?`}
-        confirmLabel="Approve"
-        variant="default"
-        onConfirm={() => { toast({ title: "Vendor approved", description: `${approveTarget} is now active.` }); setApproveTarget(null); }}
-      />
-      <ConfirmDialog
-        open={!!rejectTarget}
-        onOpenChange={() => setRejectTarget(null)}
-        title="Reject Vendor"
-        description={`Reject "${rejectTarget}"'s application? They will be notified via email.`}
-        confirmLabel="Reject"
-        onConfirm={() => { toast({ title: "Vendor rejected", description: `${rejectTarget} has been rejected.` }); setRejectTarget(null); }}
-      />
-      <ConfirmDialog
-        open={!!suspendTarget}
-        onOpenChange={() => setSuspendTarget(null)}
-        title="Suspend Vendor"
-        description={`Suspend "${suspendTarget}"? Their products will be hidden from the marketplace.`}
-        confirmLabel="Suspend"
-        onConfirm={() => { toast({ title: "Vendor suspended", description: `${suspendTarget} has been suspended.` }); setSuspendTarget(null); }}
-      />
+      <ConfirmDialog open={!!approveTarget} onOpenChange={() => setApproveTarget(null)} title="Approve Vendor" description={`Approve "${approveTarget}" to start selling on the platform?`} confirmLabel="Approve" variant="default" onConfirm={() => { toast({ title: "Vendor approved", description: `${approveTarget} is now active.` }); setApproveTarget(null); }} />
+      <ConfirmDialog open={!!rejectTarget} onOpenChange={() => setRejectTarget(null)} title="Reject Vendor" description={`Reject "${rejectTarget}"'s application? They will be notified via email.`} confirmLabel="Reject" onConfirm={() => { toast({ title: "Vendor rejected", description: `${rejectTarget} has been rejected.` }); setRejectTarget(null); }} />
+      <ConfirmDialog open={!!suspendTarget} onOpenChange={() => setSuspendTarget(null)} title="Suspend Vendor" description={`Suspend "${suspendTarget}"? Their products will be hidden from the marketplace.`} confirmLabel="Suspend" onConfirm={() => { toast({ title: "Vendor suspended", description: `${suspendTarget} has been suspended.` }); setSuspendTarget(null); }} />
     </div>
   );
 }

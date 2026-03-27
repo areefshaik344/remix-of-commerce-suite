@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { users } from "@/features/auth";
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,14 +12,25 @@ import { SearchEmpty } from "@/components/shared/EmptyState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { TablePagination, usePagination } from "@/components/shared/Pagination";
 import { toast } from "@/hooks/use-toast";
+import { TableSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 export default function AdminUsers() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [suspendTarget, setSuspendTarget] = useState<string | null>(null);
 
-  const filtered = users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
+  const { data: usersResp, isLoading, error, refetch } = useApiQuery(
+    () => adminApi.getUsers(), []
+  );
+
+  const users = (usersResp?.data ?? usersResp ?? []) as any[];
+
+  const filtered = users.filter((u: any) => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
   const { page, setPage, totalPages, paginatedItems, totalItems } = usePagination(filtered, 10);
+
+  if (isLoading) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">User Management</h1><TableSkeleton rows={6} cols={5} /></div>;
+  if (error) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">User Management</h1><PageError message={error} onRetry={refetch} /></div>;
 
   return (
     <div className="space-y-4">
@@ -51,7 +63,7 @@ export default function AdminUsers() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedItems.map(user => (
+                    {paginatedItems.map((user: any) => (
                       <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/admin/users/${user.id}`)}>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
