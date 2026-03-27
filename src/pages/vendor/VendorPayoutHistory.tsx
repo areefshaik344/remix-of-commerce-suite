@@ -7,23 +7,26 @@ import { Wallet, TrendingUp, Clock, CheckCircle, Download, ArrowLeft, Eye } from
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-
-const payouts = [
-  { id: "PAY-001", period: "Feb 2025", date: "2025-02-28", amount: 1107000, commission: 123000, netAmount: 984000, orders: 156, status: "completed", txnRef: "NEFT-2025022800123" },
-  { id: "PAY-002", period: "Jan 2025", date: "2025-01-31", amount: 1404000, commission: 156000, netAmount: 1248000, orders: 203, status: "completed", txnRef: "NEFT-2025013100098" },
-  { id: "PAY-003", period: "Dec 2024", date: "2024-12-31", amount: 2106000, commission: 234000, netAmount: 1872000, orders: 312, status: "completed", txnRef: "NEFT-2024123100145" },
-  { id: "PAY-004", period: "Nov 2024", date: "2024-11-30", amount: 1701000, commission: 189000, netAmount: 1512000, orders: 245, status: "completed", txnRef: "NEFT-2024113000076" },
-  { id: "PAY-005", period: "Oct 2024", date: "2024-10-31", amount: 1450000, commission: 161000, netAmount: 1289000, orders: 198, status: "completed", txnRef: "NEFT-2024103100055" },
-  { id: "PAY-006", period: "Mar 2025", date: "2025-03-15", amount: 980000, commission: 108900, netAmount: 871100, orders: 134, status: "pending", txnRef: "—" },
-  { id: "PAY-007", period: "Mar 2025 (adj)", date: "2025-03-20", amount: 45000, commission: 0, netAmount: 45000, orders: 0, status: "processing", txnRef: "—" },
-];
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
 
 const fmt = (n: number) => `₹${(n / 100000).toFixed(1)}L`;
 
 export default function VendorPayoutHistory() {
   const navigate = useNavigate();
-  const totalPaid = payouts.filter(p => p.status === "completed").reduce((s, p) => s + p.netAmount, 0);
-  const pending = payouts.filter(p => p.status !== "completed").reduce((s, p) => s + p.netAmount, 0);
+
+  const { data: payoutsResp, isLoading, error } = useApiQuery(
+    () => vendorApi.getPayoutHistory(), []
+  );
+
+  if (isLoading) return <DashboardSkeleton />;
+  if (error) return <PageError message="Failed to load payout history" />;
+
+  const payouts: any[] = Array.isArray(payoutsResp) ? payoutsResp : [];
+  const totalPaid = payouts.filter(p => p.status === "completed").reduce((s, p) => s + (p.netAmount || 0), 0);
+  const pending = payouts.filter(p => p.status !== "completed").reduce((s, p) => s + (p.netAmount || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -39,7 +42,7 @@ export default function VendorPayoutHistory() {
         <StatCard title="Total Paid Out" value={fmt(totalPaid)} icon={CheckCircle} change="All time" changeType="neutral" />
         <StatCard title="Pending Payout" value={fmt(pending)} icon={Clock} change="Processing" changeType="neutral" />
         <StatCard title="Avg Commission" value="10%" icon={TrendingUp} change="Per sale" changeType="neutral" />
-        <StatCard title="Next Payout" value="Mar 15" icon={Wallet} change={fmt(pending)} changeType="neutral" />
+        <StatCard title="Next Payout" value="—" icon={Wallet} change={fmt(pending)} changeType="neutral" />
       </div>
 
       <Card className="shadow-card">
@@ -63,14 +66,14 @@ export default function VendorPayoutHistory() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payouts.map(p => (
+              {payouts.map((p: any) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-mono text-sm">{p.id}</TableCell>
                   <TableCell className="text-sm">{p.period}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{new Date(p.date).toLocaleDateString("en-IN")}</TableCell>
-                  <TableCell className="text-sm">₹{p.amount.toLocaleString("en-IN")}</TableCell>
-                  <TableCell className="text-sm text-destructive">-₹{p.commission.toLocaleString("en-IN")}</TableCell>
-                  <TableCell className="font-medium text-sm">₹{p.netAmount.toLocaleString("en-IN")}</TableCell>
+                  <TableCell className="text-sm">₹{(p.amount || 0).toLocaleString("en-IN")}</TableCell>
+                  <TableCell className="text-sm text-destructive">-₹{(p.commission || 0).toLocaleString("en-IN")}</TableCell>
+                  <TableCell className="font-medium text-sm">₹{(p.netAmount || 0).toLocaleString("en-IN")}</TableCell>
                   <TableCell className="text-sm">{p.orders}</TableCell>
                   <TableCell>
                     <Badge variant={p.status === "completed" ? "default" : "secondary"} className={p.status === "completed" ? "bg-success/10 text-success border-0" : p.status === "processing" ? "bg-warning/10 text-warning border-0" : ""}>
@@ -86,12 +89,12 @@ export default function VendorPayoutHistory() {
                           <div className="flex justify-between"><span className="text-muted-foreground">Period</span><span>{p.period}</span></div>
                           <div className="flex justify-between"><span className="text-muted-foreground">Date</span><span>{new Date(p.date).toLocaleDateString("en-IN")}</span></div>
                           <Separator />
-                          <div className="flex justify-between"><span className="text-muted-foreground">Gross Revenue</span><span>₹{p.amount.toLocaleString("en-IN")}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Commission (10%)</span><span className="text-destructive">-₹{p.commission.toLocaleString("en-IN")}</span></div>
-                          <div className="flex justify-between font-medium"><span>Net Payout</span><span>₹{p.netAmount.toLocaleString("en-IN")}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Gross Revenue</span><span>₹{(p.amount || 0).toLocaleString("en-IN")}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Commission</span><span className="text-destructive">-₹{(p.commission || 0).toLocaleString("en-IN")}</span></div>
+                          <div className="flex justify-between font-medium"><span>Net Payout</span><span>₹{(p.netAmount || 0).toLocaleString("en-IN")}</span></div>
                           <Separator />
                           <div className="flex justify-between"><span className="text-muted-foreground">Orders Settled</span><span>{p.orders}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Transaction Ref</span><span className="font-mono text-xs">{p.txnRef}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Transaction Ref</span><span className="font-mono text-xs">{p.txnRef || "—"}</span></div>
                           <div className="flex justify-between"><span className="text-muted-foreground">Status</span><Badge variant={p.status === "completed" ? "default" : "secondary"}>{p.status}</Badge></div>
                         </div>
                       </DialogContent>

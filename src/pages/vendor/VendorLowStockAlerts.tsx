@@ -1,4 +1,3 @@
-import { products } from "@/features/product";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,28 +7,43 @@ import { ArrowLeft, AlertTriangle, Package, Bell, BellOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
-
-const LOW_STOCK_THRESHOLD = 100;
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function VendorLowStockAlerts() {
   const navigate = useNavigate();
-  const allProducts = products; // In real app, filter by vendor
-  const lowStockProducts = allProducts.filter(p => p.stockCount <= LOW_STOCK_THRESHOLD);
-  const outOfStock = allProducts.filter(p => p.stockCount === 0);
-  const critical = allProducts.filter(p => p.stockCount > 0 && p.stockCount <= 20);
-  const warning = allProducts.filter(p => p.stockCount > 20 && p.stockCount <= LOW_STOCK_THRESHOLD);
-
   const [restockAmounts, setRestockAmounts] = useState<Record<string, string>>({});
   const [alertsEnabled, setAlertsEnabled] = useState(true);
 
-  const handleRestock = (productId: string, productName: string) => {
+  const { data: productsResp, isLoading, error, refetch } = useApiQuery(
+    () => vendorApi.getLowStockProducts(), []
+  );
+
+  if (isLoading) return <DashboardSkeleton />;
+  if (error) return <PageError message="Failed to load low stock data" />;
+
+  const allProducts: any[] = Array.isArray(productsResp) ? productsResp : [];
+  const outOfStock = allProducts.filter(p => p.stockCount === 0);
+  const critical = allProducts.filter(p => p.stockCount > 0 && p.stockCount <= 20);
+  const warning = allProducts.filter(p => p.stockCount > 20 && p.stockCount <= 100);
+
+  const handleRestock = async (productId: string, productName: string) => {
     const amount = restockAmounts[productId];
     if (!amount || parseInt(amount) <= 0) {
       toast({ title: "Invalid quantity", description: "Enter a valid restock amount.", variant: "destructive" });
       return;
     }
-    toast({ title: "Restock initiated", description: `${amount} units queued for "${productName}".` });
-    setRestockAmounts(prev => ({ ...prev, [productId]: "" }));
+    try {
+      await vendorApi.updateInventory(productId, parseInt(amount));
+      toast({ title: "Restock initiated", description: `${amount} units queued for "${productName}".` });
+      setRestockAmounts(prev => ({ ...prev, [productId]: "" }));
+      refetch();
+    } catch (e) {
+      toast({ title: "Restock failed", description: getErrorMessage(e), variant: "destructive" });
+    }
   };
 
   return (
@@ -39,7 +53,7 @@ export default function VendorLowStockAlerts() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/vendor/inventory")}><ArrowLeft className="h-4 w-4" /></Button>
           <div>
             <h1 className="font-display text-xl font-bold">Low Stock Alerts</h1>
-            <p className="text-sm text-muted-foreground">{lowStockProducts.length} products need attention</p>
+            <p className="text-sm text-muted-foreground">{allProducts.length} products need attention</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => { setAlertsEnabled(!alertsEnabled); toast({ title: alertsEnabled ? "Alerts paused" : "Alerts resumed" }); }}>
@@ -89,11 +103,11 @@ export default function VendorLowStockAlerts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {lowStockProducts.sort((a, b) => a.stockCount - b.stockCount).map(p => (
+              {allProducts.sort((a: any, b: any) => a.stockCount - b.stockCount).map((p: any) => (
                 <TableRow key={p.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <img src={p.images[0]} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
+                      <img src={p.images?.[0] || p.image || "/placeholder.svg"} alt={p.name} className="h-10 w-10 rounded-lg object-cover" />
                       <div><p className="font-medium text-sm line-clamp-1">{p.name}</p><p className="text-xs text-muted-foreground">{p.brand}</p></div>
                     </div>
                   </TableCell>

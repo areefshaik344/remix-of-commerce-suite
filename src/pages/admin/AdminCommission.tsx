@@ -8,33 +8,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { DollarSign, Percent, TrendingUp, Settings2 } from "lucide-react";
-import { categories } from "@/features/product";
-import { vendors } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
-
-const categoryCommissions = [
-  { category: "Electronics", rate: 8, minFee: 25, orders: 12500, revenue: 2340000 },
-  { category: "Fashion", rate: 15, minFee: 15, orders: 8900, revenue: 1890000 },
-  { category: "Home & Living", rate: 12, minFee: 20, orders: 4500, revenue: 780000 },
-  { category: "Beauty", rate: 18, minFee: 10, orders: 7800, revenue: 1200000 },
-  { category: "Sports", rate: 12, minFee: 15, orders: 2100, revenue: 450000 },
-  { category: "Books", rate: 5, minFee: 5, orders: 34000, revenue: 340000 },
-  { category: "Groceries", rate: 10, minFee: 10, orders: 12000, revenue: 560000 },
-  { category: "Toys & Games", rate: 15, minFee: 15, orders: 5600, revenue: 420000 },
-];
-
-const vendorOverrides = [
-  { vendor: "AppleZone Official", category: "Electronics", standardRate: 8, customRate: 6, reason: "Volume discount" },
-  { vendor: "BookHaven", category: "Books", standardRate: 5, customRate: 3, reason: "Exclusive partner" },
-];
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function AdminCommission() {
   const { toast } = useToast();
-  const [rates, setRates] = useState(
-    Object.fromEntries(categoryCommissions.map(c => [c.category, c.rate]))
+  const [saving, setSaving] = useState(false);
+
+  const { data: commissionResp, isLoading, error } = useApiQuery(
+    () => adminApi.getCommissionRates(), []
+  );
+  const { data: overridesResp } = useApiQuery(
+    () => adminApi.getCommissionOverrides(), []
   );
 
-  const totalCommissionRevenue = categoryCommissions.reduce((s, c) => s + c.revenue, 0);
+  const categoryCommissions: any[] = Array.isArray(commissionResp) ? commissionResp : commissionResp?.categories || [];
+  const vendorOverrides: any[] = Array.isArray(overridesResp) ? overridesResp : overridesResp?.overrides || [];
+
+  const [rates, setRates] = useState<Record<string, number>>({});
+
+  // Sync rates when data loads
+  if (categoryCommissions.length > 0 && Object.keys(rates).length === 0) {
+    const initial: Record<string, number> = {};
+    categoryCommissions.forEach((c: any) => { initial[c.category] = c.rate; });
+    if (Object.keys(initial).length > 0) setRates(initial);
+  }
+
+  if (isLoading) return <DashboardSkeleton />;
+  if (error) return <PageError message="Failed to load commission data" />;
+
+  const totalCommissionRevenue = categoryCommissions.reduce((s: number, c: any) => s + (c.revenue || 0), 0);
 
   const updateRate = (cat: string, val: string) => {
     const num = parseFloat(val);
@@ -43,8 +50,16 @@ export default function AdminCommission() {
     }
   };
 
-  const handleSave = () => {
-    toast({ title: "Commission rates updated", description: "New rates will apply to future orders." });
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await adminApi.updateCommissionRates({ rates });
+      toast({ title: "Commission rates updated", description: "New rates will apply to future orders." });
+    } catch (e) {
+      toast({ title: "Failed to save", description: getErrorMessage(e), variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -61,7 +76,6 @@ export default function AdminCommission() {
         <StatCard title="Pending Settlements" value="₹23.4L" icon={TrendingUp} change="12 vendors" changeType="neutral" />
       </div>
 
-      {/* Category Commission */}
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="text-base">Category Commission Rates</CardTitle>
@@ -79,33 +93,25 @@ export default function AdminCommission() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categoryCommissions.map(c => (
+              {categoryCommissions.map((c: any) => (
                 <TableRow key={c.category}>
                   <TableCell className="font-medium">{c.category}</TableCell>
                   <TableCell className="text-center">
-                    <Input
-                      type="number"
-                      value={rates[c.category]}
-                      onChange={e => updateRate(c.category, e.target.value)}
-                      className="h-8 w-20 text-center mx-auto"
-                      min={0}
-                      max={50}
-                    />
+                    <Input type="number" value={rates[c.category] ?? c.rate} onChange={e => updateRate(c.category, e.target.value)} className="h-8 w-20 text-center mx-auto" min={0} max={50} />
                   </TableCell>
                   <TableCell className="text-center text-muted-foreground">₹{c.minFee}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{c.orders.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-medium">₹{(c.revenue / 100000).toFixed(1)}L</TableCell>
+                  <TableCell className="text-right text-muted-foreground">{(c.orders || 0).toLocaleString()}</TableCell>
+                  <TableCell className="text-right font-medium">₹{((c.revenue || 0) / 100000).toFixed(1)}L</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
           <div className="mt-4 flex justify-end">
-            <Button onClick={handleSave}>Save Commission Rates</Button>
+            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Commission Rates"}</Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Vendor Overrides */}
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="text-base">Vendor-Specific Overrides</CardTitle>
@@ -124,7 +130,7 @@ export default function AdminCommission() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vendorOverrides.map((o, i) => (
+              {vendorOverrides.map((o: any, i: number) => (
                 <TableRow key={i}>
                   <TableCell className="font-medium">{o.vendor}</TableCell>
                   <TableCell className="text-muted-foreground">{o.category}</TableCell>
@@ -145,7 +151,6 @@ export default function AdminCommission() {
         </CardContent>
       </Card>
 
-      {/* Fee Structure */}
       <Card className="shadow-card">
         <CardHeader>
           <CardTitle className="text-base">Platform Fee Structure</CardTitle>

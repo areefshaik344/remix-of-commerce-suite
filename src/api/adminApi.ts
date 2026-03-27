@@ -132,4 +132,125 @@ export const adminApi = {
     const res = await httpClient.patch(ENDPOINTS.ADMIN.VENDOR_APPLICATION_REJECT(id));
     return res.data?.data || res.data;
   },
+
+  // Settings
+  async getSettings() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.SETTINGS);
+    return res.data?.data || res.data;
+  },
+
+  async updateSettings(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.ADMIN.SETTINGS, data);
+    return res.data?.data || res.data;
+  },
+
+  // Banners / CMS
+  async getBanners() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.BANNERS);
+    return res.data?.data || res.data;
+  },
+
+  async getBannerById(id: string) {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.BANNER_DETAIL(id));
+    return res.data?.data || res.data;
+  },
+
+  async createBanner(data: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.ADMIN.BANNERS, data);
+    return res.data?.data || res.data;
+  },
+
+  async updateBanner(id: string, data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.ADMIN.BANNER_DETAIL(id), data);
+    return res.data?.data || res.data;
+  },
+
+  async deleteBanner(id: string) {
+    const res = await httpClient.delete(ENDPOINTS.ADMIN.BANNER_DETAIL(id));
+    return res.data?.data || res.data;
+  },
+
+  async getSections() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.SECTIONS);
+    return res.data?.data || res.data;
+  },
+
+  async updateSections(data: Record<string, unknown>[]) {
+    const res = await httpClient.put(ENDPOINTS.ADMIN.SECTIONS, data);
+    return res.data?.data || res.data;
+  },
+
+  async getPages() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.PAGES);
+    return res.data?.data || res.data;
+  },
+
+  async deletePage(id: string) {
+    const res = await httpClient.delete(ENDPOINTS.ADMIN.PAGE_DETAIL(id));
+    return res.data?.data || res.data;
+  },
+
+  // Commission
+  async getCommissionRates() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.COMMISSION);
+    return res.data?.data || res.data;
+  },
+
+  async updateCommissionRates(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.ADMIN.COMMISSION, data);
+    return res.data?.data || res.data;
+  },
+
+  async getCommissionOverrides() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.COMMISSION_OVERRIDES);
+    return res.data?.data || res.data;
+  },
+
+  // Fraud
+  async getFraudOrders() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.FRAUD_ORDERS);
+    return res.data?.data || res.data;
+  },
+
+  async getFraudReviews() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.FRAUD_REVIEWS);
+    return res.data?.data || res.data;
+  },
+
+  async getFraudReports() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.FRAUD_REPORTS);
+    return res.data?.data || res.data;
+  },
+
+  async takeFraudAction(id: string, action: string) {
+    const res = await httpClient.post(ENDPOINTS.ADMIN.FRAUD_ACTION(id), { action });
+    return res.data?.data || res.data;
+  },
+
+  // Email Templates
+  async getEmailTemplates() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.EMAIL_TEMPLATES);
+    return res.data?.data || res.data;
+  },
+
+  async updateEmailTemplate(id: string, data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.ADMIN.EMAIL_TEMPLATE_DETAIL(id), data);
+    return res.data?.data || res.data;
+  },
+
+  // Categories CRUD
+  async createCategory(data: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.ADMIN.CATEGORIES, data);
+    return res.data?.data || res.data;
+  },
+
+  async updateCategory(id: string, data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.ADMIN.CATEGORY_DETAIL(id), data);
+    return res.data?.data || res.data;
+  },
+
+  async deleteCategory(id: string) {
+    const res = await httpClient.delete(ENDPOINTS.ADMIN.CATEGORY_DETAIL(id));
+    return res.data?.data || res.data;
+  },
 };
