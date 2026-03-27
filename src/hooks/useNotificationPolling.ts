@@ -1,7 +1,8 @@
-import { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { notificationApi } from "@/api/notificationApi";
 import { useNotificationStore } from "@/store/notificationStore";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 interface UseNotificationPollingOptions {
   /** Polling interval in ms (default 30s) */
