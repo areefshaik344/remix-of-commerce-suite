@@ -1,5 +1,5 @@
-import { useAuth } from "@/features/auth";
-import type { VendorApplication } from "@/features/auth";
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Check, X, Clock, Store } from "lucide-react";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { TableSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning",
@@ -15,28 +17,31 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AdminVendorApplications() {
-  const { vendorApplications, approveVendor, rejectVendor } = useAuth();
-  const [approveTarget, setApproveTarget] = useState<VendorApplication | null>(null);
-  const [rejectTarget, setRejectTarget] = useState<VendorApplication | null>(null);
+  const { data: applications, isLoading, error, refetch } = useApiQuery<any[]>(() => adminApi.getVendorApplications(), []);
+  const [approveTarget, setApproveTarget] = useState<any | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<any | null>(null);
   const [tab, setTab] = useState<"pending" | "all">("pending");
 
-  const filtered = tab === "pending" ? vendorApplications.filter(a => a.status === "pending") : vendorApplications;
+  if (isLoading) return <TableSkeleton rows={4} cols={5} />;
+  if (error) return <PageError message={error} onRetry={refetch} />;
+
+  const appList = applications || [];
+  const filtered = tab === "pending" ? appList.filter((a: any) => a.status === "pending") : appList;
+  const pendingCount = appList.filter((a: any) => a.status === "pending").length;
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="font-display text-xl font-bold">Vendor Applications</h1>
-        <p className="text-sm text-muted-foreground">
-          {vendorApplications.filter(a => a.status === "pending").length} pending review
-        </p>
+        <p className="text-sm text-muted-foreground">{pendingCount} pending review</p>
       </div>
 
       <div className="flex gap-2">
         <Button variant={tab === "pending" ? "default" : "outline"} size="sm" onClick={() => setTab("pending")}>
-          Pending ({vendorApplications.filter(a => a.status === "pending").length})
+          Pending ({pendingCount})
         </Button>
         <Button variant={tab === "all" ? "default" : "outline"} size="sm" onClick={() => setTab("all")}>
-          All ({vendorApplications.length})
+          All ({appList.length})
         </Button>
       </div>
 
@@ -49,7 +54,7 @@ export default function AdminVendorApplications() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filtered.map(app => (
+          {filtered.map((app: any) => (
             <Card key={app.id} className="shadow-card">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
@@ -93,7 +98,12 @@ export default function AdminVendorApplications() {
         description={`Approve "${approveTarget?.storeName}" by ${approveTarget?.name}? They will be able to start listing products.`}
         confirmLabel="Approve"
         variant="default"
-        onConfirm={() => { approveVendor(approveTarget!.id); toast({ title: "Application approved" }); setApproveTarget(null); }}
+        onConfirm={async () => {
+          await adminApi.approveVendorApplication(approveTarget!.id);
+          toast({ title: "Application approved" });
+          setApproveTarget(null);
+          refetch();
+        }}
       />
       <ConfirmDialog
         open={!!rejectTarget}
@@ -101,7 +111,12 @@ export default function AdminVendorApplications() {
         title="Reject Application"
         description={`Reject "${rejectTarget?.storeName}" by ${rejectTarget?.name}? They will be notified via email.`}
         confirmLabel="Reject"
-        onConfirm={() => { rejectVendor(rejectTarget!.id); toast({ title: "Application rejected" }); setRejectTarget(null); }}
+        onConfirm={async () => {
+          await adminApi.rejectVendorApplication(rejectTarget!.id);
+          toast({ title: "Application rejected" });
+          setRejectTarget(null);
+          refetch();
+        }}
       />
     </div>
   );
