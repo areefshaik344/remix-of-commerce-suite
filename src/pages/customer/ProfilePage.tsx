@@ -38,15 +38,15 @@ export default function ProfilePage() {
   // Fetch profile from API
   const { data: profile, refetch: refetchProfile } = useApiQuery(
     () => userApi.getProfile(),
-    [],
-    { enabled: !!currentUser }
+    [isInitialized],
+    { enabled: !!currentUser && isInitialized }
   );
 
   // Fetch addresses from API
   const { data: addresses = [], isLoading: addressesLoading, refetch: refetchAddresses } = useApiQuery(
     () => userApi.getAddresses(),
-    [],
-    { enabled: !!currentUser }
+    [isInitialized],
+    { enabled: !!currentUser && isInitialized }
   );
 
   if (!currentUser) return null;
