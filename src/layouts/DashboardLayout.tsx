@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { useNotificationStore } from "@/features/notification";
 import { useNotificationPolling } from "@/hooks/useNotificationPolling";
+import { NotificationDropdown } from "@/components/shared/NotificationDropdown";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -10,8 +11,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Bell, LucideIcon, LogOut, User, ChevronDown, LayoutDashboard, Package, DollarSign, Settings, Users, Store } from "lucide-react";
+import { LucideIcon, LogOut, ChevronDown, LayoutDashboard, Package, DollarSign, Settings, Users, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DashboardLayoutProps {
