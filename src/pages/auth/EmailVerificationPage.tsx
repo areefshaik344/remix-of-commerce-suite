@@ -17,10 +17,15 @@ export default function EmailVerificationPage() {
   const handleVerify = async () => {
     if (otp.length !== 6) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setLoading(false);
-    toast({ title: "Email verified!", description: "Your account is now active." });
-    navigate("/");
+    try {
+      await authApi.verifyEmail(otp);
+      toast({ title: "Email verified!", description: "Your account is now active." });
+      navigate("/");
+    } catch (err) {
+      toast({ title: "Verification failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResend = async () => {
