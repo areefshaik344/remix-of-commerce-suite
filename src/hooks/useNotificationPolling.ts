@@ -61,7 +61,7 @@ export function useNotificationPolling({
               title: n.title,
               description: n.message,
               action: n.actionUrl
-                ? React.createElement(ToastAction, {
+                ? (React.createElement(ToastAction, {
                     altText: "View",
                     onClick: () => {
                       window.dispatchEvent(new CustomEvent("notification-navigate", { detail: n.actionUrl }));
