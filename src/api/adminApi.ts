@@ -62,10 +62,6 @@ export const adminApi = {
     return res.data?.data || res.data;
   },
 
-  async getAuditLog() {
-    const res = await httpClient.get(`${ENDPOINTS.ADMIN.ANALYTICS}/audit-log`);
-    return res.data?.data || res.data;
-  },
 
   async getCategories() {
     const res = await httpClient.get(ENDPOINTS.ADMIN.CATEGORIES);
@@ -84,6 +80,31 @@ export const adminApi = {
 
   async deleteCoupon(couponId: string) {
     const res = await httpClient.delete(ENDPOINTS.ADMIN.COUPON_DELETE(couponId));
+    return res.data?.data || res.data;
+  },
+
+  async getAnalytics() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.ANALYTICS);
+    return res.data?.data || res.data;
+  },
+
+  async getAuditLog() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.AUDIT_LOG);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorApplications() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.VENDOR_APPLICATIONS);
+    return res.data?.data || res.data;
+  },
+
+  async approveVendorApplication(id: string) {
+    const res = await httpClient.patch(ENDPOINTS.ADMIN.VENDOR_APPLICATION_APPROVE(id));
+    return res.data?.data || res.data;
+  },
+
+  async rejectVendorApplication(id: string) {
+    const res = await httpClient.patch(ENDPOINTS.ADMIN.VENDOR_APPLICATION_REJECT(id));
     return res.data?.data || res.data;
   },
 };

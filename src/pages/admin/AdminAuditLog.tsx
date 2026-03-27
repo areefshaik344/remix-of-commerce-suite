@@ -1,3 +1,5 @@
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -5,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Clock } from "lucide-react";
 import { useState, useMemo } from "react";
 import { TablePagination, usePagination } from "@/components/shared/Pagination";
+import { TableSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 interface AuditEntry {
   id: string;
@@ -17,19 +21,6 @@ interface AuditEntry {
   severity: "info" | "warning" | "critical";
 }
 
-const mockAuditLog: AuditEntry[] = [
-  { id: "al-1", timestamp: "2025-03-10T14:30:00", actor: "Admin User", actorRole: "admin", action: "vendor.approve", resource: "GadgetPro", details: "Approved vendor application", severity: "info" },
-  { id: "al-2", timestamp: "2025-03-10T12:15:00", actor: "Admin User", actorRole: "admin", action: "vendor.suspend", resource: "ToyLand", details: "Suspended vendor for policy violation", severity: "critical" },
-  { id: "al-3", timestamp: "2025-03-09T18:45:00", actor: "Admin User", actorRole: "admin", action: "product.remove", resource: "Counterfeit Watch", details: "Removed product — counterfeit report", severity: "warning" },
-  { id: "al-4", timestamp: "2025-03-09T10:00:00", actor: "Priya Patel", actorRole: "vendor", action: "product.create", resource: "iPhone 16 Case", details: "New product listing created", severity: "info" },
-  { id: "al-5", timestamp: "2025-03-08T16:20:00", actor: "Admin User", actorRole: "admin", action: "coupon.create", resource: "SUMMER25", details: "Created 25% off coupon", severity: "info" },
-  { id: "al-6", timestamp: "2025-03-08T09:30:00", actor: "Admin User", actorRole: "admin", action: "user.ban", resource: "spam_user@test.com", details: "Banned user for spam reviews", severity: "critical" },
-  { id: "al-7", timestamp: "2025-03-07T14:00:00", actor: "Admin User", actorRole: "admin", action: "order.refund", resource: "ORD-10006", details: "Processed refund of ₹6,998", severity: "warning" },
-  { id: "al-8", timestamp: "2025-03-07T11:00:00", actor: "Priya Patel", actorRole: "vendor", action: "product.update", resource: "Sony WH-1000XM5", details: "Updated price and stock", severity: "info" },
-  { id: "al-9", timestamp: "2025-03-06T15:30:00", actor: "Admin User", actorRole: "admin", action: "category.create", resource: "Pet Supplies", details: "Added new category", severity: "info" },
-  { id: "al-10", timestamp: "2025-03-06T08:00:00", actor: "Admin User", actorRole: "admin", action: "settings.update", resource: "Commission", details: "Updated commission rate to 12%", severity: "warning" },
-];
-
 const severityColors: Record<string, string> = {
   info: "bg-primary/10 text-primary",
   warning: "bg-warning/10 text-warning",
@@ -37,17 +28,21 @@ const severityColors: Record<string, string> = {
 };
 
 export default function AdminAuditLog() {
+  const { data: auditLog, isLoading, error, refetch } = useApiQuery<AuditEntry[]>(() => adminApi.getAuditLog(), []);
   const [search, setSearch] = useState("");
   const [severityFilter, setSeverityFilter] = useState("all");
 
   const filtered = useMemo(() =>
-    mockAuditLog
+    (auditLog || [])
       .filter(e => severityFilter === "all" || e.severity === severityFilter)
       .filter(e => !search || e.action.includes(search.toLowerCase()) || e.resource.toLowerCase().includes(search.toLowerCase()) || e.actor.toLowerCase().includes(search.toLowerCase())),
-    [search, severityFilter]
+    [auditLog, search, severityFilter]
   );
 
   const { page, setPage, totalPages, paginatedItems, totalItems } = usePagination(filtered, 10);
+
+  if (isLoading) return <TableSkeleton rows={8} cols={6} />;
+  if (error) return <PageError message={error} onRetry={refetch} />;
 
   return (
     <div className="space-y-4">
