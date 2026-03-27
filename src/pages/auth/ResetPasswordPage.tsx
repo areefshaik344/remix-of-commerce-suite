@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, KeyRound, Check, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/api/authApi";
+import { getErrorMessage } from "@/api/errorMapper";
+import { useSearchParams } from "react-router-dom";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();

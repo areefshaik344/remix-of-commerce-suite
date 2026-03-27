@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ArrowLeft, Mail, Check } from "lucide-react";
 import { forgotPasswordSchema } from "@/lib/validators";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/api/authApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

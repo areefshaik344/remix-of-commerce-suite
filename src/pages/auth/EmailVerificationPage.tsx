@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import OTPInput from "@/components/auth/OTPInput";
 import { Mail, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/api/authApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function EmailVerificationPage() {
   const [otp, setOtp] = useState("");
