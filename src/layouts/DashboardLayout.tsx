@@ -55,12 +55,20 @@ function DashboardSidebar({ title, navItems }: DashboardLayoutProps) {
 
 export default function DashboardLayout({ title, navItems }: DashboardLayoutProps) {
   const { user: currentUser, role: currentRole, logout } = useAuth();
-  const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
-  const unread = unreadCount();
 
   // Poll backend for new notifications every 30s, pause when tab is hidden
   useNotificationPolling({ interval: 30_000, enabled: true });
+
+  // Listen for toast "View" button clicks to navigate
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const url = (e as CustomEvent).detail;
+      if (url) navigate(url);
+    };
+    window.addEventListener("notification-navigate", handler);
+    return () => window.removeEventListener("notification-navigate", handler);
+  }, [navigate]);
 
   const handleLogout = () => {
     logout();
