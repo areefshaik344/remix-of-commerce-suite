@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Truck, Package, MapPin, Clock, IndianRupee, CheckCircle2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Truck, MapPin, Clock, IndianRupee, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { getErrorMessage } from "@/api/errorMapper";
+import { PageError } from "@/shared";
 
 export default function VendorShipping() {
   const { toast } = useToast();
+  const { data: settings, isLoading, error, refetch } = useApiQuery(() => vendorApi.getShippingSettings(), []);
+  const [saving, setSaving] = useState(false);
+
   const [logisticsMode, setLogisticsMode] = useState("marketplace");
   const [expressEnabled, setExpressEnabled] = useState(true);
   const [codEnabled, setCodEnabled] = useState(true);
@@ -21,9 +29,49 @@ export default function VendorShipping() {
   const [defaultWeight, setDefaultWeight] = useState("500");
   const [returnShipping, setReturnShipping] = useState("seller");
 
-  const handleSave = () => {
-    toast({ title: "Shipping settings saved", description: "Your shipping configuration has been updated." });
+  useEffect(() => {
+    if (settings) {
+      setLogisticsMode(settings.logisticsMode || "marketplace");
+      setExpressEnabled(settings.expressEnabled ?? true);
+      setCodEnabled(settings.codEnabled ?? true);
+      setFreeShippingThreshold(String(settings.freeShippingThreshold ?? 499));
+      setHandlingDays(String(settings.handlingDays ?? 1));
+      setDefaultWeight(String(settings.defaultWeight ?? 500));
+      setReturnShipping(settings.returnShipping || "seller");
+    }
+  }, [settings]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await vendorApi.updateShippingSettings({
+        logisticsMode,
+        expressEnabled,
+        codEnabled,
+        freeShippingThreshold: parseFloat(freeShippingThreshold),
+        handlingDays: parseInt(handlingDays),
+        defaultWeight: parseFloat(defaultWeight),
+        returnShipping,
+      });
+      toast({ title: "Shipping settings saved", description: "Your shipping configuration has been updated." });
+    } catch (err) {
+      toast({ title: "Save failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 max-w-3xl">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-48 w-full" />
+      </div>
+    );
+  }
+
+  if (error) return <PageError message="Failed to load shipping settings" onRetry={refetch} />;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -160,9 +208,9 @@ export default function VendorShipping() {
           <div className="rounded-lg border border-border p-4 flex items-start gap-3">
             <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium">AppleZone Official - Warehouse</p>
-              <p className="text-xs text-muted-foreground mt-0.5">42, Electronic City Phase 1, Bangalore, Karnataka - 560100</p>
-              <p className="text-xs text-muted-foreground">Contact: +91 98765 43210</p>
+              <p className="text-sm font-medium">{settings?.pickupAddress?.name || "Warehouse"}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{settings?.pickupAddress?.address || "Configure your pickup address"}</p>
+              <p className="text-xs text-muted-foreground">{settings?.pickupAddress?.phone || ""}</p>
             </div>
             <Button variant="outline" size="sm" className="ml-auto shrink-0">Edit</Button>
           </div>
@@ -170,7 +218,7 @@ export default function VendorShipping() {
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} className="w-full">Save Shipping Settings</Button>
+      <Button onClick={handleSave} className="w-full" disabled={saving}>{saving ? "Saving..." : "Save Shipping Settings"}</Button>
     </div>
   );
 }

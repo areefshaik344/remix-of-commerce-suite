@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Upload, X, Plus, Trash2, GripVertical, ImagePlus } from "lucide-react";
 import { categories } from "@/features/product";
 import { toast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 interface Variant {
   name: string;
@@ -126,13 +128,37 @@ export default function VendorProductForm() {
     ? Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100)
     : 0;
 
-  const handleSubmit = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
     if (!name || !price || !category) {
       toast({ title: "Missing fields", description: "Please fill in product name, price, and category.", variant: "destructive" });
       return;
     }
-    toast({ title: "Product created!", description: `"${name}" has been added to your store.` });
-    navigate("/vendor/products");
+    setLoading(true);
+    try {
+      await vendorApi.createProduct({
+        name,
+        description,
+        price: parseFloat(price),
+        originalPrice: originalPrice ? parseFloat(originalPrice) : parseFloat(price),
+        category,
+        subcategory: subcategory || undefined,
+        brand,
+        images,
+        stock: stockCount ? parseInt(stockCount) : 0,
+        tags,
+        featured,
+        variants: variants.length > 0 ? variants : undefined,
+        specifications: specs.length > 0 ? Object.fromEntries(specs.filter(s => s.key).map(s => [s.key, s.value])) : undefined,
+      });
+      toast({ title: "Product created!", description: `"${name}" has been added to your store.` });
+      navigate("/vendor/products");
+    } catch (err) {
+      toast({ title: "Failed to create product", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -409,8 +435,8 @@ export default function VendorProductForm() {
 
           {/* Actions */}
           <div className="space-y-2">
-            <Button className="w-full" onClick={handleSubmit}>
-              <Upload className="h-4 w-4 mr-1.5" /> Publish Product
+            <Button className="w-full" onClick={handleSubmit} disabled={loading}>
+              <Upload className="h-4 w-4 mr-1.5" /> {loading ? "Publishing..." : "Publish Product"}
             </Button>
             <Button variant="outline" className="w-full" onClick={() => navigate("/vendor/products")}>
               Cancel

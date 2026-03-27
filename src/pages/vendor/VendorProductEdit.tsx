@@ -10,8 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Upload, X, Plus, Trash2, GripVertical, ImagePlus, Save } from "lucide-react";
-import { categories, products } from "@/features/product";
+import { categories } from "@/features/product";
 import { toast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { getErrorMessage } from "@/api/errorMapper";
 
 interface Variant { name: string; options: string[]; }
 interface SpecRow { key: string; value: string; }
@@ -19,7 +22,10 @@ interface SpecRow { key: string; value: string; }
 export default function VendorProductEdit() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const product = products.find(p => p.id === id);
+  const { data: product, isLoading: productLoading, error: productError } = useApiQuery(
+    () => vendorApi.getVendorProducts().then((prods: any[]) => prods?.find((p: any) => p.id === id)),
+    [id]
+  );
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -106,16 +112,48 @@ export default function VendorProductEdit() {
   const discount = originalPrice && price
     ? Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100) : 0;
 
-  const handleSubmit = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
     if (!name || !price || !category) {
       toast({ title: "Missing fields", description: "Please fill in product name, price, and category.", variant: "destructive" });
       return;
     }
-    toast({ title: "Product updated!", description: `"${name}" has been saved.` });
-    navigate("/vendor/products");
+    setSaving(true);
+    try {
+      await vendorApi.updateProduct(id!, {
+        name,
+        description,
+        price: parseFloat(price),
+        originalPrice: originalPrice ? parseFloat(originalPrice) : parseFloat(price),
+        category,
+        subcategory: subcategory || undefined,
+        brand,
+        images,
+        stock: stockCount ? parseInt(stockCount) : 0,
+        tags,
+        featured,
+        variants: variants.length > 0 ? variants : undefined,
+        specifications: specs.length > 0 ? Object.fromEntries(specs.filter(s => s.key).map(s => [s.key, s.value])) : undefined,
+      });
+      toast({ title: "Product updated!", description: `"${name}" has been saved.` });
+      navigate("/vendor/products");
+    } catch (err) {
+      toast({ title: "Failed to update product", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
-  if (!product) {
+  if (productLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading product...</p>
+      </div>
+    );
+  }
+
+  if (!product || productError) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
@@ -284,7 +322,7 @@ export default function VendorProductEdit() {
           </Card>
 
           <div className="space-y-2">
-            <Button className="w-full" onClick={handleSubmit}><Save className="h-4 w-4 mr-1.5" /> Save Changes</Button>
+            <Button className="w-full" onClick={handleSubmit} disabled={saving}><Save className="h-4 w-4 mr-1.5" /> {saving ? "Saving..." : "Save Changes"}</Button>
             <Button variant="outline" className="w-full" onClick={() => navigate("/vendor/products")}>Cancel</Button>
           </div>
         </div>

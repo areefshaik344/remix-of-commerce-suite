@@ -57,8 +57,23 @@ export const vendorApi = {
     return res.data?.data || res.data;
   },
 
+  async createCoupon(data: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.COUPON_CREATE, data);
+    return res.data?.data || res.data;
+  },
+
   async deleteCoupon(couponId: string) {
     const res = await httpClient.delete(ENDPOINTS.VENDOR.COUPON_DETAIL(couponId));
+    return res.data?.data || res.data;
+  },
+
+  async getShippingSettings() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.SHIPPING_SETTINGS);
+    return res.data?.data || res.data;
+  },
+
+  async updateShippingSettings(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.SHIPPING_SETTINGS, data);
     return res.data?.data || res.data;
   },
 

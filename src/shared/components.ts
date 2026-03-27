@@ -4,6 +4,7 @@
 export { EmptyState } from "@/components/shared/EmptyState";
 export { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 export { NetworkError } from "@/components/shared/NetworkError";
+export { PageError } from "@/components/shared/PageError";
 export { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 export { StatCard } from "@/components/shared/StatCard";
 export { usePagination } from "@/components/shared/Pagination";
