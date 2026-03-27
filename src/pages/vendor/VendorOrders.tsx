@@ -1,5 +1,5 @@
-import { orders } from "@/features/order";
-import { users } from "@/features/auth";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { SearchEmpty } from "@/components/shared/EmptyState";
 import { TablePagination, usePagination } from "@/components/shared/Pagination";
-
-const getUserName = (userId: string) => {
-  const user = users.find(u => u.id === userId);
-  return user?.name || userId;
-};
+import { TableSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning",
@@ -28,11 +25,20 @@ export default function VendorOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const { data: ordersResp, isLoading, error, refetch } = useApiQuery(
+    () => vendorApi.getVendorOrders(), []
+  );
+
+  const orders = (ordersResp?.data ?? ordersResp ?? []) as any[];
+
   const filtered = orders
-    .filter(o => o.id.toLowerCase().includes(search.toLowerCase()) || o.items.some(i => i.productName.toLowerCase().includes(search.toLowerCase())))
-    .filter(o => statusFilter === "all" || o.status === statusFilter);
+    .filter((o: any) => o.id.toLowerCase().includes(search.toLowerCase()) || o.items?.some((i: any) => i.productName.toLowerCase().includes(search.toLowerCase())))
+    .filter((o: any) => statusFilter === "all" || o.status === statusFilter);
 
   const { page, setPage, totalPages, paginatedItems, totalItems } = usePagination(filtered, 8);
+
+  if (isLoading) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">Orders</h1><TableSkeleton rows={6} cols={6} /></div>;
+  if (error) return <div className="space-y-4"><h1 className="font-display text-xl font-bold">Orders</h1><PageError message={error} onRetry={refetch} /></div>;
 
   return (
     <div className="space-y-4">
@@ -73,7 +79,6 @@ export default function VendorOrders() {
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-3 font-medium">Order ID</th>
                       <th className="text-left p-3 font-medium">Items</th>
-                      <th className="text-left p-3 font-medium">Customer</th>
                       <th className="text-center p-3 font-medium">Status</th>
                       <th className="text-left p-3 font-medium">Payment</th>
                       <th className="text-right p-3 font-medium">Amount</th>
@@ -81,16 +86,15 @@ export default function VendorOrders() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedItems.map(order => (
+                    {paginatedItems.map((order: any) => (
                       <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/vendor/orders/${order.id}`)}>
                         <td className="p-3 font-mono text-sm font-medium">{order.id}</td>
-                        <td className="p-3 text-muted-foreground max-w-[200px] truncate">{order.items.map(i => i.productName).join(", ")}</td>
-                        <td className="p-3 text-muted-foreground">{getUserName(order.userId)}</td>
+                        <td className="p-3 text-muted-foreground max-w-[200px] truncate">{order.items?.map((i: any) => i.productName).join(", ")}</td>
                         <td className="p-3 text-center">
                           <Badge variant="secondary" className={`text-xs capitalize border-0 ${statusColors[order.status] || ""}`}>{order.status}</Badge>
                         </td>
                         <td className="p-3 text-muted-foreground">{order.paymentMethod}</td>
-                        <td className="p-3 text-right font-medium">₹{order.total.toLocaleString("en-IN")}</td>
+                        <td className="p-3 text-right font-medium">₹{order.total?.toLocaleString("en-IN")}</td>
                         <td className="p-3 text-right text-muted-foreground">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
                       </tr>
                     ))}
