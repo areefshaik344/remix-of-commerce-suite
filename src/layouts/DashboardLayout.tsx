@@ -59,6 +59,9 @@ export default function DashboardLayout({ title, navItems }: DashboardLayoutProp
   const navigate = useNavigate();
   const unread = unreadCount();
 
+  // Poll backend for new notifications every 30s, pause when tab is hidden
+  useNotificationPolling({ interval: 30_000, enabled: true });
+
   const handleLogout = () => {
     logout();
     navigate("/login");
