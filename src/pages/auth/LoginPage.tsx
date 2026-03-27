@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/api/errorMapper";
 import { authApi } from "@/api/authApi";
 import OTPInput from "@/components/auth/OTPInput";
+import { useOtpCooldown } from "@/hooks/useOtpCooldown";
 
 export default function LoginPage() {
   const [tab, setTab] = useState<"email" | "phone">("email");
