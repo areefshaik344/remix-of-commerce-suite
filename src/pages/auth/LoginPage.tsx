@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/api/errorMapper";
 import { authApi } from "@/api/authApi";
 import OTPInput from "@/components/auth/OTPInput";
+import { useOtpCooldown } from "@/hooks/useOtpCooldown";
 
 export default function LoginPage() {
   const [tab, setTab] = useState<"email" | "phone">("email");
@@ -23,6 +24,7 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const { cooldown, isCoolingDown, startCooldown, resetCooldown } = useOtpCooldown();
 
   const { login, loginWithToken } = useAuth();
   const navigate = useNavigate();
@@ -59,7 +61,7 @@ export default function LoginPage() {
     try {
       const res = await authApi.sendOtp(phone);
       setOtpSent(true);
-      // In dev mode, backend returns the OTP in the response for testing
+      startCooldown();
       const devOtp = res.otp ? ` (Dev OTP: ${res.otp})` : "";
       toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}${devOtp}` });
     } catch (err) {
@@ -235,7 +237,12 @@ export default function LoginPage() {
                         {loading ? "Verifying..." : "Verify & Login"}
                       </Button>
                       <p className="text-xs text-center text-muted-foreground">
-                        Didn't receive? <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        Didn't receive?{" "}
+                        {isCoolingDown ? (
+                          <span className="text-muted-foreground">Resend in {cooldown}s</span>
+                        ) : (
+                          <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        )}
                       </p>
                     </div>
                   )}

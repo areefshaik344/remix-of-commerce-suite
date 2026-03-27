@@ -14,6 +14,7 @@ import { signupSchema, phoneLoginSchema, otpSchema } from "@/lib/validators";
 import { getErrorMessage } from "@/api/errorMapper";
 import { authApi } from "@/api/authApi";
 import OTPInput from "@/components/auth/OTPInput";
+import { useOtpCooldown } from "@/hooks/useOtpCooldown";
 
 export default function SignupPage() {
   const [tab, setTab] = useState<"email" | "phone">("email");
@@ -40,6 +41,7 @@ export default function SignupPage() {
   const { signup, loginWithToken } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { cooldown, isCoolingDown, startCooldown, resetCooldown } = useOtpCooldown();
 
   // ── Email Signup ──
   const handleEmailSignup = async (e: React.FormEvent) => {
@@ -79,6 +81,7 @@ export default function SignupPage() {
     try {
       const res = await authApi.sendOtp(otpPhone);
       setOtpSent(true);
+      startCooldown();
       const devOtp = res.otp ? ` (Dev OTP: ${res.otp})` : "";
       toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${otpPhone}${devOtp}` });
     } catch (err) {
@@ -303,7 +306,12 @@ export default function SignupPage() {
                         {loading ? "Verifying..." : "Verify OTP"}
                       </Button>
                       <p className="text-xs text-center text-muted-foreground">
-                        Didn't receive? <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        Didn't receive?{" "}
+                        {isCoolingDown ? (
+                          <span className="text-muted-foreground">Resend in {cooldown}s</span>
+                        ) : (
+                          <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                        )}
                       </p>
                     </div>
                   ) : (
