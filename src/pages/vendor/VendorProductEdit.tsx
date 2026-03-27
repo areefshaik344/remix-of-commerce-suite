@@ -112,13 +112,37 @@ export default function VendorProductEdit() {
   const discount = originalPrice && price
     ? Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100) : 0;
 
-  const handleSubmit = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
     if (!name || !price || !category) {
       toast({ title: "Missing fields", description: "Please fill in product name, price, and category.", variant: "destructive" });
       return;
     }
-    toast({ title: "Product updated!", description: `"${name}" has been saved.` });
-    navigate("/vendor/products");
+    setSaving(true);
+    try {
+      await vendorApi.updateProduct(id!, {
+        name,
+        description,
+        price: parseFloat(price),
+        originalPrice: originalPrice ? parseFloat(originalPrice) : parseFloat(price),
+        category,
+        subcategory: subcategory || undefined,
+        brand,
+        images,
+        stock: stockCount ? parseInt(stockCount) : 0,
+        tags,
+        featured,
+        variants: variants.length > 0 ? variants : undefined,
+        specifications: specs.length > 0 ? Object.fromEntries(specs.filter(s => s.key).map(s => [s.key, s.value])) : undefined,
+      });
+      toast({ title: "Product updated!", description: `"${name}" has been saved.` });
+      navigate("/vendor/products");
+    } catch (err) {
+      toast({ title: "Failed to update product", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!product) {
