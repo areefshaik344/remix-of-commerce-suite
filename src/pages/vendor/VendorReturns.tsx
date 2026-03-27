@@ -2,30 +2,16 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RotateCcw, Check, X, MessageSquare } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-
-interface ReturnRequest {
-  id: string;
-  orderId: string;
-  productName: string;
-  customerName: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected" | "refunded";
-  requestDate: string;
-  amount: number;
-}
-
-const mockReturns: ReturnRequest[] = [
-  { id: "ret-1", orderId: "ORD-10001", productName: "iPhone 15 Pro Max", customerName: "Rahul Sharma", reason: "Defective screen", status: "pending", requestDate: "2025-03-08", amount: 134900 },
-  { id: "ret-2", orderId: "ORD-10004", productName: "The Alchemist", customerName: "Vikram Joshi", reason: "Wrong edition received", status: "approved", requestDate: "2025-03-05", amount: 299 },
-  { id: "ret-3", orderId: "ORD-10002", productName: "Nike Air Max 270 React", customerName: "Rahul Sharma", reason: "Size doesn't fit", status: "refunded", requestDate: "2025-02-28", amount: 12995 },
-  { id: "ret-4", orderId: "ORD-10007", productName: "Samsung Galaxy S24 Ultra", customerName: "Vikram Joshi", reason: "Changed my mind", status: "rejected", requestDate: "2025-02-20", amount: 129999 },
-];
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning",
@@ -35,22 +21,58 @@ const statusColors: Record<string, string> = {
 };
 
 export default function VendorReturns() {
-  const [returns, setReturns] = useState(mockReturns);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [respondingTo, setRespondingTo] = useState<ReturnRequest | null>(null);
+  const [respondingTo, setRespondingTo] = useState<any | null>(null);
   const [response, setResponse] = useState("");
 
-  const filtered = statusFilter === "all" ? returns : returns.filter(r => r.status === statusFilter);
+  const { data: returns = [], isLoading, error, refetch } = useApiQuery(
+    () => vendorApi.getVendorReturns(),
+    []
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
+  if (error) return <PageError message={error} onRetry={refetch} />;
+
+  const filtered = statusFilter === "all" ? returns : returns.filter((r: any) => r.status === statusFilter);
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
 
-  const handleAction = (id: string, action: "approved" | "rejected") => {
-    setReturns(prev => prev.map(r => r.id === id ? { ...r, status: action } : r));
-    toast({ title: action === "approved" ? "Return approved" : "Return rejected" });
+  const handleAction = async (id: string, action: "approved" | "rejected") => {
+    try {
+      await vendorApi.updateReturnStatus(id, action);
+      toast({ title: action === "approved" ? "Return approved" : "Return rejected" });
+      refetch();
+    } catch {
+      toast({ title: "Action failed", variant: "destructive" });
+    }
   };
 
-  const handleRefund = (id: string) => {
-    setReturns(prev => prev.map(r => r.id === id ? { ...r, status: "refunded" } : r));
-    toast({ title: "Refund processed" });
+  const handleRefund = async (id: string) => {
+    try {
+      await vendorApi.updateReturnStatus(id, "refunded");
+      toast({ title: "Refund processed" });
+      refetch();
+    } catch {
+      toast({ title: "Refund failed", variant: "destructive" });
+    }
+  };
+
+  const handleSendResponse = async () => {
+    if (!respondingTo) return;
+    try {
+      await vendorApi.updateReturnStatus(respondingTo.id, respondingTo.status, response);
+      toast({ title: "Response sent" });
+      setRespondingTo(null);
+    } catch {
+      toast({ title: "Failed to send response", variant: "destructive" });
+    }
   };
 
   return (
@@ -58,7 +80,7 @@ export default function VendorReturns() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display text-xl font-bold">Returns & Refunds</h1>
-          <p className="text-sm text-muted-foreground">{returns.filter(r => r.status === "pending").length} pending review</p>
+          <p className="text-sm text-muted-foreground">{returns.filter((r: any) => r.status === "pending").length} pending review</p>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-36 text-xs"><SelectValue /></SelectTrigger>
@@ -97,7 +119,7 @@ export default function VendorReturns() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(ret => (
+                  {filtered.map((ret: any) => (
                     <tr key={ret.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="p-3 font-mono text-xs">{ret.id}</td>
                       <td className="p-3 font-mono text-xs">{ret.orderId}</td>
@@ -106,7 +128,7 @@ export default function VendorReturns() {
                       <td className="p-3 text-muted-foreground max-w-[150px] truncate">{ret.reason}</td>
                       <td className="p-3 text-right font-medium">{formatPrice(ret.amount)}</td>
                       <td className="p-3 text-center">
-                        <Badge variant="secondary" className={`text-xs capitalize border-0 ${statusColors[ret.status]}`}>{ret.status}</Badge>
+                        <Badge variant="secondary" className={`text-xs capitalize border-0 ${statusColors[ret.status] || ""}`}>{ret.status}</Badge>
                       </td>
                       <td className="p-3 text-right">
                         <div className="flex justify-end gap-1">
@@ -147,7 +169,7 @@ export default function VendorReturns() {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setRespondingTo(null)}>Cancel</Button>
-              <Button onClick={() => { toast({ title: "Response sent" }); setRespondingTo(null); }}>Send Response</Button>
+              <Button onClick={handleSendResponse}>Send Response</Button>
             </div>
           </div>
         </DialogContent>

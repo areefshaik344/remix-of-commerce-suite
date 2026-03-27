@@ -1,35 +1,55 @@
 import { useState } from "react";
-import { products } from "@/features/product";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/shared/StatCard";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, AlertTriangle, TrendingDown, Archive, Search, Upload, Download, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
 
 export default function VendorInventory() {
   const { toast } = useToast();
-  const vendorProducts = products.filter(p => p.vendorId === "v-1");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState<string[]>([]);
-  const [stocks, setStocks] = useState<Record<string, number>>(
-    Object.fromEntries(vendorProducts.map(p => [p.id, p.stockCount]))
+  const [stockOverrides, setStockOverrides] = useState<Record<string, number>>({});
+
+  const { data: inventory = [], isLoading, error, refetch } = useApiQuery(
+    () => vendorApi.getVendorInventory(),
+    []
   );
 
-  const lowStockCount = vendorProducts.filter(p => stocks[p.id] <= 10).length;
-  const outOfStockCount = vendorProducts.filter(p => stocks[p.id] === 0).length;
-  const totalUnits = Object.values(stocks).reduce((a, b) => a + b, 0);
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}</div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
 
-  const filtered = vendorProducts
-    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
-    .filter(p => {
-      if (filter === "low") return stocks[p.id] > 0 && stocks[p.id] <= 10;
-      if (filter === "out") return stocks[p.id] === 0;
-      if (filter === "healthy") return stocks[p.id] > 10;
+  if (error) return <PageError message={error} onRetry={refetch} />;
+
+  const getStock = (p: any) => stockOverrides[p.id] ?? p.stockCount ?? p.stock ?? 0;
+
+  const lowStockCount = inventory.filter((p: any) => getStock(p) > 0 && getStock(p) <= 10).length;
+  const outOfStockCount = inventory.filter((p: any) => getStock(p) === 0).length;
+  const totalUnits = inventory.reduce((a: number, p: any) => a + getStock(p), 0);
+
+  const filtered = inventory
+    .filter((p: any) => (p.name || "").toLowerCase().includes(search.toLowerCase()))
+    .filter((p: any) => {
+      const stock = getStock(p);
+      if (filter === "low") return stock > 0 && stock <= 10;
+      if (filter === "out") return stock === 0;
+      if (filter === "healthy") return stock > 10;
       return true;
     });
 
@@ -39,20 +59,38 @@ export default function VendorInventory() {
 
   const toggleAll = () => {
     if (selected.length === filtered.length) setSelected([]);
-    else setSelected(filtered.map(p => p.id));
+    else setSelected(filtered.map((p: any) => p.id));
   };
 
   const updateStock = (id: string, value: number) => {
-    setStocks(prev => ({ ...prev, [id]: Math.max(0, value) }));
+    setStockOverrides(prev => ({ ...prev, [id]: Math.max(0, value) }));
   };
 
-  const bulkRestock = () => {
+  const saveStock = async (id: string) => {
+    const newStock = stockOverrides[id];
+    if (newStock === undefined) return;
+    try {
+      await vendorApi.updateInventory(id, newStock);
+      toast({ title: "Stock updated" });
+      refetch();
+    } catch {
+      toast({ title: "Failed to update stock", variant: "destructive" });
+    }
+  };
+
+  const bulkRestock = async () => {
     if (selected.length === 0) return;
-    const updated = { ...stocks };
-    selected.forEach(id => { updated[id] = (updated[id] || 0) + 50; });
-    setStocks(updated);
-    setSelected([]);
-    toast({ title: "Bulk restock", description: `Restocked ${selected.length} products (+50 each)` });
+    try {
+      await Promise.all(selected.map(id => {
+        const current = getStock(inventory.find((p: any) => p.id === id));
+        return vendorApi.updateInventory(id, current + 50);
+      }));
+      setSelected([]);
+      refetch();
+      toast({ title: "Bulk restock", description: `Restocked ${selected.length} products (+50 each)` });
+    } catch {
+      toast({ title: "Bulk restock failed", variant: "destructive" });
+    }
   };
 
   const getStockStatus = (count: number) => {
@@ -75,7 +113,7 @@ export default function VendorInventory() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Products" value={String(vendorProducts.length)} icon={Package} />
+        <StatCard title="Total Products" value={String(inventory.length)} icon={Package} />
         <StatCard title="Total Units" value={totalUnits.toLocaleString()} icon={Archive} />
         <StatCard title="Low Stock" value={String(lowStockCount)} icon={TrendingDown} change="Needs attention" changeType="negative" />
         <StatCard title="Out of Stock" value={String(outOfStockCount)} icon={AlertTriangle} change="Urgent" changeType="negative" />
@@ -122,8 +160,8 @@ export default function VendorInventory() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(product => {
-                  const stock = stocks[product.id];
+                {filtered.map((product: any) => {
+                  const stock = getStock(product);
                   const status = getStockStatus(stock);
                   return (
                     <tr key={product.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
@@ -132,14 +170,14 @@ export default function VendorInventory() {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center gap-3">
-                          <img src={product.images[0]} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
+                          <img src={product.images?.[0] || product.image} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
                           <div>
                             <p className="font-medium line-clamp-1">{product.name}</p>
                             <p className="text-xs text-muted-foreground">{product.category}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 font-mono text-xs text-muted-foreground">SKU-{product.id.split("-")[1]}</td>
+                      <td className="p-3 font-mono text-xs text-muted-foreground">SKU-{product.sku || product.id?.split("-")[1] || product.id}</td>
                       <td className="p-3 text-center">
                         <Badge variant={status.variant} className={`text-xs ${status.className}`}>{status.label}</Badge>
                       </td>
@@ -151,11 +189,14 @@ export default function VendorInventory() {
                           <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateStock(product.id, stock - 1)}>-</Button>
                           <Input
                             type="number"
-                            value={stock}
+                            value={stockOverrides[product.id] ?? stock}
                             onChange={e => updateStock(product.id, parseInt(e.target.value) || 0)}
                             className="h-7 w-16 text-center text-sm [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => updateStock(product.id, stock + 1)}>+</Button>
+                          {stockOverrides[product.id] !== undefined && stockOverrides[product.id] !== (product.stockCount ?? product.stock) && (
+                            <Button variant="default" size="sm" className="h-7 text-xs ml-1" onClick={() => saveStock(product.id)}>Save</Button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useNotificationStore } from "@/features/notification";
+import { cartApi } from "@/api/cartApi";
+import { orderApi } from "@/api/orderApi";
+import { userApi } from "@/api/userApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,8 +13,9 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, CreditCard, Banknote, Smartphone, Building2, Check, ChevronLeft, ChevronRight, Tag, X, ShoppingBag, Store } from "lucide-react";
+import { MapPin, CreditCard, Banknote, Smartphone, Building2, Check, ChevronLeft, ChevronRight, Tag, X, ShoppingBag, Store, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const paymentMethods = [
@@ -19,13 +24,6 @@ const paymentMethods = [
   { id: "netbanking", label: "Net Banking", icon: Building2, desc: "All major banks supported" },
   { id: "cod", label: "Cash on Delivery", icon: Banknote, desc: "Pay when you receive" },
 ];
-
-const mockCoupons: Record<string, { discount: number; type: "percent" | "flat"; minOrder: number; label: string; maxDiscount?: number }> = {
-  "SAVE10": { discount: 10, type: "percent", minOrder: 1000, label: "10% off", maxDiscount: 2000 },
-  "FLAT500": { discount: 500, type: "flat", minOrder: 3000, label: "₹500 off" },
-  "WELCOME": { discount: 15, type: "percent", minOrder: 500, label: "15% off (max ₹2000)", maxDiscount: 2000 },
-  "FREEBIE": { discount: 200, type: "flat", minOrder: 0, label: "₹200 off" },
-};
 
 const STEPS = ["Address", "Payment", "Review"] as const;
 
@@ -39,25 +37,29 @@ export default function CheckoutPage() {
   const { toast } = useToast();
 
   const [step, setStep] = useState(0);
-  const [selectedAddress, setSelectedAddress] = useState("a-1");
+  const [selectedAddress, setSelectedAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("upi");
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; label: string } | null>(null);
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const addresses = currentUser?.addresses || [];
-  const total = cartTotal();
-  const tax = Math.round(total * 0.18);
+  // Fetch addresses from API
+  const { data: addresses = [], isLoading: addressesLoading } = useApiQuery(
+    () => userApi.getAddresses(),
+    [],
+    { enabled: !!currentUser }
+  );
 
-  let couponDiscount = 0;
-  if (appliedCoupon && mockCoupons[appliedCoupon]) {
-    const c = mockCoupons[appliedCoupon];
-    if (c.type === "percent") {
-      couponDiscount = Math.min(Math.round(total * c.discount / 100), c.maxDiscount || 2000);
-    } else {
-      couponDiscount = c.discount;
-    }
+  // Set default address once loaded
+  if (addresses.length > 0 && !selectedAddress) {
+    const defaultAddr = addresses.find((a: any) => a.isDefault) || addresses[0];
+    if (defaultAddr) setSelectedAddress(defaultAddr.id);
   }
 
+  const total = cartTotal();
+  const tax = Math.round(total * 0.18);
+  const couponDiscount = appliedCoupon?.discount || 0;
   const shipping = total >= 499 ? 0 : 49;
   const grandTotal = total + tax + shipping - couponDiscount;
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
@@ -80,19 +82,24 @@ export default function CheckoutPage() {
     );
   }
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     const code = couponCode.trim().toUpperCase();
-    const coupon = mockCoupons[code];
-    if (!coupon) {
-      toast({ title: "Invalid coupon", description: "This coupon code is not valid.", variant: "destructive" });
-      return;
+    if (!code) return;
+    setApplyingCoupon(true);
+    try {
+      const result = await cartApi.validateCoupon(code, total);
+      setAppliedCoupon({
+        code: result.coupon.code,
+        discount: result.discountAmount,
+        label: result.coupon.label || result.coupon.description,
+      });
+      toast({ title: "Coupon applied!", description: `${result.coupon.description || result.coupon.label} discount applied.` });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "This coupon code is not valid.";
+      toast({ title: "Invalid coupon", description: msg, variant: "destructive" });
+    } finally {
+      setApplyingCoupon(false);
     }
-    if (total < coupon.minOrder) {
-      toast({ title: "Minimum order not met", description: `Requires min order of ${formatPrice(coupon.minOrder)}.`, variant: "destructive" });
-      return;
-    }
-    setAppliedCoupon(code);
-    toast({ title: "Coupon applied!", description: `${coupon.label} discount applied.` });
   };
 
   const handleRemoveCoupon = () => {
@@ -100,24 +107,45 @@ export default function CheckoutPage() {
     setCouponCode("");
   };
 
-  const handlePlaceOrder = () => {
-    // Simulate order splitting by vendor
-    const orderId = `ORD-${Date.now().toString().slice(-5)}`;
-    const vendorOrderCount = Object.keys(vendorGroups).length;
+  const handlePlaceOrder = async () => {
+    setPlacingOrder(true);
+    try {
+      const orderData = {
+        items: cart.map(item => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          quantity: item.quantity,
+          price: item.product.price,
+          image: item.product.images[0],
+        })),
+        shippingAddress: selectedAddress,
+        paymentMethod,
+        total: grandTotal,
+      };
 
-    addNotification({
-      type: "order",
-      title: "Order Placed Successfully!",
-      message: `Order ${orderId} placed with ${vendorOrderCount} vendor${vendorOrderCount > 1 ? "s" : ""}. Total: ${formatPrice(grandTotal)}`,
-      actionUrl: "/orders",
-    });
+      const result = await orderApi.createOrder(orderData, currentUser?.id || "");
+      const orderId = result?.id || result?.orderId || `ORD-${Date.now().toString().slice(-5)}`;
+      const vendorOrderCount = Object.keys(vendorGroups).length;
 
-    clearCart();
-    navigate("/order-success");
+      addNotification({
+        type: "order",
+        title: "Order Placed Successfully!",
+        message: `Order ${orderId} placed with ${vendorOrderCount} vendor${vendorOrderCount > 1 ? "s" : ""}. Total: ${formatPrice(grandTotal)}`,
+        actionUrl: "/orders",
+      });
+
+      clearCart();
+      navigate("/order-success");
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || "Failed to place order. Please try again.";
+      toast({ title: "Order failed", description: msg, variant: "destructive" });
+    } finally {
+      setPlacingOrder(false);
+    }
   };
 
-  const selectedAddr = addresses.find(a => a.id === selectedAddress);
-  const selectedPayment = paymentMethods.find(p => p.id === paymentMethod);
+  const selectedAddr = addresses.find((a: any) => a.id === selectedAddress);
+  const selectedPaymentMethod = paymentMethods.find(p => p.id === paymentMethod);
 
   return (
     <div className="container py-6 max-w-4xl">
@@ -153,24 +181,32 @@ export default function CheckoutPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress} className="space-y-3">
-                  {addresses.map(addr => (
-                    <label key={addr.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedAddress === addr.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}>
-                      <RadioGroupItem value={addr.id} className="mt-1" />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{addr.name}</span>
-                          <Badge variant="outline" className="text-[10px]">{addr.label}</Badge>
-                          {addr.isDefault && <Badge className="text-[10px] bg-success/10 text-success border-0">Default</Badge>}
+                {addressesLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+                  </div>
+                ) : addresses.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4">No addresses found. Please add one in your profile.</p>
+                ) : (
+                  <RadioGroup value={selectedAddress} onValueChange={setSelectedAddress} className="space-y-3">
+                    {addresses.map((addr: any) => (
+                      <label key={addr.id} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedAddress === addr.id ? "border-primary bg-primary/5" : "hover:bg-muted/50"}`}>
+                        <RadioGroupItem value={addr.id} className="mt-1" />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-medium text-sm">{addr.name}</span>
+                            <Badge variant="outline" className="text-[10px]">{addr.label}</Badge>
+                            {addr.isDefault && <Badge className="text-[10px] bg-success/10 text-success border-0">Default</Badge>}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{addr.line1}, {addr.line2}</p>
+                          <p className="text-sm text-muted-foreground">{addr.city}, {addr.state} - {addr.pincode}</p>
+                          <p className="text-xs text-muted-foreground mt-1">📞 {addr.phone}</p>
                         </div>
-                        <p className="text-sm text-muted-foreground">{addr.line1}, {addr.line2}</p>
-                        <p className="text-sm text-muted-foreground">{addr.city}, {addr.state} - {addr.pincode}</p>
-                        <p className="text-xs text-muted-foreground mt-1">📞 {addr.phone}</p>
-                      </div>
-                    </label>
-                  ))}
-                </RadioGroup>
-                <Button className="w-full mt-4 gap-2" onClick={() => setStep(1)}>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                )}
+                <Button className="w-full mt-4 gap-2" onClick={() => setStep(1)} disabled={!selectedAddress}>
                   Continue to Payment <ChevronRight className="h-4 w-4" />
                 </Button>
               </CardContent>
@@ -225,7 +261,6 @@ export default function CheckoutPage() {
           {/* Step 2: Review */}
           {step === 2 && (
             <div className="space-y-4">
-              {/* Delivery info */}
               <Card className="shadow-card">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -244,11 +279,10 @@ export default function CheckoutPage() {
                     <h3 className="font-display font-semibold text-sm flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" /> Payment</h3>
                     <Button variant="link" size="sm" className="text-xs h-auto p-0" onClick={() => setStep(1)}>Change</Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">{selectedPayment?.label}</p>
+                  <p className="text-sm text-muted-foreground">{selectedPaymentMethod?.label}</p>
                 </CardContent>
               </Card>
 
-              {/* Order items grouped by vendor */}
               {Object.entries(vendorGroups).map(([vendorId, items]) => (
                 <Card key={vendorId} className="shadow-card">
                   <CardContent className="p-4">
@@ -273,8 +307,9 @@ export default function CheckoutPage() {
                 </Card>
               ))}
 
-              <Button className="w-full gap-2" size="lg" onClick={handlePlaceOrder}>
-                <Check className="h-4 w-4" /> Place Order — {formatPrice(grandTotal)}
+              <Button className="w-full gap-2" size="lg" onClick={handlePlaceOrder} disabled={placingOrder}>
+                {placingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {placingOrder ? "Placing Order..." : `Place Order — ${formatPrice(grandTotal)}`}
               </Button>
             </div>
           )}
@@ -303,19 +338,20 @@ export default function CheckoutPage() {
                     <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
                     <Input placeholder="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value.toUpperCase())} className="pl-8 text-xs h-9" />
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleApplyCoupon} disabled={!couponCode.trim()}>Apply</Button>
+                  <Button variant="outline" size="sm" onClick={handleApplyCoupon} disabled={!couponCode.trim() || applyingCoupon}>
+                    {applyingCoupon ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
+                  </Button>
                 </div>
               ) : (
                 <div className="flex items-center justify-between bg-success/10 rounded-lg px-3 py-2">
                   <div className="flex items-center gap-2">
                     <Tag className="h-3 w-3 text-success" />
-                    <span className="text-xs font-medium text-success">{appliedCoupon}</span>
-                    <span className="text-xs text-success">(-{formatPrice(couponDiscount)})</span>
+                    <span className="text-xs font-medium text-success">{appliedCoupon.code}</span>
+                    <span className="text-xs text-success">(-{formatPrice(appliedCoupon.discount)})</span>
                   </div>
                   <button onClick={handleRemoveCoupon} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
                 </div>
               )}
-              <p className="text-[10px] text-muted-foreground">Try: SAVE10, FLAT500, WELCOME, FREEBIE</p>
 
               <Separator />
               <div className="space-y-2 text-sm">
@@ -332,7 +368,6 @@ export default function CheckoutPage() {
                 <span>{formatPrice(grandTotal)}</span>
               </div>
 
-              {/* Multi-vendor info */}
               {Object.keys(vendorGroups).length > 1 && (
                 <p className="text-[10px] text-muted-foreground bg-muted/50 rounded p-2">
                   📦 This order will be split into {Object.keys(vendorGroups).length} vendor shipments
