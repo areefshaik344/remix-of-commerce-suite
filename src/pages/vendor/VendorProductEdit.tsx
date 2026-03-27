@@ -145,7 +145,15 @@ export default function VendorProductEdit() {
     }
   };
 
-  if (!product) {
+  if (productLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading product...</p>
+      </div>
+    );
+  }
+
+  if (!product || productError) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
