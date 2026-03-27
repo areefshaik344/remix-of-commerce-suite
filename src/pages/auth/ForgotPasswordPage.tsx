@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ArrowLeft, Mail, Check } from "lucide-react";
 import { forgotPasswordSchema } from "@/lib/validators";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/api/authApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -22,9 +24,14 @@ export default function ForgotPasswordPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setSent(true);
-    setLoading(false);
+    try {
+      await authApi.forgotPassword(result.data.email);
+      setSent(true);
+    } catch (err) {
+      toast({ title: "Request failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

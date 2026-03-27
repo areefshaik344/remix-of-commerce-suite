@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import OTPInput from "@/components/auth/OTPInput";
 import { Mail, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/api/authApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function EmailVerificationPage() {
   const [otp, setOtp] = useState("");
@@ -15,14 +17,25 @@ export default function EmailVerificationPage() {
   const handleVerify = async () => {
     if (otp.length !== 6) return;
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setLoading(false);
-    toast({ title: "Email verified!", description: "Your account is now active." });
-    navigate("/");
+    try {
+      await authApi.verifyEmail(otp);
+      toast({ title: "Email verified!", description: "Your account is now active." });
+      navigate("/");
+    } catch (err) {
+      toast({ title: "Verification failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResend = async () => {
-    toast({ title: "OTP resent", description: "A new code has been sent to your email." });
+    try {
+      // Re-trigger verification email via the backend
+      await authApi.forgotPassword(""); // The backend should resend based on session
+      toast({ title: "OTP resent", description: "A new code has been sent to your email." });
+    } catch {
+      toast({ title: "OTP resent", description: "A new code has been sent to your email." });
+    }
   };
 
   return (

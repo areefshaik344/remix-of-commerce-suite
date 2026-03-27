@@ -6,10 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowLeft, KeyRound, Check, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { authApi } from "@/api/authApi";
+import { getErrorMessage } from "@/api/errorMapper";
+import { useSearchParams } from "react-router-dom";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token") || "";
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -26,11 +31,20 @@ export default function ResetPasswordPage() {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
     }
+    if (!token) {
+      toast({ title: "Invalid link", description: "Reset token is missing. Please request a new link.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setDone(true);
-    setLoading(false);
-    toast({ title: "Password reset successfully!" });
+    try {
+      await authApi.resetPassword(token, password);
+      setDone(true);
+      toast({ title: "Password reset successfully!" });
+    } catch (err) {
+      toast({ title: "Reset failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
