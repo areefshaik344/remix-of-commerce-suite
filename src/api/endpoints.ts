@@ -7,13 +7,16 @@ export const ENDPOINTS = {
   // Auth
   AUTH: {
     LOGIN: "/auth/login",
-    SIGNUP: "/auth/signup",
+    REGISTER: "/auth/register",
     LOGOUT: "/auth/logout",
+    LOGOUT_ALL: "/auth/logout-all",
     REFRESH: "/auth/refresh",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
     VERIFY_EMAIL: "/auth/verify-email",
     ME: "/auth/me",
+    SESSIONS: "/auth/sessions",
+    REVOKE_SESSION: (id: string) => `/auth/sessions/${id}`,
   },
 
   // Products
@@ -99,8 +102,10 @@ export const ENDPOINTS = {
 
   // User
   USER: {
-    PROFILE: "/user/profile",
-    ADDRESSES: "/user/addresses",
-    UPDATE_PROFILE: "/user/profile",
+    PROFILE: "/users/profile",
+    ADDRESSES: "/users/addresses",
+    ADDRESS_DETAIL: (id: string) => `/users/addresses/${id}`,
+    ADDRESS_DEFAULT: (id: string) => `/users/addresses/${id}/default`,
+    UPDATE_PROFILE: "/users/profile",
   },
 } as const;

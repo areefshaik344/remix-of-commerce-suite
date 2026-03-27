@@ -44,9 +44,9 @@ export const authApi = {
     };
   },
 
-  /** POST /auth/signup — returns accessToken + user, sets refresh cookie */
+  /** POST /auth/register — returns accessToken + user, sets refresh cookie */
   async signup(req: SignupRequest): Promise<AuthResponse> {
-    const res = await httpClient.post(ENDPOINTS.AUTH.SIGNUP, req);
+    const res = await httpClient.post(ENDPOINTS.AUTH.REGISTER, req);
     const data = res.data?.data || res.data;
     return {
       accessToken: data.accessToken || data.token,
