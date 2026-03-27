@@ -86,6 +86,11 @@ export const ENDPOINTS = {
     STORE: (vendorId: string) => `/vendors/${vendorId}`,
     STORE_PRODUCTS: (vendorId: string) => `/vendors/${vendorId}/products`,
     SHIPPING_SETTINGS: "/vendor/shipping-settings",
+    ONBOARDING: "/vendor/onboarding",
+    STORE_CUSTOMIZATION: "/vendor/store-customization",
+    PAYOUTS: "/vendor/payouts",
+    BULK_UPLOAD: "/vendor/products/bulk-upload",
+    LOW_STOCK: "/vendor/inventory/low-stock",
   },
 
   // Admin
