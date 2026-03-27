@@ -73,6 +73,11 @@ export const adminApi = {
     return res.data?.data || res.data;
   },
 
+  async createCoupon(data: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.ADMIN.COUPON_CREATE, data);
+    return res.data?.data || res.data;
+  },
+
   async toggleCoupon(couponId: string) {
     const res = await httpClient.patch(ENDPOINTS.ADMIN.COUPON_TOGGLE(couponId));
     return res.data?.data || res.data;
