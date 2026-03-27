@@ -66,7 +66,7 @@ export function useNotificationPolling({
                     onClick: () => {
                       window.dispatchEvent(new CustomEvent("notification-navigate", { detail: n.actionUrl }));
                     },
-                  }, "View")
+                  }, "View") as React.ReactElement<typeof ToastAction>)
                 : undefined,
             });
           }
