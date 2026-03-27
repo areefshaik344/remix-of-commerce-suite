@@ -1,10 +1,14 @@
-import { useNotificationStore } from "@/features/notification";
-import type { NotificationType } from "@/features/notification";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Bell, Package, Tag, Star, Truck, CheckCircle, Shield, Store, X, Trash2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Bell, Package, Tag, Star, Truck, CheckCircle, Shield, Store, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { notificationApi } from "@/api/notificationApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
+
+type NotificationType = "order" | "promo" | "delivery" | "review" | "system" | "vendor" | "admin";
 
 const iconMap: Record<NotificationType, typeof Bell> = {
   order: Package,
@@ -28,14 +32,41 @@ function timeAgo(timestamp: string) {
 }
 
 export default function NotificationsPage() {
-  const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotificationStore();
   const navigate = useNavigate();
-  const unread = unreadCount();
 
-  const handleClick = (n: typeof notifications[0]) => {
-    markAsRead(n.id);
+  const { data, isLoading, error, refetch } = useApiQuery(
+    () => notificationApi.getNotifications(),
+    []
+  );
+
+  const notifications: any[] = data?.items || data || [];
+  const unread = notifications.filter((n: any) => !n.read).length;
+
+  const handleClick = async (n: any) => {
+    if (!n.read) {
+      try { await notificationApi.markAsRead(n.id); } catch {}
+    }
     if (n.actionUrl) navigate(n.actionUrl);
+    refetch();
   };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationApi.markAllRead();
+      refetch();
+    } catch {}
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container py-6 max-w-2xl space-y-2">
+        <Skeleton className="h-8 w-48 mb-4" />
+        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 w-full" />)}
+      </div>
+    );
+  }
+
+  if (error) return <div className="container py-6 max-w-2xl"><PageError message={error} onRetry={refetch} /></div>;
 
   return (
     <div className="container py-6 max-w-2xl">
@@ -45,7 +76,7 @@ export default function NotificationsPage() {
           <p className="text-sm text-muted-foreground">{unread} unread</p>
         </div>
         {unread > 0 && (
-          <Button variant="outline" size="sm" onClick={markAllAsRead}>Mark all as read</Button>
+          <Button variant="outline" size="sm" onClick={handleMarkAllRead}>Mark all as read</Button>
         )}
       </div>
 
@@ -56,8 +87,8 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div className="space-y-2">
-          {notifications.map(n => {
-            const Icon = iconMap[n.type] || Bell;
+          {notifications.map((n: any) => {
+            const Icon = iconMap[n.type as NotificationType] || Bell;
             return (
               <Card
                 key={n.id}
@@ -74,14 +105,8 @@ export default function NotificationsPage() {
                       {!n.read && <Badge className="h-4 text-[10px]">New</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">{n.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{timeAgo(n.timestamp)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{timeAgo(n.timestamp || n.createdAt)}</p>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeNotification(n.id); }}
-                    className="shrink-0 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
                 </CardContent>
               </Card>
             );

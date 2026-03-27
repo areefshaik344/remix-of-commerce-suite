@@ -4,50 +4,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DollarSign, Users, TrendingUp, ShoppingBag, Download, Star } from "lucide-react";
-import { vendors } from "@/features/auth";
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
 
-const gmvData = [
-  { month: "Sep", gmv: 12500000, netRevenue: 1875000 },
-  { month: "Oct", gmv: 18900000, netRevenue: 2835000 },
-  { month: "Nov", gmv: 28400000, netRevenue: 4260000 },
-  { month: "Dec", gmv: 34200000, netRevenue: 5130000 },
-  { month: "Jan", gmv: 22100000, netRevenue: 3315000 },
-  { month: "Feb", gmv: 19800000, netRevenue: 2970000 },
-];
-
-const userGrowth = [
-  { month: "Sep", customers: 12400, vendors: 42 },
-  { month: "Oct", customers: 15800, vendors: 48 },
-  { month: "Nov", customers: 21200, vendors: 55 },
-  { month: "Dec", customers: 28900, vendors: 62 },
-  { month: "Jan", customers: 32100, vendors: 68 },
-  { month: "Feb", customers: 35600, vendors: 74 },
-];
-
-const vendorPerformance = vendors.slice(0, 8).map(v => ({
-  ...v,
-  conversionRate: (Math.random() * 4 + 1).toFixed(1),
-  returnRate: (Math.random() * 5 + 1).toFixed(1),
-  avgOrderValue: Math.round(v.totalRevenue / (v.totalOrders || 1)),
-  fulfillmentScore: (Math.random() * 1.5 + 3.5).toFixed(1),
-}));
-
-const categoryPerformance = [
-  { category: "Electronics", gmv: 45600000, orders: 22300, growth: "+14%", share: "33%" },
-  { category: "Fashion", gmv: 28900000, orders: 18700, growth: "+22%", share: "21%" },
-  { category: "Home & Living", gmv: 18200000, orders: 8900, growth: "+8%", share: "13%" },
-  { category: "Beauty", gmv: 15600000, orders: 12400, growth: "+31%", share: "11%" },
-  { category: "Books", gmv: 8900000, orders: 45000, growth: "+5%", share: "6%" },
-  { category: "Groceries", gmv: 12300000, orders: 28000, growth: "+18%", share: "9%" },
-];
-
-const COLORS = ["hsl(221,83%,53%)", "hsl(38,92%,50%)", "hsl(280,67%,54%)", "hsl(142,71%,45%)", "hsl(0,72%,51%)", "hsl(180,60%,45%)"];
 const fmt = (v: number) => `₹${(v / 10000000).toFixed(1)}Cr`;
 
 export default function AdminReporting() {
+  const { data: report, isLoading, error, refetch } = useApiQuery(
+    () => adminApi.getReporting(),
+    []
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    );
+  }
+
+  if (error) return <PageError message={error} onRetry={refetch} />;
+
+  // Fallback defaults for data structure
+  const gmvData = report?.gmvData || [];
+  const userGrowth = report?.userGrowth || [];
+  const vendorPerformance = report?.vendorPerformance || [];
+  const categoryPerformance = report?.categoryPerformance || [];
+  const stats = report?.stats || {};
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -70,10 +63,10 @@ export default function AdminReporting() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total GMV" value={fmt(gmvData.reduce((s, d) => s + d.gmv, 0))} icon={ShoppingBag} change="+18% YoY" changeType="positive" />
-        <StatCard title="Net Revenue" value={fmt(gmvData.reduce((s, d) => s + d.netRevenue, 0))} icon={DollarSign} change="+22% YoY" changeType="positive" />
-        <StatCard title="Total Users" value="35,600" icon={Users} change="+187% growth" changeType="positive" />
-        <StatCard title="Avg. Order Value" value="₹2,450" icon={TrendingUp} change="+8% vs last month" changeType="positive" />
+        <StatCard title="Total GMV" value={stats.totalGMV ? fmt(stats.totalGMV) : "—"} icon={ShoppingBag} change={stats.gmvChange || ""} changeType="positive" />
+        <StatCard title="Net Revenue" value={stats.netRevenue ? fmt(stats.netRevenue) : "—"} icon={DollarSign} change={stats.revenueChange || ""} changeType="positive" />
+        <StatCard title="Total Users" value={stats.totalUsers?.toLocaleString() || "—"} icon={Users} change={stats.userChange || ""} changeType="positive" />
+        <StatCard title="Avg. Order Value" value={stats.avgOrderValue ? `₹${stats.avgOrderValue.toLocaleString()}` : "—"} icon={TrendingUp} change={stats.aovChange || ""} changeType="positive" />
       </div>
 
       <Tabs defaultValue="revenue">
@@ -154,7 +147,7 @@ export default function AdminReporting() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {vendorPerformance.map(v => (
+                    {vendorPerformance.map((v: any) => (
                       <TableRow key={v.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -168,9 +161,9 @@ export default function AdminReporting() {
                         <TableCell className="text-center">
                           <span className="inline-flex items-center gap-0.5 text-sm"><Star className="h-3 w-3 fill-warning text-warning" />{v.rating}</span>
                         </TableCell>
-                        <TableCell className="text-right font-medium">₹{(v.totalRevenue / 100000).toFixed(1)}L</TableCell>
-                        <TableCell className="text-right text-muted-foreground">{v.totalOrders.toLocaleString()}</TableCell>
-                        <TableCell className="text-center text-muted-foreground">₹{v.avgOrderValue.toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-medium">₹{((v.totalRevenue || 0) / 100000).toFixed(1)}L</TableCell>
+                        <TableCell className="text-right text-muted-foreground">{(v.totalOrders || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-center text-muted-foreground">₹{(v.avgOrderValue || 0).toLocaleString()}</TableCell>
                         <TableCell className="text-center">
                           <Badge variant="secondary" className="text-xs">{v.conversionRate}%</Badge>
                         </TableCell>
@@ -206,11 +199,11 @@ export default function AdminReporting() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {categoryPerformance.map((c, i) => (
+                  {categoryPerformance.map((c: any) => (
                     <TableRow key={c.category}>
                       <TableCell className="font-medium">{c.category}</TableCell>
-                      <TableCell className="text-right font-medium">{fmt(c.gmv)}</TableCell>
-                      <TableCell className="text-right text-muted-foreground">{c.orders.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-medium">{fmt(c.gmv || 0)}</TableCell>
+                      <TableCell className="text-right text-muted-foreground">{(c.orders || 0).toLocaleString()}</TableCell>
                       <TableCell className="text-center">
                         <Badge className="bg-primary/10 text-primary border-0 text-xs">{c.growth}</Badge>
                       </TableCell>
