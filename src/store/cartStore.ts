@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, devtools } from "zustand/middleware";
 import type { Product } from "@/data/mock-products";
+import { cartApi } from "@/api/cartApi";
 
 export interface CartItem {
   product: Product;
@@ -37,28 +38,43 @@ export const useCartStore = create<CartState>()(
       savedForLater: [],
 
       addToCart: (product, quantity = 1, variants = {}) => {
-        // Stock validation
         if (product.stockCount !== undefined && product.stockCount <= 0) return;
         const { cart } = get();
         const existing = cart.find(i => i.product.id === product.id);
         if (existing) {
           const newQty = existing.quantity + quantity;
-          // Don't exceed available stock
           const maxQty = product.stockCount !== undefined ? Math.min(newQty, product.stockCount) : newQty;
-          set({ cart: cart.map(i => i.product.id === product.id ? { ...i, quantity: Math.min(maxQty, 10) } : i) });
+          const finalQty = Math.min(maxQty, 10);
+          set({ cart: cart.map(i => i.product.id === product.id ? { ...i, quantity: finalQty } : i) });
+          // Sync with backend
+          cartApi.addToCart(product.id, finalQty, variants[Object.keys(variants)[0]]).catch(() => {});
         } else {
-          set({ cart: [...cart, { product, quantity: Math.min(quantity, 10), selectedVariants: variants }] });
+          const finalQty = Math.min(quantity, 10);
+          set({ cart: [...cart, { product, quantity: finalQty, selectedVariants: variants }] });
+          cartApi.addToCart(product.id, finalQty, variants[Object.keys(variants)[0]]).catch(() => {});
         }
       },
 
-      removeFromCart: (productId) => set({ cart: get().cart.filter(i => i.product.id !== productId) }),
+      removeFromCart: (productId) => {
+        const { cart } = get();
+        const item = cart.find(i => i.product.id === productId);
+        set({ cart: cart.filter(i => i.product.id !== productId) });
+        if (item) {
+          cartApi.removeItem(productId).catch(() => {});
+        }
+      },
 
       updateCartQuantity: (productId, quantity) => {
         if (quantity <= 0) { get().removeFromCart(productId); return; }
         set({ cart: get().cart.map(i => i.product.id === productId ? { ...i, quantity } : i) });
+        cartApi.updateItem(productId, quantity).catch(() => {});
       },
 
-      clearCart: () => set({ cart: [] }),
+      clearCart: () => {
+        set({ cart: [] });
+        cartApi.clearCart().catch(() => {});
+      },
+
       cartTotal: () => get().cart.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
       cartCount: () => get().cart.reduce((sum, i) => sum + i.quantity, 0),
 
@@ -70,6 +86,7 @@ export const useCartStore = create<CartState>()(
           cart: cart.filter(i => i.product.id !== productId),
           savedForLater: [...savedForLater, { product: item.product, savedAt: Date.now() }],
         });
+        cartApi.removeItem(productId).catch(() => {});
       },
 
       moveToCart: (productId) => {

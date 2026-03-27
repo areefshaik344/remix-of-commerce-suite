@@ -8,8 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { adminApi } from "@/api/adminApi";
+import { vendorApi } from "@/api/vendorApi";
+import { getErrorMessage } from "@/api/errorMapper";
 import { categories } from "@/features/product";
-import { vendors } from "@/features/auth";
+import { useApiQuery } from "@/hooks/useApiQuery";
 
 export default function AdminCreateCoupon() {
   const navigate = useNavigate();
@@ -27,6 +30,11 @@ export default function AdminCreateCoupon() {
   const [scope, setScope] = useState("platform");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedVendor, setSelectedVendor] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Fetch vendors from API for the vendor scope dropdown
+  const { data: vendorsData } = useApiQuery(() => vendorApi.getAllVendors(), []);
+  const vendors = Array.isArray(vendorsData) ? vendorsData : [];
 
   const generateCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -34,13 +42,36 @@ export default function AdminCreateCoupon() {
     setCode(generated);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!code || !value) {
       toast({ title: "Missing fields", description: "Code and discount value are required.", variant: "destructive" });
       return;
     }
-    toast({ title: "Coupon created!", description: `Platform coupon "${code}" is now ${active ? "active" : "saved as draft"}.` });
-    navigate("/admin/coupons");
+    setLoading(true);
+    try {
+      await adminApi.createCoupon({
+        code,
+        discountType: type,
+        discountValue: parseFloat(value),
+        description,
+        scope,
+        categorySlug: scope === "category" ? selectedCategory : undefined,
+        vendorId: scope === "vendor" ? selectedVendor : undefined,
+        minOrder: minOrder ? parseFloat(minOrder) : 0,
+        maxDiscount: maxDiscount ? parseFloat(maxDiscount) : undefined,
+        usageLimit: usageLimit ? parseInt(usageLimit) : undefined,
+        perUserLimit: parseInt(perUserLimit),
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        active,
+      });
+      toast({ title: "Coupon created!", description: `Platform coupon "${code}" is now ${active ? "active" : "saved as draft"}.` });
+      navigate("/admin/coupons");
+    } catch (err) {
+      toast({ title: "Failed to create coupon", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -99,7 +130,7 @@ export default function AdminCreateCoupon() {
               <Select value={selectedVendor} onValueChange={setSelectedVendor}>
                 <SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger>
                 <SelectContent>
-                  {vendors.map(v => <SelectItem key={v.id} value={v.id}>{v.logo} {v.storeName}</SelectItem>)}
+                  {vendors.map((v: any) => <SelectItem key={v.id} value={v.id}>{v.storeName}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -149,7 +180,7 @@ export default function AdminCreateCoupon() {
 
       <div className="flex gap-3 justify-end">
         <Button variant="outline" onClick={() => navigate("/admin/coupons")}>Cancel</Button>
-        <Button onClick={handleSubmit}>Create Coupon</Button>
+        <Button onClick={handleSubmit} disabled={loading}>{loading ? "Creating..." : "Create Coupon"}</Button>
       </div>
     </div>
   );

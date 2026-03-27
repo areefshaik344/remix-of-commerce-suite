@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Tag } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function VendorCreateCoupon() {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export default function VendorCreateCoupon() {
   const [endDate, setEndDate] = useState("");
   const [active, setActive] = useState(true);
   const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const generateCode = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -29,13 +32,33 @@ export default function VendorCreateCoupon() {
     setCode(code);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!code || !value) {
       toast({ title: "Missing fields", description: "Code and discount value are required.", variant: "destructive" });
       return;
     }
-    toast({ title: "Coupon created!", description: `Code "${code}" is now ${active ? "active" : "saved as draft"}.` });
-    navigate("/vendor/coupons");
+    setLoading(true);
+    try {
+      await vendorApi.createCoupon({
+        code,
+        discountType: type,
+        discountValue: parseFloat(value),
+        description,
+        minOrder: minOrder ? parseFloat(minOrder) : 0,
+        maxDiscount: maxDiscount ? parseFloat(maxDiscount) : undefined,
+        usageLimit: usageLimit ? parseInt(usageLimit) : undefined,
+        perUserLimit: parseInt(perUserLimit),
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        active,
+      });
+      toast({ title: "Coupon created!", description: `Code "${code}" is now ${active ? "active" : "saved as draft"}.` });
+      navigate("/vendor/coupons");
+    } catch (err) {
+      toast({ title: "Failed to create coupon", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -108,7 +131,7 @@ export default function VendorCreateCoupon() {
 
       <div className="flex gap-3 justify-end">
         <Button variant="outline" onClick={() => navigate("/vendor/coupons")}>Cancel</Button>
-        <Button onClick={handleSubmit}>Create Coupon</Button>
+        <Button onClick={handleSubmit} disabled={loading}>{loading ? "Creating..." : "Create Coupon"}</Button>
       </div>
     </div>
   );
