@@ -116,4 +116,36 @@ export const vendorApi = {
     const res = await httpClient.get(ENDPOINTS.ADMIN.VENDORS);
     return res.data?.data || res.data;
   },
+
+  async submitOnboarding(data: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.ONBOARDING, data);
+    return res.data?.data || res.data;
+  },
+
+  async getStoreCustomization() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.STORE_CUSTOMIZATION);
+    return res.data?.data || res.data;
+  },
+
+  async updateStoreCustomization(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.STORE_CUSTOMIZATION, data);
+    return res.data?.data || res.data;
+  },
+
+  async getPayoutHistory() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.PAYOUTS);
+    return res.data?.data || res.data;
+  },
+
+  async bulkUploadProducts(formData: FormData) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.BULK_UPLOAD, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data?.data || res.data;
+  },
+
+  async getLowStockProducts() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.LOW_STOCK);
+    return res.data?.data || res.data;
+  },
 };
