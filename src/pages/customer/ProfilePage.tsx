@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddressFormDialog } from "@/components/shared/AddressFormDialog";
-import { User, MapPin, Bell, Shield, Edit2, Save, Loader2 } from "lucide-react";
+import { User, MapPin, Bell, Shield, Edit2, Save, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/features/auth";
 
