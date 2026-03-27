@@ -31,11 +31,20 @@ export default function ResetPasswordPage() {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
     }
+    if (!token) {
+      toast({ title: "Invalid link", description: "Reset token is missing. Please request a new link.", variant: "destructive" });
+      return;
+    }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setDone(true);
-    setLoading(false);
-    toast({ title: "Password reset successfully!" });
+    try {
+      await authApi.resetPassword(token, password);
+      setDone(true);
+      toast({ title: "Password reset successfully!" });
+    } catch (err) {
+      toast({ title: "Reset failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

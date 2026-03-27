@@ -24,9 +24,14 @@ export default function ForgotPasswordPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setSent(true);
-    setLoading(false);
+    try {
+      await authApi.forgotPassword(result.data.email);
+      setSent(true);
+    } catch (err) {
+      toast({ title: "Request failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
