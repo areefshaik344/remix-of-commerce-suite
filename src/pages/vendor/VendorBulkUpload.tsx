@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Upload, Download, FileSpreadsheet, Check, AlertTriangle, X } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Upload, FileSpreadsheet, Download, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 interface UploadResult {
   total: number;
@@ -17,15 +20,16 @@ export default function VendorBulkUpload() {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<UploadResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f) {
-      if (!f.name.endsWith(".csv") && !f.name.endsWith(".xlsx")) {
+    const selected = e.target.files?.[0];
+    if (selected) {
+      if (!selected.name.match(/\.(csv|xlsx|xls)$/)) {
         toast({ title: "Invalid file", description: "Please upload a CSV or Excel file.", variant: "destructive" });
         return;
       }
-      setFile(f);
+      setFile(selected);
       setResult(null);
     }
   };
@@ -35,33 +39,40 @@ export default function VendorBulkUpload() {
     setUploading(true);
     setProgress(0);
 
-    // Simulate upload progress
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(r => setTimeout(r, 200));
-      setProgress(i);
-    }
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    // Mock result
-    setResult({
-      total: 25,
-      success: 22,
-      errors: [
-        { row: 8, field: "price", message: "Price must be a positive number" },
-        { row: 15, field: "category", message: "Unknown category 'Gadgets'" },
-        { row: 21, field: "sku", message: "Duplicate SKU 'WH-100'" },
-      ],
-    });
-    setUploading(false);
-    toast({ title: "Upload complete", description: "22 of 25 products imported successfully." });
+      // Simulate progress (real upload doesn't provide progress from httpClient)
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 15, 90));
+      }, 300);
+
+      const res = await vendorApi.bulkUploadProducts(formData);
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      setResult({
+        total: res.total || 0,
+        success: res.success || 0,
+        errors: res.errors || [],
+      });
+      toast({ title: "Upload complete", description: `${res.success || 0} of ${res.total || 0} products imported successfully.` });
+    } catch (e) {
+      toast({ title: "Upload failed", description: getErrorMessage(e), variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const downloadTemplate = () => {
-    const csv = "name,description,category,subcategory,brand,price,originalPrice,sku,stockCount,image1,image2\nSample Product,A great product,electronics,Smartphones,BrandName,9999,12999,SKU-001,50,https://example.com/img1.jpg,";
-    const blob = new Blob([csv], { type: "text/csv" });
+    const headers = "name,sku,category,brand,price,comparePrice,stock,description,image1,image2\n";
+    const sample = 'Sample Product,SKU-001,Electronics,BrandX,999,1299,50,"Description here",https://img.url/1.jpg,https://img.url/2.jpg\n';
+    const blob = new Blob([headers + sample], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "markethub-product-template.csv";
+    a.download = "product-upload-template.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -70,103 +81,95 @@ export default function VendorBulkUpload() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="font-display text-xl font-bold">Bulk Product Upload</h1>
-        <p className="text-sm text-muted-foreground">Import multiple products at once using a CSV or Excel file</p>
+        <p className="text-sm text-muted-foreground">Import multiple products at once using CSV or Excel</p>
       </div>
 
-      {/* Template Download */}
+      {/* Step 1: Template */}
       <Card className="shadow-card">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">1. Download Template</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Download className="h-4 w-4" /> Step 1: Download Template
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">Start with our template to ensure your data is formatted correctly.</p>
-          <Button variant="outline" className="gap-2" onClick={downloadTemplate}>
-            <Download className="h-4 w-4" /> Download CSV Template
+          <p className="text-sm text-muted-foreground mb-3">Download the CSV template, fill in your product data, then upload.</p>
+          <Button variant="outline" size="sm" onClick={downloadTemplate}>
+            <FileSpreadsheet className="h-4 w-4 mr-1.5" /> Download Template
           </Button>
         </CardContent>
       </Card>
 
-      {/* File Upload */}
+      {/* Step 2: Upload */}
       <Card className="shadow-card">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">2. Upload Your File</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Upload className="h-4 w-4" /> Step 2: Upload File
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-8 cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-colors">
-            <input type="file" accept=".csv,.xlsx" className="hidden" onChange={handleFileChange} />
-            <FileSpreadsheet className="h-10 w-10 text-muted-foreground mb-3" />
-            {file ? (
-              <div className="text-center">
-                <p className="text-sm font-medium">{file.name}</p>
-                <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-sm font-medium">Click to upload or drag & drop</p>
-                <p className="text-xs text-muted-foreground">CSV or Excel files (max 5MB)</p>
-              </div>
-            )}
-          </label>
-
-          {file && !uploading && !result && (
-            <Button className="w-full gap-2" onClick={handleUpload}>
-              <Upload className="h-4 w-4" /> Upload & Import Products
-            </Button>
-          )}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+          >
+            <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+            <p className="text-sm font-medium">{file ? file.name : "Click to select CSV or Excel file"}</p>
+            <p className="text-xs text-muted-foreground mt-1">Supports .csv, .xlsx, .xls</p>
+            <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileChange} />
+          </div>
 
           {uploading && (
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Processing...</span>
-                <span>{progress}%</span>
-              </div>
-              <Progress value={progress} />
+              <Progress value={progress} className="h-2" />
+              <p className="text-xs text-muted-foreground text-center">{progress}% uploaded</p>
             </div>
           )}
+
+          <Button onClick={handleUpload} disabled={!file || uploading} className="w-full">
+            {uploading ? "Uploading..." : "Upload & Import"}
+          </Button>
         </CardContent>
       </Card>
 
-      {/* Results */}
+      {/* Step 3: Results */}
       {result && (
         <Card className="shadow-card">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">3. Import Results</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" /> Import Results
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Check className="h-4 w-4 text-success" />
-                <span>{result.success} imported</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <X className="h-4 w-4 text-destructive" />
-                <span>{result.errors.length} failed</span>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                Total: {result.total} rows
-              </div>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="rounded-lg bg-muted p-3"><p className="text-2xl font-bold">{result.total}</p><p className="text-xs text-muted-foreground">Total Rows</p></div>
+              <div className="rounded-lg bg-primary/5 p-3"><p className="text-2xl font-bold text-primary">{result.success}</p><p className="text-xs text-muted-foreground">Imported</p></div>
+              <div className="rounded-lg bg-destructive/5 p-3"><p className="text-2xl font-bold text-destructive">{result.errors.length}</p><p className="text-xs text-muted-foreground">Errors</p></div>
             </div>
 
             {result.errors.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium flex items-center gap-1">
-                  <AlertTriangle className="h-4 w-4 text-warning" /> Errors
-                </h4>
-                <div className="rounded-lg border divide-y text-sm">
-                  {result.errors.map((err, i) => (
-                    <div key={i} className="px-3 py-2 flex items-center gap-3">
-                      <Badge variant="outline" className="text-[10px] shrink-0">Row {err.row}</Badge>
-                      <span className="font-mono text-xs text-muted-foreground">{err.field}</span>
-                      <span className="text-muted-foreground">{err.message}</span>
-                    </div>
-                  ))}
-                </div>
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-1.5"><AlertTriangle className="h-4 w-4 text-warning" /> Errors</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Row</TableHead>
+                      <TableHead>Field</TableHead>
+                      <TableHead>Error</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {result.errors.map((err, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-mono text-sm">{err.row}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">{err.field}</Badge></TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{err.message}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
             )}
 
-            <Button variant="outline" onClick={() => { setFile(null); setResult(null); }}>
-              Upload Another File
-            </Button>
+            <Button variant="outline" onClick={() => { setFile(null); setResult(null); setProgress(0); }}>Upload Another File</Button>
           </CardContent>
         </Card>
       )}
