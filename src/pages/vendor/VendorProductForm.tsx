@@ -128,13 +128,37 @@ export default function VendorProductForm() {
     ? Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100)
     : 0;
 
-  const handleSubmit = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
     if (!name || !price || !category) {
       toast({ title: "Missing fields", description: "Please fill in product name, price, and category.", variant: "destructive" });
       return;
     }
-    toast({ title: "Product created!", description: `"${name}" has been added to your store.` });
-    navigate("/vendor/products");
+    setLoading(true);
+    try {
+      await vendorApi.createProduct({
+        name,
+        description,
+        price: parseFloat(price),
+        originalPrice: originalPrice ? parseFloat(originalPrice) : parseFloat(price),
+        category,
+        subcategory: subcategory || undefined,
+        brand,
+        images,
+        stock: stockCount ? parseInt(stockCount) : 0,
+        tags,
+        featured,
+        variants: variants.length > 0 ? variants : undefined,
+        specifications: specs.length > 0 ? Object.fromEntries(specs.filter(s => s.key).map(s => [s.key, s.value])) : undefined,
+      });
+      toast({ title: "Product created!", description: `"${name}" has been added to your store.` });
+      navigate("/vendor/products");
+    } catch (err) {
+      toast({ title: "Failed to create product", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
