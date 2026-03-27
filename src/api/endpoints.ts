@@ -102,8 +102,10 @@ export const ENDPOINTS = {
 
   // User
   USER: {
-    PROFILE: "/user/profile",
-    ADDRESSES: "/user/addresses",
-    UPDATE_PROFILE: "/user/profile",
+    PROFILE: "/users/profile",
+    ADDRESSES: "/users/addresses",
+    ADDRESS_DETAIL: (id: string) => `/users/addresses/${id}`,
+    ADDRESS_DEFAULT: (id: string) => `/users/addresses/${id}/default`,
+    UPDATE_PROFILE: "/users/profile",
   },
 } as const;
