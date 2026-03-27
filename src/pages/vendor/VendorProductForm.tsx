@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Upload, X, Plus, Trash2, GripVertical, ImagePlus } from "lucide-react";
 import { categories } from "@/features/product";
 import { toast } from "@/hooks/use-toast";
+import { vendorApi } from "@/api/vendorApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 interface Variant {
   name: string;
