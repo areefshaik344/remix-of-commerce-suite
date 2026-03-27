@@ -61,11 +61,9 @@ export function useNotificationPolling({
               title: n.title,
               description: n.message,
               action: n.actionUrl
-                ? React.createElement("a", {
-                    href: n.actionUrl,
-                    className: "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                    onClick: (e: React.MouseEvent) => {
-                      e.preventDefault();
+                ? React.createElement(ToastAction, {
+                    altText: "View",
+                    onClick: () => {
                       window.dispatchEvent(new CustomEvent("notification-navigate", { detail: n.actionUrl }));
                     },
                   }, "View")
