@@ -11,6 +11,7 @@ import { Mail, Phone, Eye, EyeOff, ShieldCheck, ChevronRight, Truck, Tag, Headph
 import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/api/errorMapper";
+import { authApi } from "@/api/authApi";
 import OTPInput from "@/components/auth/OTPInput";
 
 export default function LoginPage() {
