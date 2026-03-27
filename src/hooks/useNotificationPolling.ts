@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { notificationApi } from "@/api/notificationApi";
 import { useNotificationStore } from "@/store/notificationStore";
+import { toast } from "@/hooks/use-toast";
 
 interface UseNotificationPollingOptions {
   /** Polling interval in ms (default 30s) */
@@ -20,6 +21,7 @@ export function useNotificationPolling({
 }: UseNotificationPollingOptions = {}) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
+  const isFirstFetchRef = useRef(true);
 
   const syncNotifications = useCallback(async () => {
     if (!isMountedRef.current) return;
@@ -49,6 +51,24 @@ export function useNotificationPolling({
       const newIds = mapped.map((n: any) => n.id).join(",");
 
       if (currentIds !== newIds || store.notifications.length !== mapped.length) {
+        // Find genuinely new notifications (not in current store)
+        if (!isFirstFetchRef.current) {
+          const currentIdSet = new Set(store.notifications.map(n => n.id));
+          const newOnes = mapped.filter((n: any) => !currentIdSet.has(n.id) && !n.read);
+          for (const n of newOnes.slice(0, 3)) {
+            toast({
+              title: n.title,
+              description: n.message,
+            });
+          }
+          if (newOnes.length > 3) {
+            toast({
+              title: `+${newOnes.length - 3} more notifications`,
+              description: "Check your notifications for details.",
+            });
+          }
+        }
+        isFirstFetchRef.current = false;
         useNotificationStore.setState({ notifications: mapped });
       }
     } catch {
