@@ -62,10 +62,6 @@ export const adminApi = {
     return res.data?.data || res.data;
   },
 
-  async getAuditLog() {
-    const res = await httpClient.get(`${ENDPOINTS.ADMIN.ANALYTICS}/audit-log`);
-    return res.data?.data || res.data;
-  },
 
   async getCategories() {
     const res = await httpClient.get(ENDPOINTS.ADMIN.CATEGORIES);
