@@ -1,7 +1,8 @@
 import { useParams, Link } from "react-router-dom";
-import { products } from "@/features/product";
-import { vendors } from "@/features/auth";
-import { reviews } from "@/features/order";
+import { productApi } from "@/api/productApi";
+import { reviewApi } from "@/api/reviewApi";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import { useUIStore } from "@/store/uiStore";
@@ -12,6 +13,8 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ProductCard, PincodeChecker, FrequentlyBoughtTogether, RecentlyViewedSection } from "@/features/product";
 import { WriteReviewForm } from "@/components/shared/WriteReviewForm";
+import { ProductDetailSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 import SEOHead from "@/components/shared/SEOHead";
 import { Star, Heart, ShoppingCart, Truck, ShieldCheck, RotateCcw, Minus, Plus, ThumbsUp, GitCompareArrows, Store, ZoomIn, Package, AlertTriangle } from "lucide-react";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -19,7 +22,6 @@ import { motion } from "framer-motion";
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
-  const product = products.find(p => p.slug === slug);
   const addToCart = useCartStore(s => s.addToCart);
   const toggleWishlist = useWishlistStore(s => s.toggleWishlist);
   const isInWishlist = useWishlistStore(s => s.isInWishlist);
@@ -34,6 +36,29 @@ export default function ProductDetailPage() {
   const [zoomOpen, setZoomOpen] = useState(false);
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
   const imageRef = useRef<HTMLDivElement>(null);
+
+  const { data: productResp, isLoading, error, refetch } = useApiQuery(
+    () => productApi.getProductBySlug(slug!),
+    [slug],
+    { enabled: !!slug }
+  );
+
+  const product = productResp?.data ?? productResp;
+
+  const { data: reviewsResp } = useApiQuery(
+    () => reviewApi.getProductReviews(product?.id),
+    [product?.id],
+    { enabled: !!product?.id }
+  );
+
+  const { data: relatedResp } = useApiQuery(
+    () => productApi.getRelatedProducts(product?.id),
+    [product?.id],
+    { enabled: !!product?.id }
+  );
+
+  const productReviews = reviewsResp?.data ?? reviewsResp ?? [];
+  const related = relatedResp?.data ?? relatedResp ?? [];
 
   const jsonLd = useMemo(() => product ? ({
     "@context": "https://schema.org",
@@ -60,19 +85,16 @@ export default function ProductDetailPage() {
     if (product) addToRecentlyViewed(product.id);
   }, [product?.id]);
 
+  if (isLoading) return <ProductDetailSkeleton />;
+  if (error) return <div className="container py-6"><PageError message={error} onRetry={refetch} /></div>;
   if (!product) return <div className="container py-20 text-center text-muted-foreground">Product not found</div>;
 
-  const productReviews = reviews.filter(r => r.productId === product.id);
-  const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
   const wishlisted = isInWishlist(product.id);
   const inCompare = isInCompare(product.id);
-  const vendor = vendors.find(v => v.id === product.vendorId);
-  const vendorSlug = vendor?.storeName.toLowerCase().replace(/\s+/g, "-");
   const formatPrice = (p: number) => `₹${p.toLocaleString("en-IN")}`;
   const isOutOfStock = !product.inStock || product.stockCount === 0;
   const isLowStock = product.inStock && product.stockCount > 0 && product.stockCount <= 10;
 
-  // Simulated delivery estimate
   const deliveryDays = Math.floor(Math.random() * 3) + 2;
   const deliveryDate = new Date();
   deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
@@ -107,7 +129,6 @@ export default function ProductDetailPage() {
             onClick={() => setZoomOpen(true)}
           >
             <img src={product.images[selectedImage]} alt={product.name} className="h-full w-full object-cover" />
-            {/* Hover zoom lens indicator */}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
               <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-70 transition-opacity drop-shadow-lg" />
             </div>
@@ -119,7 +140,7 @@ export default function ProductDetailPage() {
           </div>
           {product.images.length > 1 && (
             <div className="flex gap-2">
-              {product.images.map((img, i) => (
+              {product.images.map((img: string, i: number) => (
                 <button key={i} onClick={() => setSelectedImage(i)} className={`h-16 w-16 rounded-lg overflow-hidden border-2 transition-colors ${i === selectedImage ? "border-primary" : "border-border"}`}>
                   <img src={img} alt="" className="h-full w-full object-cover" />
                 </button>
@@ -145,15 +166,12 @@ export default function ProductDetailPage() {
                 src={product.images[selectedImage]}
                 alt={product.name}
                 className="w-full h-full transition-transform duration-100"
-                style={{
-                  transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
-                  transform: "scale(2)",
-                }}
+                style={{ transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`, transform: "scale(2)" }}
               />
             </div>
             {product.images.length > 1 && (
               <div className="flex gap-2 p-3 border-t bg-card">
-                {product.images.map((img, i) => (
+                {product.images.map((img: string, i: number) => (
                   <button key={i} onClick={() => setSelectedImage(i)} className={`h-12 w-12 rounded overflow-hidden border-2 transition-colors ${i === selectedImage ? "border-primary" : "border-border"}`}>
                     <img src={img} alt="" className="h-full w-full object-cover" />
                   </button>
@@ -172,7 +190,7 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-1 bg-success/10 text-success px-2 py-0.5 rounded text-sm font-semibold">
                 <span>{product.rating}</span><Star className="h-3.5 w-3.5 fill-current" />
               </div>
-              <span className="text-sm text-muted-foreground">{product.reviewCount.toLocaleString()} ratings</span>
+              <span className="text-sm text-muted-foreground">{product.reviewCount?.toLocaleString()} ratings</span>
             </div>
           </div>
 
@@ -189,19 +207,6 @@ export default function ProductDetailPage() {
             <p className="text-xs text-muted-foreground">Inclusive of all taxes</p>
           </div>
 
-          {/* Vendor link */}
-          {vendor && (
-            <Link
-              to={`/store/${vendorSlug}`}
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors bg-muted/50 rounded-lg px-3 py-2"
-            >
-              <Store className="h-4 w-4" />
-              <span>Sold by <span className="font-medium text-foreground">{vendor.storeName}</span></span>
-              <div className="flex items-center gap-0.5 ml-1">
-                {vendor.rating} <Star className="h-3 w-3 fill-secondary text-secondary" />
-              </div>
-            </Link>
-          )}
           {/* Stock Status */}
           <div className="flex items-center gap-3">
             {isOutOfStock ? (
@@ -237,18 +242,12 @@ export default function ProductDetailPage() {
           <Separator />
 
           {/* Variants */}
-          {product.variants.map(v => (
+          {product.variants?.map((v: any) => (
             <div key={v.name}>
               <p className="text-sm font-medium mb-2">{v.name}</p>
               <div className="flex flex-wrap gap-2">
-                {v.options.map(opt => (
-                  <Button
-                    key={opt}
-                    variant={selectedVariants[v.name] === opt ? "default" : "outline"}
-                    size="sm"
-                    className="text-xs"
-                    onClick={() => setSelectedVariants(prev => ({ ...prev, [v.name]: opt }))}
-                  >
+                {v.options.map((opt: string) => (
+                  <Button key={opt} variant={selectedVariants[v.name] === opt ? "default" : "outline"} size="sm" className="text-xs" onClick={() => setSelectedVariants(prev => ({ ...prev, [v.name]: opt }))}>
                     {opt}
                   </Button>
                 ))}
@@ -274,8 +273,7 @@ export default function ProductDetailPage() {
               <Heart className={`h-4 w-4 ${wishlisted ? "fill-current" : ""}`} />
             </Button>
             <Button
-              variant="outline"
-              size="lg"
+              variant="outline" size="lg"
               onClick={() => addToCompare(product.id)}
               disabled={inCompare || compareList.length >= 4}
               className={inCompare ? "text-primary border-primary/50" : ""}
@@ -285,7 +283,6 @@ export default function ProductDetailPage() {
             </Button>
           </div>
 
-          {/* Pincode Checker */}
           <PincodeChecker />
 
           {/* Delivery features */}
@@ -304,7 +301,7 @@ export default function ProductDetailPage() {
           <div>
             <h3 className="font-display font-semibold mb-2">Specifications</h3>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(product.specs).map(([k, v]) => (
+              {Object.entries(product.specs || {}).map(([k, v]) => (
                 <div key={k} className="text-sm">
                   <span className="text-muted-foreground">{k}:</span> <span className="font-medium">{String(v)}</span>
                 </div>
@@ -322,7 +319,7 @@ export default function ProductDetailPage() {
       {/* Reviews */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg font-bold">Customer Reviews ({productReviews.length})</h2>
+          <h2 className="font-display text-lg font-bold">Customer Reviews ({(productReviews as any[]).length})</h2>
           <Button variant="outline" size="sm" onClick={() => setShowReviewForm(!showReviewForm)}>
             {showReviewForm ? "Cancel" : "Write a Review"}
           </Button>
@@ -334,9 +331,9 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        {productReviews.length > 0 ? (
+        {(productReviews as any[]).length > 0 ? (
           <div className="space-y-3">
-            {productReviews.map(review => (
+            {(productReviews as any[]).map((review: any) => (
               <Card key={review.id} className="shadow-card">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
@@ -364,16 +361,15 @@ export default function ProductDetailPage() {
       <FrequentlyBoughtTogether product={product} />
 
       {/* Related */}
-      {related.length > 0 && (
+      {(related as any[]).length > 0 && (
         <section>
           <h2 className="font-display text-lg font-bold mb-4">Related Products</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {related.map(p => <ProductCard key={p.id} product={p} />)}
+            {(related as any[]).map((p: any) => <ProductCard key={p.id} product={p} />)}
           </div>
         </section>
       )}
 
-      {/* Recently Viewed */}
       <RecentlyViewedSection excludeProductIds={[product.id]} maxItems={6} />
     </div>
   );

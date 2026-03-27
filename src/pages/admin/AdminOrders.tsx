@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { orders } from "@/features/order";
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Eye } from "lucide-react";
 import { SearchEmpty } from "@/components/shared/EmptyState";
 import { TablePagination, usePagination } from "@/components/shared/Pagination";
+import { TableSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 const statusColors: Record<string, string> = {
   pending: "bg-warning/10 text-warning",
@@ -25,11 +28,20 @@ export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const { data: ordersResp, isLoading, error, refetch } = useApiQuery(
+    () => adminApi.getAllOrders(), []
+  );
+
+  const orders = (ordersResp?.data ?? ordersResp ?? []) as any[];
+
   const filtered = orders
-    .filter(o => o.id.toLowerCase().includes(search.toLowerCase()))
-    .filter(o => statusFilter === "all" || o.status === statusFilter);
+    .filter((o: any) => o.id.toLowerCase().includes(search.toLowerCase()))
+    .filter((o: any) => statusFilter === "all" || o.status === statusFilter);
 
   const { page, setPage, totalPages, paginatedItems, totalItems } = usePagination(filtered, 8);
+
+  if (isLoading) return <div className="space-y-6"><h1 className="font-display text-xl font-bold">All Orders</h1><TableSkeleton rows={6} cols={6} /></div>;
+  if (error) return <div className="space-y-6"><h1 className="font-display text-xl font-bold">All Orders</h1><PageError message={error} onRetry={refetch} /></div>;
 
   return (
     <div className="space-y-6">
@@ -75,10 +87,10 @@ export default function AdminOrders() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedItems.map(o => (
+                  {paginatedItems.map((o: any) => (
                     <TableRow key={o.id} className="cursor-pointer" onClick={() => navigate(`/admin/orders/${o.id}`)}>
                       <TableCell className="font-mono text-sm font-medium">{o.id}</TableCell>
-                      <TableCell className="text-sm max-w-[200px] truncate">{o.items.map(i => i.productName).join(", ")}</TableCell>
+                      <TableCell className="text-sm max-w-[200px] truncate">{o.items.map((i: any) => i.productName).join(", ")}</TableCell>
                       <TableCell className="font-medium text-sm">₹{o.total.toLocaleString("en-IN")}</TableCell>
                       <TableCell className="text-sm">{o.paymentMethod}</TableCell>
                       <TableCell>

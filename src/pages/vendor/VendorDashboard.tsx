@@ -1,11 +1,14 @@
 import { StatCard } from "@/components/shared/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { analyticsData, orders } from "@/features/order";
+import { vendorApi } from "@/api/vendorApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
 import { DollarSign, Package, ShoppingCart, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { PageError } from "@/components/shared/PageError";
 
 const COLORS = ["hsl(142 71% 45%)", "hsl(221 83% 53%)", "hsl(38 92% 50%)", "hsl(280 67% 54%)", "hsl(0 72% 51%)", "hsl(220 10% 46%)"];
 
@@ -19,8 +22,26 @@ const statusColors: Record<string, string> = {
 
 export default function VendorDashboard() {
   const navigate = useNavigate();
-  const revenueData = analyticsData.monthlyRevenue.map(d => ({ ...d, revenue: d.revenue / 100000 }));
-  const statusData = analyticsData.ordersByStatus;
+
+  const { data: analyticsResp, isLoading: analyticsLoading, error: analyticsError, refetch: refetchAnalytics } = useApiQuery(
+    () => vendorApi.getVendorAnalytics(), []
+  );
+  const { data: ordersResp, isLoading: ordersLoading } = useApiQuery(
+    () => vendorApi.getVendorOrders(), []
+  );
+
+  const analytics = analyticsResp?.data ?? analyticsResp;
+  const orders = (ordersResp?.data ?? ordersResp ?? []) as any[];
+
+  if (analyticsLoading || ordersLoading) return <DashboardSkeleton />;
+  if (analyticsError) return <PageError message={analyticsError} onRetry={refetchAnalytics} />;
+
+  const revenueData = (analytics?.monthlySales || []).map((d: any) => ({ ...d, revenue: (d.revenue || 0) / 100000 }));
+  
+  // Derive status data from orders
+  const statusCounts: Record<string, number> = {};
+  orders.forEach((o: any) => { statusCounts[o.status] = (statusCounts[o.status] || 0) + 1; });
+  const statusData = Object.entries(statusCounts).map(([status, count]) => ({ status, count }));
 
   return (
     <div className="space-y-6">
@@ -30,10 +51,10 @@ export default function VendorDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Revenue" value="₹89.5L" change="+12.5% from last month" changeType="positive" icon={DollarSign} iconClassName="bg-success/10 text-success" />
-        <StatCard title="Total Orders" value="12,500" change="+8.2% from last month" changeType="positive" icon={ShoppingCart} iconClassName="bg-primary/10 text-primary" />
-        <StatCard title="Products" value="45" change="3 new this month" changeType="neutral" icon={Package} iconClassName="bg-secondary/10 text-secondary" />
-        <StatCard title="Conversion Rate" value="3.2%" change="+0.5% from last month" changeType="positive" icon={TrendingUp} iconClassName="bg-accent/10 text-accent" />
+        <StatCard title="Total Revenue" value={`₹${((analytics?.revenue || 0) / 100000).toFixed(1)}L`} change="+12.5% from last month" changeType="positive" icon={DollarSign} iconClassName="bg-success/10 text-success" />
+        <StatCard title="Total Orders" value={(analytics?.orders || 0).toLocaleString()} change="+8.2% from last month" changeType="positive" icon={ShoppingCart} iconClassName="bg-primary/10 text-primary" />
+        <StatCard title="Products" value={String(analytics?.products || 0)} change="Active listings" changeType="neutral" icon={Package} iconClassName="bg-secondary/10 text-secondary" />
+        <StatCard title="Avg Rating" value={String((analytics?.avgRating || 0).toFixed(1))} change="Based on reviews" changeType="positive" icon={TrendingUp} iconClassName="bg-accent/10 text-accent" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -58,7 +79,7 @@ export default function VendorDashboard() {
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="count" nameKey="status" label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`}>
-                  {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  {statusData.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                 </Pie>
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
               </PieChart>
@@ -87,14 +108,14 @@ export default function VendorDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {orders.slice(0, 5).map(order => (
+                {orders.slice(0, 5).map((order: any) => (
                   <tr key={order.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => navigate(`/vendor/orders/${order.id}`)}>
                     <td className="py-2.5 font-mono font-medium">{order.id}</td>
-                    <td className="py-2.5 text-muted-foreground">{order.items[0]?.productName}</td>
+                    <td className="py-2.5 text-muted-foreground">{order.items?.[0]?.productName}</td>
                     <td className="py-2.5">
                       <Badge variant="secondary" className={`text-xs capitalize border-0 ${statusColors[order.status] || ""}`}>{order.status}</Badge>
                     </td>
-                    <td className="py-2.5 text-right font-medium">₹{order.total.toLocaleString("en-IN")}</td>
+                    <td className="py-2.5 text-right font-medium">₹{order.total?.toLocaleString("en-IN")}</td>
                     <td className="py-2.5 text-right text-muted-foreground">{new Date(order.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}</td>
                   </tr>
                 ))}
