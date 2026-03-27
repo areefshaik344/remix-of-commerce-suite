@@ -20,6 +20,7 @@ export function useNotificationPolling({
   enabled = true,
 }: UseNotificationPollingOptions = {}) {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isMountedRef = useRef(true);
   const isFirstFetchRef = useRef(true);
 
   const syncNotifications = useCallback(async () => {
