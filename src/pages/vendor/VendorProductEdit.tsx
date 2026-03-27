@@ -322,7 +322,7 @@ export default function VendorProductEdit() {
           </Card>
 
           <div className="space-y-2">
-            <Button className="w-full" onClick={handleSubmit}><Save className="h-4 w-4 mr-1.5" /> Save Changes</Button>
+            <Button className="w-full" onClick={handleSubmit} disabled={saving}><Save className="h-4 w-4 mr-1.5" /> {saving ? "Saving..." : "Save Changes"}</Button>
             <Button variant="outline" className="w-full" onClick={() => navigate("/vendor/products")}>Cancel</Button>
           </div>
         </div>

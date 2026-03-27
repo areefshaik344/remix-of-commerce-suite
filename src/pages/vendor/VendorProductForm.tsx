@@ -435,8 +435,8 @@ export default function VendorProductForm() {
 
           {/* Actions */}
           <div className="space-y-2">
-            <Button className="w-full" onClick={handleSubmit}>
-              <Upload className="h-4 w-4 mr-1.5" /> Publish Product
+            <Button className="w-full" onClick={handleSubmit} disabled={loading}>
+              <Upload className="h-4 w-4 mr-1.5" /> {loading ? "Publishing..." : "Publish Product"}
             </Button>
             <Button variant="outline" className="w-full" onClick={() => navigate("/vendor/products")}>
               Cancel
