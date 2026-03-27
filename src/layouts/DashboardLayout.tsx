@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { useNotificationStore } from "@/features/notification";
 import { useNotificationPolling } from "@/hooks/useNotificationPolling";
+import { NotificationDropdown } from "@/components/shared/NotificationDropdown";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -10,8 +11,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { Bell, LucideIcon, LogOut, User, ChevronDown, LayoutDashboard, Package, DollarSign, Settings, Users, Store } from "lucide-react";
+import { LucideIcon, LogOut, ChevronDown, LayoutDashboard, Package, DollarSign, Settings, Users, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DashboardLayoutProps {
@@ -55,12 +55,20 @@ function DashboardSidebar({ title, navItems }: DashboardLayoutProps) {
 
 export default function DashboardLayout({ title, navItems }: DashboardLayoutProps) {
   const { user: currentUser, role: currentRole, logout } = useAuth();
-  const { unreadCount } = useNotificationStore();
   const navigate = useNavigate();
-  const unread = unreadCount();
 
   // Poll backend for new notifications every 30s, pause when tab is hidden
   useNotificationPolling({ interval: 30_000, enabled: true });
+
+  // Listen for toast "View" button clicks to navigate
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const url = (e as CustomEvent).detail;
+      if (url) navigate(url);
+    };
+    window.addEventListener("notification-navigate", handler);
+    return () => window.removeEventListener("notification-navigate", handler);
+  }, [navigate]);
 
   const handleLogout = () => {
     logout();
@@ -81,14 +89,7 @@ export default function DashboardLayout({ title, navItems }: DashboardLayoutProp
             </div>
             <div className="flex items-center gap-2">
               {/* Notifications */}
-              <Button variant="ghost" size="icon" className="relative" onClick={() => navigate("/notifications")}>
-                <Bell className="h-4 w-4" />
-                {unread > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-4 min-w-4 p-0 flex items-center justify-center text-[10px] bg-destructive text-destructive-foreground">
-                    {unread}
-                  </Badge>
-                )}
-              </Button>
+              <NotificationDropdown />
 
               {/* Profile dropdown */}
               <DropdownMenu>

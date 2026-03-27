@@ -1,7 +1,8 @@
-import { useEffect, useRef, useCallback } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { notificationApi } from "@/api/notificationApi";
 import { useNotificationStore } from "@/store/notificationStore";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 interface UseNotificationPollingOptions {
   /** Polling interval in ms (default 30s) */
@@ -59,6 +60,14 @@ export function useNotificationPolling({
             toast({
               title: n.title,
               description: n.message,
+              action: n.actionUrl
+                ? (React.createElement(ToastAction, {
+                    altText: "View",
+                    onClick: () => {
+                      window.dispatchEvent(new CustomEvent("notification-navigate", { detail: n.actionUrl }));
+                    },
+                  }, "View") as unknown as React.ReactElement<typeof ToastAction>)
+                : undefined,
             });
           }
           if (newOnes.length > 3) {
