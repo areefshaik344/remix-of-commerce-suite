@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddressFormDialog } from "@/components/shared/AddressFormDialog";
-import { User, MapPin, Bell, Shield, Edit2, Save, Loader2 } from "lucide-react";
+import { User, MapPin, Bell, Shield, Edit2, Save, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Address } from "@/features/auth";
 
@@ -21,6 +21,11 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const [profileForm, setProfileForm] = useState({
     name: currentUser?.name || "",
@@ -195,10 +200,74 @@ export default function ProfilePage() {
         <TabsContent value="security">
           <Card className="shadow-card">
             <CardContent className="p-6 space-y-4">
-              <div><Label className="text-xs">Current Password</Label><Input type="password" placeholder="••••••••" className="mt-1" /></div>
-              <div><Label className="text-xs">New Password</Label><Input type="password" placeholder="••••••••" className="mt-1" /></div>
-              <div><Label className="text-xs">Confirm New Password</Label><Input type="password" placeholder="••••••••" className="mt-1" /></div>
-              <Button>Update Password</Button>
+              <div>
+                <Label className="text-xs">Current Password</Label>
+                <div className="relative mt-1">
+                  <Input
+                    type={showPasswords.current ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={passwordForm.currentPassword}
+                    onChange={e => setPasswordForm(p => ({ ...p, currentPassword: e.target.value }))}
+                  />
+                  <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0" onClick={() => setShowPasswords(s => ({ ...s, current: !s.current }))}>
+                    {showPasswords.current ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">New Password</Label>
+                <div className="relative mt-1">
+                  <Input
+                    type={showPasswords.new ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={passwordForm.newPassword}
+                    onChange={e => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
+                  />
+                  <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0" onClick={() => setShowPasswords(s => ({ ...s, new: !s.new }))}>
+                    {showPasswords.new ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Confirm New Password</Label>
+                <div className="relative mt-1">
+                  <Input
+                    type={showPasswords.confirm ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={passwordForm.confirmPassword}
+                    onChange={e => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}
+                  />
+                  <Button type="button" variant="ghost" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0" onClick={() => setShowPasswords(s => ({ ...s, confirm: !s.confirm }))}>
+                    {showPasswords.confirm ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              <Button
+                disabled={changingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+                onClick={async () => {
+                  if (passwordForm.newPassword.length < 8) {
+                    toast({ title: "Password too short", description: "New password must be at least 8 characters.", variant: "destructive" });
+                    return;
+                  }
+                  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+                    toast({ title: "Passwords don't match", description: "New password and confirmation must match.", variant: "destructive" });
+                    return;
+                  }
+                  setChangingPassword(true);
+                  try {
+                    await userApi.changePassword({ currentPassword: passwordForm.currentPassword, newPassword: passwordForm.newPassword });
+                    toast({ title: "Password updated", description: "Your password has been changed successfully." });
+                    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                  } catch (err: any) {
+                    const msg = err?.response?.data?.message || "Failed to update password.";
+                    toast({ title: "Update failed", description: msg, variant: "destructive" });
+                  } finally {
+                    setChangingPassword(false);
+                  }
+                }}
+              >
+                {changingPassword ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Updating...</> : "Update Password"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

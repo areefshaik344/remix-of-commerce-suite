@@ -35,4 +35,9 @@ export const userApi = {
     const res = await httpClient.patch(ENDPOINTS.USER.ADDRESS_DEFAULT(addressId));
     return res.data?.data || res.data;
   },
+
+  async changePassword(data: { currentPassword: string; newPassword: string }) {
+    const res = await httpClient.post(ENDPOINTS.USER.CHANGE_PASSWORD, data);
+    return res.data?.data || res.data;
+  },
 };
