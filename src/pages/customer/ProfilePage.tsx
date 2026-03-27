@@ -16,6 +16,7 @@ import type { Address } from "@/features/auth";
 
 export default function ProfilePage() {
   const currentUser = useAuthStore((s) => s.currentUser);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
