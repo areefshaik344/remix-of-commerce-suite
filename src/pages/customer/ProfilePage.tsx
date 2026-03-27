@@ -22,6 +22,11 @@ export default function ProfilePage() {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
 
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [showPasswords, setShowPasswords] = useState({ current: false, new: false, confirm: false });
+  const [changingPassword, setChangingPassword] = useState(false);
+
   const [profileForm, setProfileForm] = useState({
     name: currentUser?.name || "",
     email: currentUser?.email || "",
