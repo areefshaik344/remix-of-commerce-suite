@@ -1,6 +1,5 @@
-import { mockSuccess, simulateDelay, type ApiResponse } from "./apiClient";
-import { mockOrders } from "@/mocks";
-import type { Order } from "@/data/mock-orders";
+import { httpClient } from "./httpClient";
+import { ENDPOINTS } from "./endpoints";
 
 export interface CreateOrderRequest {
   items: { productId: string; productName: string; quantity: number; price: number; image: string }[];
@@ -10,60 +9,39 @@ export interface CreateOrderRequest {
 }
 
 export const orderApi = {
-  async getOrders(userId?: string): Promise<ApiResponse<Order[]>> {
-    await simulateDelay(300);
-    const filtered = userId ? mockOrders.filter(o => o.userId === userId) : mockOrders;
-    return mockSuccess(filtered);
+  async getOrders(userId?: string) {
+    const params = userId ? { userId } : {};
+    const res = await httpClient.get(ENDPOINTS.ORDERS.LIST, { params });
+    return res.data?.data || res.data;
   },
 
-  async getOrderById(orderId: string): Promise<ApiResponse<Order | null>> {
-    await simulateDelay(200);
-    return mockSuccess(mockOrders.find(o => o.id === orderId) || null);
+  async getOrderById(orderId: string) {
+    const res = await httpClient.get(ENDPOINTS.ORDERS.DETAIL(orderId));
+    return res.data?.data || res.data;
   },
 
-  async createOrder(req: CreateOrderRequest, userId: string): Promise<ApiResponse<Order>> {
-    await simulateDelay(800);
-    const order: Order = {
-      id: `ORD-${10000 + mockOrders.length + 1}`,
-      userId,
-      vendorId: "v-1",
-      items: req.items,
-      total: req.total,
-      status: "pending",
-      paymentMethod: req.paymentMethod,
-      shippingAddress: req.shippingAddress,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    mockOrders.push(order);
-    return mockSuccess(order, "Order placed successfully");
+  async createOrder(req: CreateOrderRequest, userId: string) {
+    const res = await httpClient.post(ENDPOINTS.ORDERS.CREATE, { ...req, userId });
+    return res.data?.data || res.data;
   },
 
-  async cancelOrder(orderId: string): Promise<ApiResponse<Order>> {
-    await simulateDelay(400);
-    const order = mockOrders.find(o => o.id === orderId);
-    if (!order) throw new Error("Order not found");
-    order.status = "cancelled";
-    order.updatedAt = new Date().toISOString();
-    return mockSuccess(order, "Order cancelled");
+  async cancelOrder(orderId: string) {
+    const res = await httpClient.patch(ENDPOINTS.ORDERS.CANCEL(orderId));
+    return res.data?.data || res.data;
   },
 
-  async updateOrderStatus(orderId: string, status: Order["status"]): Promise<ApiResponse<Order>> {
-    await simulateDelay(300);
-    const order = mockOrders.find(o => o.id === orderId);
-    if (!order) throw new Error("Order not found");
-    order.status = status;
-    order.updatedAt = new Date().toISOString();
-    return mockSuccess(order, "Order updated");
+  async updateOrderStatus(orderId: string, status: string) {
+    const res = await httpClient.patch(ENDPOINTS.ORDERS.DETAIL(orderId), { status });
+    return res.data?.data || res.data;
   },
 
-  async requestReturn(orderId: string, reason: string): Promise<ApiResponse<{ requestId: string }>> {
-    await simulateDelay(500);
-    return mockSuccess({ requestId: `RET-${Date.now()}` }, "Return request submitted");
+  async requestReturn(orderId: string, reason: string) {
+    const res = await httpClient.post(ENDPOINTS.ORDERS.RETURN(orderId), { reason });
+    return res.data?.data || res.data;
   },
 
-  async generateInvoice(orderId: string): Promise<ApiResponse<{ url: string }>> {
-    await simulateDelay(300);
-    return mockSuccess({ url: `/invoices/${orderId}.pdf` }, "Invoice generated");
+  async trackOrder(orderId: string) {
+    const res = await httpClient.get(ENDPOINTS.ORDERS.TRACK(orderId));
+    return res.data?.data || res.data;
   },
 };
