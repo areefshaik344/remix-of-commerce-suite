@@ -81,7 +81,7 @@ export default function SignupPage() {
     try {
       const res = await authApi.sendOtp(otpPhone);
       setOtpSent(true);
-      const devOtp = res.otp ? ` (Dev OTP: ${res.otp})` : "";
+      startCooldown();
       toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${otpPhone}${devOtp}` });
     } catch (err) {
       toast({ title: "Failed to send OTP", description: getErrorMessage(err), variant: "destructive" });
