@@ -56,6 +56,7 @@ export function useAuth() {
     isCustomer,
     hasRole,
     login,
+    loginWithToken,
     signup,
     logout,
     vendorApplications: store.vendorApplications,
