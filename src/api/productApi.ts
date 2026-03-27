@@ -1,8 +1,5 @@
-import { mockSuccess, mockPaginated, simulateDelay, type ApiResponse, type PaginatedResponse } from "./apiClient";
-import { mockProducts, mockCategories } from "@/mocks";
-import { mockReviews } from "@/mocks";
-import type { Product, Category } from "@/data/mock-products";
-import type { Review } from "@/data/mock-orders";
+import { httpClient } from "./httpClient";
+import { ENDPOINTS } from "./endpoints";
 
 export interface ProductFilters {
   category?: string;
@@ -17,104 +14,75 @@ export interface ProductFilters {
 }
 
 export const productApi = {
-  async getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
-    await simulateDelay(200);
-    let result = [...mockProducts];
+  async getProducts(filters: ProductFilters = {}) {
+    const params: Record<string, string | number> = {};
+    if (filters.search) params.search = filters.search;
+    if (filters.category) params.category = filters.category;
+    if (filters.brand) params.brand = filters.brand;
+    if (filters.minPrice !== undefined) params.minPrice = filters.minPrice;
+    if (filters.maxPrice !== undefined) params.maxPrice = filters.maxPrice;
+    if (filters.minRating !== undefined) params.minRating = filters.minRating;
+    if (filters.sortBy) params.sortBy = filters.sortBy;
+    params.page = (filters.page || 1) - 1; // Backend is 0-indexed
+    params.size = filters.pageSize || 12;
 
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-      result = result.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.tags.some(t => t.toLowerCase().includes(q)));
-    }
-    if (filters.category) {
-      result = result.filter(p => p.category.toLowerCase().replace(/ & /g, "-").replace(/ /g, "-") === filters.category);
-    }
-    if (filters.brand) {
-      result = result.filter(p => p.brand === filters.brand);
-    }
-    if (filters.minPrice !== undefined) {
-      result = result.filter(p => p.price >= filters.minPrice!);
-    }
-    if (filters.maxPrice !== undefined) {
-      result = result.filter(p => p.price <= filters.maxPrice!);
-    }
-    if (filters.minRating !== undefined) {
-      result = result.filter(p => p.rating >= filters.minRating!);
-    }
-
-    switch (filters.sortBy) {
-      case "price-asc": result.sort((a, b) => a.price - b.price); break;
-      case "price-desc": result.sort((a, b) => b.price - a.price); break;
-      case "rating": result.sort((a, b) => b.rating - a.rating); break;
-      case "discount": result.sort((a, b) => b.discount - a.discount); break;
-      case "newest": result.sort((a, b) => b.id.localeCompare(a.id)); break;
-    }
-
-    return mockPaginated(result, filters.page || 1, filters.pageSize || 12);
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.LIST, { params });
+    return res.data?.data || res.data;
   },
 
-  async getProductBySlug(slug: string): Promise<ApiResponse<Product | null>> {
-    await simulateDelay(150);
-    const product = mockProducts.find(p => p.slug === slug) || null;
-    return mockSuccess(product);
+  async getProductBySlug(slug: string) {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.BY_SLUG(slug));
+    return res.data?.data || res.data;
   },
 
-  async getProductById(id: string): Promise<ApiResponse<Product | null>> {
-    await simulateDelay(100);
-    return mockSuccess(mockProducts.find(p => p.id === id) || null);
+  async getProductById(id: string) {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.DETAIL(id));
+    return res.data?.data || res.data;
   },
 
-  async getCategories(): Promise<ApiResponse<Category[]>> {
-    await simulateDelay(100);
-    return mockSuccess(mockCategories);
+  async getCategories() {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.CATEGORIES);
+    return res.data?.data || res.data;
   },
 
-  async getProductReviews(productId: string): Promise<ApiResponse<Review[]>> {
-    await simulateDelay(200);
-    return mockSuccess(mockReviews.filter(r => r.productId === productId));
+  async getProductReviews(productId: string) {
+    const res = await httpClient.get(ENDPOINTS.REVIEWS.BY_PRODUCT(productId));
+    return res.data?.data || res.data;
   },
 
-  async submitReview(review: Omit<Review, "id" | "helpful">): Promise<ApiResponse<Review>> {
-    await simulateDelay(500);
-    const newReview: Review = { ...review, id: `r-${Date.now()}`, helpful: 0 };
-    mockReviews.push(newReview);
-    return mockSuccess(newReview, "Review submitted");
+  async submitReview(review: { productId: string; rating: number; title: string; comment: string }) {
+    const res = await httpClient.post(ENDPOINTS.REVIEWS.CREATE, review);
+    return res.data?.data || res.data;
   },
 
-  async getRelatedProducts(productId: string, limit = 4): Promise<ApiResponse<Product[]>> {
-    await simulateDelay(150);
-    const product = mockProducts.find(p => p.id === productId);
-    if (!product) return mockSuccess([]);
-    const related = mockProducts.filter(p => p.category === product.category && p.id !== productId).slice(0, limit);
-    return mockSuccess(related);
+  async getRelatedProducts(productId: string, limit = 4) {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.RELATED(productId), { params: { limit } });
+    return res.data?.data || res.data;
   },
 
-  async getFeaturedProducts(): Promise<ApiResponse<Product[]>> {
-    await simulateDelay(100);
-    return mockSuccess(mockProducts.filter(p => p.featured));
+  async getFeaturedProducts() {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.FEATURED);
+    return res.data?.data || res.data;
   },
 
-  async getTrendingProducts(): Promise<ApiResponse<Product[]>> {
-    await simulateDelay(100);
-    return mockSuccess(mockProducts.filter(p => p.trending));
+  async getTrendingProducts() {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.TRENDING);
+    return res.data?.data || res.data;
   },
 
-  async getDeals(): Promise<ApiResponse<Product[]>> {
-    await simulateDelay(100);
-    return mockSuccess(mockProducts.filter(p => p.discount >= 20));
+  async getDeals() {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.DEALS);
+    return res.data?.data || res.data;
   },
 
-  async searchSuggestions(query: string): Promise<ApiResponse<string[]>> {
-    await simulateDelay(100);
-    if (query.length < 2) return mockSuccess([]);
-    const q = query.toLowerCase();
-    const names = mockProducts
-      .filter(p => p.name.toLowerCase().includes(q))
-      .slice(0, 6)
-      .map(p => p.name);
-    return mockSuccess(names);
+  async searchSuggestions(query: string) {
+    if (query.length < 2) return [];
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.SEARCH, { params: { q: query, limit: 6 } });
+    return res.data?.data || res.data;
   },
 
-  async getBrands(): Promise<ApiResponse<string[]>> {
-    return mockSuccess([...new Set(mockProducts.map(p => p.brand))]);
+  async getBrands() {
+    const res = await httpClient.get(ENDPOINTS.PRODUCTS.BRANDS);
+    return res.data?.data || res.data;
   },
 };

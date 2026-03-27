@@ -1,92 +1,69 @@
-import { mockSuccess, simulateDelay, type ApiResponse } from "./apiClient";
-import { mockProducts } from "@/mocks";
-import { mockVendors } from "@/mocks";
-import { mockOrders } from "@/mocks";
-import type { Product } from "@/data/mock-products";
-import type { Vendor } from "@/data/mock-users";
-import type { Order } from "@/data/mock-orders";
+import { httpClient } from "./httpClient";
+import { ENDPOINTS } from "./endpoints";
 
 export const vendorApi = {
-  async getVendorProfile(vendorId: string): Promise<ApiResponse<Vendor | null>> {
-    await simulateDelay(200);
-    return mockSuccess(mockVendors.find(v => v.id === vendorId) || null);
+  async getVendorProfile() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.PROFILE);
+    return res.data?.data || res.data;
   },
 
-  async getVendorProducts(vendorId: string): Promise<ApiResponse<Product[]>> {
-    await simulateDelay(200);
-    return mockSuccess(mockProducts.filter(p => p.vendorId === vendorId));
+  async getVendorProducts() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.PRODUCTS);
+    return res.data?.data || res.data;
   },
 
-  async getVendorOrders(vendorId: string): Promise<ApiResponse<Order[]>> {
-    await simulateDelay(300);
-    return mockSuccess(mockOrders.filter(o => o.vendorId === vendorId));
+  async getVendorOrders() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.ORDERS);
+    return res.data?.data || res.data;
   },
 
-  async getVendorBySlug(slug: string): Promise<ApiResponse<Vendor | null>> {
-    await simulateDelay(200);
-    const vendor = mockVendors.find(v => v.storeName.toLowerCase().replace(/\s+/g, "-") === slug);
-    return mockSuccess(vendor || null);
+  async getVendorBySlug(slug: string) {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.STORE(slug));
+    return res.data?.data || res.data;
   },
 
-  async updateVendorProfile(vendorId: string, data: Partial<Vendor>): Promise<ApiResponse<Vendor>> {
-    await simulateDelay(400);
-    const idx = mockVendors.findIndex(v => v.id === vendorId);
-    if (idx === -1) throw new Error("Vendor not found");
-    Object.assign(mockVendors[idx], data);
-    return mockSuccess(mockVendors[idx], "Profile updated");
+  async updateVendorProfile(data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.PROFILE, data);
+    return res.data?.data || res.data;
   },
 
-  async createProduct(product: Omit<Product, "id" | "slug">): Promise<ApiResponse<Product>> {
-    await simulateDelay(600);
-    const newProduct: Product = {
-      ...product,
-      id: `prod-${Date.now()}`,
-      slug: product.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
-    } as Product;
-    mockProducts.push(newProduct);
-    return mockSuccess(newProduct, "Product created");
+  async createProduct(product: Record<string, unknown>) {
+    const res = await httpClient.post(ENDPOINTS.VENDOR.PRODUCTS, product);
+    return res.data?.data || res.data;
   },
 
-  async updateProduct(productId: string, data: Partial<Product>): Promise<ApiResponse<Product>> {
-    await simulateDelay(400);
-    const idx = mockProducts.findIndex(p => p.id === productId);
-    if (idx === -1) throw new Error("Product not found");
-    Object.assign(mockProducts[idx], data);
-    return mockSuccess(mockProducts[idx], "Product updated");
+  async updateProduct(productId: string, data: Record<string, unknown>) {
+    const res = await httpClient.put(ENDPOINTS.VENDOR.PRODUCT_DETAIL(productId), data);
+    return res.data?.data || res.data;
   },
 
-  async deleteProduct(productId: string): Promise<ApiResponse<{ deleted: boolean }>> {
-    await simulateDelay(300);
-    const idx = mockProducts.findIndex(p => p.id === productId);
-    if (idx !== -1) mockProducts.splice(idx, 1);
-    return mockSuccess({ deleted: true }, "Product deleted");
+  async deleteProduct(productId: string) {
+    const res = await httpClient.delete(ENDPOINTS.VENDOR.PRODUCT_DETAIL(productId));
+    return res.data?.data || res.data;
   },
 
-  async getVendorAnalytics(vendorId: string): Promise<ApiResponse<{
-    revenue: number;
-    orders: number;
-    products: number;
-    avgRating: number;
-    monthlySales: { month: string; revenue: number; orders: number }[];
-  }>> {
-    await simulateDelay(300);
-    const products = mockProducts.filter(p => p.vendorId === vendorId);
-    const orders = mockOrders.filter(o => o.vendorId === vendorId);
-    return mockSuccess({
-      revenue: orders.reduce((s, o) => s + o.total, 0),
-      orders: orders.length,
-      products: products.length,
-      avgRating: products.length ? products.reduce((s, p) => s + p.rating, 0) / products.length : 0,
-      monthlySales: [
-        { month: "Jan", revenue: 2800000, orders: 120 },
-        { month: "Feb", revenue: 3200000, orders: 145 },
-        { month: "Mar", revenue: 2900000, orders: 132 },
-      ],
-    });
+  async getVendorAnalytics() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.ANALYTICS);
+    return res.data?.data || res.data;
   },
 
-  async getAllVendors(): Promise<ApiResponse<Vendor[]>> {
-    await simulateDelay(200);
-    return mockSuccess(mockVendors);
+  async getVendorFinancials() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.FINANCIALS);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorCoupons() {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.COUPONS);
+    return res.data?.data || res.data;
+  },
+
+  async getVendorStoreProducts(vendorId: string) {
+    const res = await httpClient.get(ENDPOINTS.VENDOR.STORE_PRODUCTS(vendorId));
+    return res.data?.data || res.data;
+  },
+
+  async getAllVendors() {
+    const res = await httpClient.get(ENDPOINTS.ADMIN.VENDORS);
+    return res.data?.data || res.data;
   },
 };
