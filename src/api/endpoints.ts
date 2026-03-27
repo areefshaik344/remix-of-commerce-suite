@@ -80,10 +80,12 @@ export const ENDPOINTS = {
     INVENTORY_UPDATE: (id: string) => `/vendor/inventory/${id}`,
     COUPONS: "/vendor/coupons",
     COUPON_DETAIL: (id: string) => `/vendor/coupons/${id}`,
+    COUPON_CREATE: "/vendor/coupons",
     RETURNS: "/vendor/returns",
     RETURN_DETAIL: (id: string) => `/vendor/returns/${id}`,
     STORE: (vendorId: string) => `/vendors/${vendorId}`,
     STORE_PRODUCTS: (vendorId: string) => `/vendors/${vendorId}/products`,
+    SHIPPING_SETTINGS: "/vendor/shipping-settings",
   },
 
   // Admin
