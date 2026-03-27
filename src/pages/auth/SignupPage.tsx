@@ -6,13 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, ShieldCheck, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, EyeOff, ShieldCheck, ChevronRight, Mail, Phone } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { useToast } from "@/hooks/use-toast";
-import { signupSchema } from "@/lib/validators";
+import { signupSchema, phoneLoginSchema, otpSchema } from "@/lib/validators";
 import { getErrorMessage } from "@/api/errorMapper";
+import { authApi } from "@/api/authApi";
+import OTPInput from "@/components/auth/OTPInput";
 
 export default function SignupPage() {
+  const [tab, setTab] = useState<"email" | "phone">("email");
+
+  // Email signup state
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -23,11 +29,20 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { signup } = useAuth();
+  // Phone OTP signup state
+  const [otpPhone, setOtpPhone] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpName, setOtpName] = useState("");
+  const [otpAgreed, setOtpAgreed] = useState(false);
+
+  const { signup, loginWithToken } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  // ── Email Signup ──
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormErrors({});
     const result = signupSchema.safeParse({ name, email, phone, password, confirmPassword, agreed });
@@ -48,6 +63,76 @@ export default function SignupPage() {
       navigate("/verify-email");
     } catch (err) {
       toast({ title: "Signup failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Phone OTP Send ──
+  const handleSendOTP = async () => {
+    const result = phoneLoginSchema.safeParse({ phone: otpPhone });
+    if (!result.success) {
+      toast({ title: "Invalid phone", description: result.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authApi.sendOtp(otpPhone);
+      setOtpSent(true);
+      const devOtp = res.otp ? ` (Dev OTP: ${res.otp})` : "";
+      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${otpPhone}${devOtp}` });
+    } catch (err) {
+      toast({ title: "Failed to send OTP", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Phone OTP Verify ──
+  const handleVerifyOTP = async () => {
+    const result = otpSchema.safeParse({ otp });
+    if (!result.success) {
+      toast({ title: "Invalid OTP", description: result.error.errors[0].message, variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authApi.verifyOtp(otpPhone, otp);
+      // Store auth data temporarily, show name step
+      setOtpVerified(true);
+      // Save token for after name entry
+      (window as any).__otpAuthResponse = res;
+      toast({ title: "Phone verified!", description: "One more step — enter your name." });
+    } catch (err) {
+      toast({ title: "Verification failed", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Complete Phone Signup (set name) ──
+  const handleCompletePhoneSignup = async () => {
+    if (!otpName.trim()) {
+      toast({ title: "Name required", description: "Please enter your name.", variant: "destructive" });
+      return;
+    }
+    if (!otpAgreed) {
+      toast({ title: "Terms required", description: "Please agree to the Terms of Service.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const authRes = (window as any).__otpAuthResponse;
+      // Set auth and then update profile name
+      loginWithToken(authRes.accessToken, { ...authRes.user, name: otpName.trim() });
+      // Update name on backend
+      const { userApi } = await import("@/api/userApi");
+      await userApi.updateProfile({ name: otpName.trim() }).catch(() => {});
+      delete (window as any).__otpAuthResponse;
+      toast({ title: "Account created!", description: "Welcome to MarketHub!" });
+      navigate("/", { replace: true });
+    } catch (err) {
+      toast({ title: "Failed", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -100,72 +185,155 @@ export default function SignupPage() {
 
           <Card className="shadow-elevated border-0">
             <CardContent className="p-6">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Full Name</Label>
-                  <Input placeholder="Rahul Sharma" value={name} onChange={e => setName(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Email Address</Label>
-                  <Input type="email" placeholder="rahul@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
-                  {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>Phone Number</Label>
-                  <div className="flex gap-2">
-                    <div className="flex items-center px-3 rounded-md border bg-muted text-sm font-medium text-muted-foreground">+91</div>
-                    <Input placeholder="98765 43210" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} required />
-                  </div>
-                  {formErrors.phone && <p className="text-xs text-destructive">{formErrors.phone}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label>Password</Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Min 6 characters"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {password && (
-                    <div className="space-y-1">
-                      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                        <div className={`h-full ${strength.color} transition-all rounded-full`} style={{ width: strength.width }} />
+              <Tabs value={tab} onValueChange={(v) => { setTab(v as "email" | "phone"); setOtpSent(false); setOtpVerified(false); setOtp(""); }}>
+                <TabsList className="grid grid-cols-2 w-full">
+                  <TabsTrigger value="email" className="gap-1.5 text-xs">
+                    <Mail className="h-3.5 w-3.5" /> Email
+                  </TabsTrigger>
+                  <TabsTrigger value="phone" className="gap-1.5 text-xs">
+                    <Phone className="h-3.5 w-3.5" /> Phone OTP
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* ── Email Tab ── */}
+                <TabsContent value="email" className="mt-4">
+                  <form onSubmit={handleEmailSignup} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Full Name</Label>
+                      <Input placeholder="Rahul Sharma" value={name} onChange={e => setName(e.target.value)} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Email Address</Label>
+                      <Input type="email" placeholder="rahul@example.com" value={email} onChange={e => setEmail(e.target.value)} required />
+                      {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Phone Number</Label>
+                      <div className="flex gap-2">
+                        <div className="flex items-center px-3 rounded-md border bg-muted text-sm font-medium text-muted-foreground">+91</div>
+                        <Input placeholder="98765 43210" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} required />
                       </div>
-                      <p className="text-xs text-muted-foreground">{strength.label}</p>
+                      {formErrors.phone && <p className="text-xs text-destructive">{formErrors.phone}</p>}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Password</Label>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Min 6 characters"
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          required
+                          minLength={6}
+                        />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {password && (
+                        <div className="space-y-1">
+                          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                            <div className={`h-full ${strength.color} transition-all rounded-full`} style={{ width: strength.width }} />
+                          </div>
+                          <p className="text-xs text-muted-foreground">{strength.label}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Confirm Password</Label>
+                      <Input
+                        type="password"
+                        placeholder="Re-enter password"
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        required
+                      />
+                      {confirmPassword && confirmPassword !== password && (
+                        <p className="text-xs text-destructive">Passwords don't match</p>
+                      )}
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Checkbox id="terms" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+                      <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed">
+                        I agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link> and{" "}
+                        <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+                      </label>
+                    </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? "Creating account..." : "Create Account"}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                {/* ── Phone OTP Tab ── */}
+                <TabsContent value="phone" className="mt-4">
+                  {!otpSent ? (
+                    /* Step 1: Enter phone number */
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Mobile Number</Label>
+                        <div className="flex gap-2">
+                          <div className="flex items-center px-3 rounded-md border bg-muted text-sm font-medium text-muted-foreground">+91</div>
+                          <Input
+                            placeholder="98765 43210"
+                            value={otpPhone}
+                            onChange={(e) => setOtpPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            maxLength={10}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">We'll send a 6-digit OTP to verify your number</p>
+                      <Button onClick={handleSendOTP} className="w-full" disabled={loading || otpPhone.length !== 10}>
+                        {loading ? "Sending OTP..." : "Send OTP"}
+                      </Button>
+                    </div>
+                  ) : !otpVerified ? (
+                    /* Step 2: Enter OTP */
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">
+                          OTP sent to <span className="font-medium text-foreground">+91 {otpPhone}</span>
+                        </p>
+                        <button onClick={() => { setOtpSent(false); setOtp(""); }} className="text-xs text-primary hover:underline mt-1">
+                          Change number
+                        </button>
+                      </div>
+                      <OTPInput value={otp} onChange={setOtp} />
+                      <Button onClick={handleVerifyOTP} className="w-full" disabled={loading || otp.length !== 6}>
+                        {loading ? "Verifying..." : "Verify OTP"}
+                      </Button>
+                      <p className="text-xs text-center text-muted-foreground">
+                        Didn't receive? <button onClick={handleSendOTP} className="text-primary hover:underline">Resend OTP</button>
+                      </p>
+                    </div>
+                  ) : (
+                    /* Step 3: Enter name after OTP verified */
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <div className="h-10 w-10 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                          <Phone className="h-5 w-5 text-primary" />
+                        </div>
+                        <p className="text-sm font-medium">Phone verified! ✓</p>
+                        <p className="text-xs text-muted-foreground mt-1">Just one more step to complete your account</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Your Name</Label>
+                        <Input placeholder="Rahul Sharma" value={otpName} onChange={e => setOtpName(e.target.value)} autoFocus />
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Checkbox id="otp-terms" checked={otpAgreed} onCheckedChange={(v) => setOtpAgreed(v === true)} className="mt-0.5" />
+                        <label htmlFor="otp-terms" className="text-xs text-muted-foreground leading-relaxed">
+                          I agree to the <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link> and{" "}
+                          <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+                        </label>
+                      </div>
+                      <Button onClick={handleCompletePhoneSignup} className="w-full" disabled={loading || !otpName.trim() || !otpAgreed}>
+                        {loading ? "Creating account..." : "Complete Signup"}
+                      </Button>
                     </div>
                   )}
-                </div>
-                <div className="space-y-2">
-                  <Label>Confirm Password</Label>
-                  <Input
-                    type="password"
-                    placeholder="Re-enter password"
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    required
-                  />
-                  {confirmPassword && confirmPassword !== password && (
-                    <p className="text-xs text-destructive">Passwords don't match</p>
-                  )}
-                </div>
-                <div className="flex items-start gap-2">
-                  <Checkbox id="terms" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
-                  <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed">
-                    I agree to the <Link to="/" className="text-primary hover:underline">Terms of Service</Link> and{" "}
-                    <Link to="/" className="text-primary hover:underline">Privacy Policy</Link>
-                  </label>
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Creating account..." : "Create Account"}
-                </Button>
-              </form>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 
