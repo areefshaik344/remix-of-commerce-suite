@@ -1,52 +1,83 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, ImagePlus, X, Save, Eye } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-
-const existingBanners: Record<string, any> = {
-  "1": { title: "Summer Sale - Up to 70% Off", subtitle: "Huge discounts on electronics, fashion & more", position: "hero", link: "/products?sale=summer", active: true, image: "/placeholder.svg", startDate: "2025-01-01", endDate: "2025-03-31" },
-  "2": { title: "New Arrivals Collection", subtitle: "Check out the latest trends", position: "hero", link: "/products?collection=new", active: true, image: "/placeholder.svg", startDate: "2025-02-01", endDate: "2025-04-30" },
-};
+import { adminApi } from "@/api/adminApi";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function AdminBannerForm() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
-  const existing = id ? existingBanners[id] : null;
 
-  const [title, setTitle] = useState(existing?.title || "");
-  const [subtitle, setSubtitle] = useState(existing?.subtitle || "");
-  const [position, setPosition] = useState(existing?.position || "hero");
-  const [link, setLink] = useState(existing?.link || "");
+  const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
+  const [position, setPosition] = useState("hero");
+  const [link, setLink] = useState("");
   const [ctaText, setCtaText] = useState("Shop Now");
-  const [active, setActive] = useState(existing?.active ?? true);
-  const [image, setImage] = useState<string | null>(existing?.image || null);
-  const [startDate, setStartDate] = useState(existing?.startDate || "");
-  const [endDate, setEndDate] = useState(existing?.endDate || "");
-  const [desktopImage, setDesktopImage] = useState<string | null>(existing?.image || null);
+  const [active, setActive] = useState(true);
+  const [desktopImage, setDesktopImage] = useState<string | null>(null);
   const [mobileImage, setMobileImage] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [bgColor, setBgColor] = useState("#1a1a2e");
   const [textColor, setTextColor] = useState("#ffffff");
+  const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(isEdit);
+
+  useEffect(() => {
+    if (isEdit && id) {
+      adminApi.getBannerById(id).then(data => {
+        setTitle(data.title || "");
+        setSubtitle(data.subtitle || "");
+        setPosition(data.position || "hero");
+        setLink(data.link || "");
+        setCtaText(data.ctaText || "Shop Now");
+        setActive(data.active ?? true);
+        setDesktopImage(data.image || data.desktopImage || null);
+        setMobileImage(data.mobileImage || null);
+        setStartDate(data.startDate || "");
+        setEndDate(data.endDate || "");
+        setBgColor(data.bgColor || "#1a1a2e");
+        setTextColor(data.textColor || "#ffffff");
+      }).catch(e => toast({ title: "Failed to load banner", description: getErrorMessage(e), variant: "destructive" }))
+        .finally(() => setFetching(false));
+    }
+  }, [isEdit, id]);
 
   const simulateUpload = (setter: (v: string) => void) => {
     setter("https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=400&fit=crop");
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title) {
       toast({ title: "Title required", variant: "destructive" });
       return;
     }
-    toast({ title: isEdit ? "Banner updated" : "Banner created", description: `"${title}" has been ${isEdit ? "saved" : "created"}.` });
-    navigate("/admin/cms");
+    setLoading(true);
+    try {
+      const payload = { title, subtitle, position, link, ctaText, active, image: desktopImage, mobileImage, startDate, endDate, bgColor, textColor };
+      if (isEdit && id) {
+        await adminApi.updateBanner(id, payload);
+      } else {
+        await adminApi.createBanner(payload);
+      }
+      toast({ title: isEdit ? "Banner updated" : "Banner created", description: `"${title}" has been ${isEdit ? "saved" : "created"}.` });
+      navigate("/admin/cms");
+    } catch (e) {
+      toast({ title: "Failed to save banner", description: getErrorMessage(e), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (fetching) return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading banner...</div>;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -104,7 +135,6 @@ export default function AdminBannerForm() {
             </CardContent>
           </Card>
 
-          {/* Preview */}
           <Card className="shadow-card">
             <CardHeader className="pb-3"><CardTitle className="text-base flex items-center gap-2"><Eye className="h-4 w-4" /> Preview</CardTitle></CardHeader>
             <CardContent>
@@ -153,7 +183,7 @@ export default function AdminBannerForm() {
           </Card>
 
           <div className="space-y-2">
-            <Button className="w-full" onClick={handleSubmit}><Save className="h-4 w-4 mr-1.5" /> {isEdit ? "Save Changes" : "Create Banner"}</Button>
+            <Button className="w-full" onClick={handleSubmit} disabled={loading}><Save className="h-4 w-4 mr-1.5" /> {loading ? "Saving..." : isEdit ? "Save Changes" : "Create Banner"}</Button>
             <Button variant="outline" className="w-full" onClick={() => navigate("/admin/cms")}>Cancel</Button>
           </div>
         </div>

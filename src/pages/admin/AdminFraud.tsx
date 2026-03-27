@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,34 +7,42 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertTriangle, ShieldAlert, MessageSquareWarning, Eye, Ban, Check, MoreHorizontal, Star, Flag, UserX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const suspiciousOrders = [
-  { id: "ORD-8821", customer: "Unknown User", amount: 124500, reason: "Multiple high-value orders from new account", riskLevel: "high", date: "2025-03-07" },
-  { id: "ORD-8819", customer: "Rajesh K", amount: 89000, reason: "Shipping address mismatch with billing", riskLevel: "medium", date: "2025-03-07" },
-  { id: "ORD-8815", customer: "Test Account", amount: 45000, reason: "Repeated failed payment attempts", riskLevel: "high", date: "2025-03-06" },
-  { id: "ORD-8810", customer: "Priya M", amount: 23400, reason: "Unusual buying pattern detected", riskLevel: "low", date: "2025-03-06" },
-  { id: "ORD-8805", customer: "Anon User", amount: 67800, reason: "VPN/proxy detected", riskLevel: "medium", date: "2025-03-05" },
-];
-
-const fakeReviews = [
-  { id: "REV-201", product: "iPhone 15 Pro Max", reviewer: "user_xyz123", rating: 1, text: "worst product ever buy this scam dont buy!!!!", reason: "Spam pattern, no verified purchase", date: "2025-03-07" },
-  { id: "REV-198", product: "Sony WH-1000XM5", reviewer: "reviewer_bot_44", rating: 5, text: "Amazing product best quality!!!!! Buy now!!!!", reason: "Bot-like pattern, repetitive text", date: "2025-03-06" },
-  { id: "REV-195", product: "Nike Air Max 90", reviewer: "fake_acc_99", rating: 5, text: "Perfect shoes perfect quality perfect everything", reason: "New account, bulk reviews posted", date: "2025-03-05" },
-  { id: "REV-190", product: "MacBook Air M3", reviewer: "competitor_acct", rating: 1, text: "Don't buy this, buy XYZ brand instead", reason: "Competitor promotion suspected", date: "2025-03-04" },
-];
-
-const abuseReports = [
-  { id: "RPT-55", type: "Vendor", target: "GlamourBox", reason: "Selling counterfeit products", reports: 12, status: "investigating" },
-  { id: "RPT-52", type: "User", target: "spam_user_22", reason: "Harassing vendor in messages", reports: 5, status: "pending" },
-  { id: "RPT-48", type: "Vendor", target: "ToyLand", reason: "Misleading product descriptions", reports: 8, status: "action_taken" },
-  { id: "RPT-45", type: "Product", target: "Fake Designer Bag", reason: "Copyright infringement", reports: 15, status: "removed" },
-];
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function AdminFraud() {
   const { toast } = useToast();
 
-  const handleAction = (action: string, id: string) => {
-    toast({ title: `${action}`, description: `Action taken on ${id}` });
+  const { data: ordersResp, isLoading: oLoading, error: oError, refetch: refetchOrders } = useApiQuery(
+    () => adminApi.getFraudOrders(), []
+  );
+  const { data: reviewsResp, isLoading: rLoading, error: rError } = useApiQuery(
+    () => adminApi.getFraudReviews(), []
+  );
+  const { data: reportsResp, isLoading: rpLoading, error: rpError } = useApiQuery(
+    () => adminApi.getFraudReports(), []
+  );
+
+  const isLoading = oLoading || rLoading || rpLoading;
+  const error = oError || rError || rpError;
+  if (isLoading) return <DashboardSkeleton />;
+  if (error) return <PageError message="Failed to load fraud data" />;
+
+  const suspiciousOrders: any[] = Array.isArray(ordersResp) ? ordersResp : [];
+  const fakeReviews: any[] = Array.isArray(reviewsResp) ? reviewsResp : [];
+  const abuseReports: any[] = Array.isArray(reportsResp) ? reportsResp : [];
+
+  const handleAction = async (action: string, id: string) => {
+    try {
+      await adminApi.takeFraudAction(id, action);
+      toast({ title: `${action}`, description: `Action taken on ${id}` });
+      refetchOrders();
+    } catch (e) {
+      toast({ title: "Action failed", description: getErrorMessage(e), variant: "destructive" });
+    }
   };
 
   const riskBadge = (level: string) => {
@@ -65,10 +72,10 @@ export default function AdminFraud() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Flagged Orders" value={String(suspiciousOrders.length)} icon={ShieldAlert} change="2 high risk" changeType="negative" />
-        <StatCard title="Fake Reviews" value={String(fakeReviews.length)} icon={MessageSquareWarning} change="Today: 2" changeType="negative" />
-        <StatCard title="Abuse Reports" value={String(abuseReports.length)} icon={Flag} change="3 pending" changeType="negative" />
-        <StatCard title="Accounts Blocked" value="23" icon={UserX} change="This month" changeType="neutral" />
+        <StatCard title="Flagged Orders" value={String(suspiciousOrders.length)} icon={ShieldAlert} change={`${suspiciousOrders.filter((o: any) => o.riskLevel === "high").length} high risk`} changeType="negative" />
+        <StatCard title="Fake Reviews" value={String(fakeReviews.length)} icon={MessageSquareWarning} change={`Today: ${fakeReviews.length}`} changeType="negative" />
+        <StatCard title="Abuse Reports" value={String(abuseReports.length)} icon={Flag} change={`${abuseReports.filter((r: any) => r.status === "pending").length} pending`} changeType="negative" />
+        <StatCard title="Accounts Blocked" value="—" icon={UserX} change="This month" changeType="neutral" />
       </div>
 
       <Tabs defaultValue="orders">
@@ -94,11 +101,11 @@ export default function AdminFraud() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {suspiciousOrders.map(o => (
+                  {suspiciousOrders.map((o: any) => (
                     <TableRow key={o.id}>
                       <TableCell className="font-mono text-sm">{o.id}</TableCell>
                       <TableCell className="font-medium">{o.customer}</TableCell>
-                      <TableCell>₹{o.amount.toLocaleString("en-IN")}</TableCell>
+                      <TableCell>₹{(o.amount || 0).toLocaleString("en-IN")}</TableCell>
                       <TableCell>{riskBadge(o.riskLevel)}</TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-48 truncate">{o.reason}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{o.date}</TableCell>
@@ -136,7 +143,7 @@ export default function AdminFraud() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {fakeReviews.map(r => (
+                  {fakeReviews.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="font-mono text-xs">{r.id}</TableCell>
                       <TableCell className="font-medium text-sm">{r.product}</TableCell>
@@ -179,7 +186,7 @@ export default function AdminFraud() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {abuseReports.map(r => (
+                  {abuseReports.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell className="font-mono text-xs">{r.id}</TableCell>
                       <TableCell><Badge variant="outline" className="text-xs">{r.type}</Badge></TableCell>
@@ -191,9 +198,9 @@ export default function AdminFraud() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Investigate</DropdownMenuItem>
-                            <DropdownMenuItem>Warn User</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">Ban & Remove</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAction("Investigating", r.id)}>Investigate</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleAction("Warned", r.id)}>Warn User</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleAction("Banned", r.id)}>Ban & Remove</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

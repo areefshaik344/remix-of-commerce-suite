@@ -2,41 +2,51 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Image, Plus, Pencil, Trash2, Eye, GripVertical } from "lucide-react";
-
-const banners = [
-  { id: "1", title: "Summer Sale - Up to 70% Off", image: "/placeholder.svg", position: "hero", active: true, order: 1 },
-  { id: "2", title: "New Arrivals Collection", image: "/placeholder.svg", position: "hero", active: true, order: 2 },
-  { id: "3", title: "Free Shipping on Orders $50+", image: "/placeholder.svg", position: "top-bar", active: true, order: 1 },
-  { id: "4", title: "Festival Special Deals", image: "/placeholder.svg", position: "hero", active: false, order: 3 },
-];
-
-const sections = [
-  { id: "1", name: "Featured Products", type: "product-grid", visible: true, order: 1 },
-  { id: "2", name: "Deals of the Day", type: "countdown-grid", visible: true, order: 2 },
-  { id: "3", name: "Categories", type: "category-carousel", visible: true, order: 3 },
-  { id: "4", name: "Trending Now", type: "product-carousel", visible: true, order: 4 },
-  { id: "5", name: "Brand Spotlight", type: "banner", visible: false, order: 5 },
-];
-
-const pages = [
-  { id: "1", title: "About Us", slug: "/about", status: "published", updated: "2025-01-10" },
-  { id: "2", title: "Privacy Policy", slug: "/privacy", status: "published", updated: "2025-01-05" },
-  { id: "3", title: "Terms of Service", slug: "/terms", status: "published", updated: "2025-01-05" },
-  { id: "4", title: "Contact Us", slug: "/contact", status: "draft", updated: "2025-01-12" },
-  { id: "5", title: "FAQ", slug: "/faq", status: "published", updated: "2025-01-08" },
-];
+import { adminApi } from "@/api/adminApi";
+import { useApiQuery } from "@/hooks/useApiQuery";
+import { PageError } from "@/components/shared/PageError";
+import { DashboardSkeleton } from "@/components/shared/ProductSkeleton";
+import { toast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/api/errorMapper";
 
 export default function AdminCMS() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("banners");
+
+  const { data: banners, isLoading: bannersLoading, error: bannersError, refetch: refetchBanners } = useApiQuery(
+    () => adminApi.getBanners(), []
+  );
+  const { data: sections, isLoading: sectionsLoading, error: sectionsError } = useApiQuery(
+    () => adminApi.getSections(), []
+  );
+  const { data: pages, isLoading: pagesLoading, error: pagesError } = useApiQuery(
+    () => adminApi.getPages(), []
+  );
+
+  const handleDeleteBanner = async (id: string) => {
+    try {
+      await adminApi.deleteBanner(id);
+      toast({ title: "Banner deleted" });
+      refetchBanners();
+    } catch (e) {
+      toast({ title: "Failed to delete", description: getErrorMessage(e), variant: "destructive" });
+    }
+  };
+
+  const isLoading = bannersLoading || sectionsLoading || pagesLoading;
+  const error = bannersError || sectionsError || pagesError;
+  if (isLoading) return <DashboardSkeleton />;
+  if (error) return <PageError message="Failed to load CMS data" />;
+
+  const bannerList = Array.isArray(banners) ? banners : [];
+  const sectionList = Array.isArray(sections) ? sections : [];
+  const pageList = Array.isArray(pages) ? pages : [];
 
   return (
     <div className="space-y-6">
@@ -71,7 +81,7 @@ export default function AdminCMS() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {banners.map(b => (
+                  {bannerList.map((b: any) => (
                     <TableRow key={b.id}>
                       <TableCell><GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" /></TableCell>
                       <TableCell>
@@ -88,9 +98,9 @@ export default function AdminCMS() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                           <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/cms/banners/${b.id}/edit`)}><Eye className="h-4 w-4" /></Button>
-                           <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/cms/banners/${b.id}/edit`)}><Pencil className="h-4 w-4" /></Button>
-                          <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/cms/banners/${b.id}/edit`)}><Eye className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/cms/banners/${b.id}/edit`)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteBanner(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -105,7 +115,7 @@ export default function AdminCMS() {
           <Card>
             <CardHeader><CardTitle className="text-base">Homepage Layout</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              {sections.map(s => (
+              {sectionList.map((s: any) => (
                 <div key={s.id} className="flex items-center gap-3 p-3 border rounded-lg">
                   <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                   <div className="flex-1">
@@ -140,14 +150,14 @@ export default function AdminCMS() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pages.map(p => (
+                  {pageList.map((p: any) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">{p.title}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">{p.slug}</TableCell>
                       <TableCell>
                         <Badge variant={p.status === "published" ? "default" : "secondary"}>{p.status}</Badge>
                       </TableCell>
-                      <TableCell className="text-sm">{p.updated}</TableCell>
+                      <TableCell className="text-sm">{p.updated || p.updatedAt}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon"><Pencil className="h-4 w-4" /></Button>
