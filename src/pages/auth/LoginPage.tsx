@@ -56,10 +56,17 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setOtpSent(true);
-    setLoading(false);
-    toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}` });
+    try {
+      const res = await authApi.sendOtp(phone);
+      setOtpSent(true);
+      // In dev mode, backend returns the OTP in the response for testing
+      const devOtp = res.otp ? ` (Dev OTP: ${res.otp})` : "";
+      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}${devOtp}` });
+    } catch (err) {
+      toast({ title: "Failed to send OTP", description: getErrorMessage(err), variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerifyOTP = async () => {
@@ -70,7 +77,8 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      await login(`${phone}@phone.otp`, otp);
+      const res = await authApi.verifyOtp(phone, otp);
+      loginWithToken(res.accessToken, res.user);
       toast({ title: "Welcome!", description: "Phone verified successfully." });
       const from = (location.state as { from?: string })?.from || "/";
       navigate(from, { replace: true });
