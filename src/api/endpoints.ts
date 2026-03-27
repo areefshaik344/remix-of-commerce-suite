@@ -155,5 +155,6 @@ export const ENDPOINTS = {
     ADDRESS_DETAIL: (id: string) => `/users/addresses/${id}`,
     ADDRESS_DEFAULT: (id: string) => `/users/addresses/${id}/default`,
     UPDATE_PROFILE: "/users/profile",
+    CHANGE_PASSWORD: "/users/change-password",
   },
 } as const;
