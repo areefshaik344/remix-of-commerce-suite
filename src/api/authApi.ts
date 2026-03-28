@@ -91,6 +91,12 @@ export const authApi = {
     return res.data?.data || res.data;
   },
 
+  /** POST /auth/resend-verification — resend email OTP with cooldown */
+  async resendVerification(email: string): Promise<{ message: string }> {
+    const res = await httpClient.post(ENDPOINTS.AUTH.RESEND_VERIFICATION, { email });
+    return res.data?.data || res.data;
+  },
+
   /** GET /auth/me — get current user from token */
   async getCurrentUser(): Promise<AuthUser> {
     const res = await httpClient.get(ENDPOINTS.AUTH.ME);
