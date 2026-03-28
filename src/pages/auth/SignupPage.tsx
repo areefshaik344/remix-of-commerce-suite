@@ -62,7 +62,7 @@ export default function SignupPage() {
     try {
       await signup(result.data.name, result.data.email, result.data.phone, result.data.password);
       toast({ title: "Account created!", description: "Please verify your email." });
-      navigate("/verify-email");
+      navigate("/verify-email", { state: { email: result.data.email } });
     } catch (err) {
       toast({ title: "Signup failed", description: getErrorMessage(err), variant: "destructive" });
     } finally {
